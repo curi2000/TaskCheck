@@ -37,7 +37,7 @@
             border-radius: 10px;
             padding: 20px;
             margin-bottom: 30px;
-            max-width: 800px;
+            max-width: 960px;
             margin-left: auto;
             margin-right: auto;
         }
@@ -313,23 +313,6 @@
         <div class="period-info">2025년 8월 14일 ~ 2026년 1월 14일 (154일) | 10개 항목</div>
     </div>
 
-    <div class="github-config">
-        <div class="config-title">🔧 GitHub 동기화 설정</div>
-        <div class="config-row">
-            <input type="text" id="githubUsername" class="config-input" placeholder="GitHub 사용자명 (예: myusername)" value="">
-            <input type="text" id="githubRepo" class="config-input" placeholder="Repository 이름 (예: daily-tasks)" value="">
-        </div>
-        <div class="config-row">
-            <input type="password" id="githubToken" class="config-input" placeholder="GitHub Personal Access Token">
-            <button class="config-btn" onclick="saveGitHubConfig()">설정 저장</button>
-            <button class="config-btn" onclick="testConnection()">연결 테스트</button>
-        </div>
-        <div class="sync-status">
-            <div class="status-indicator" id="statusIndicator"></div>
-            <div class="status-text" id="statusText">GitHub 설정이 필요합니다</div>
-        </div>
-    </div>
-
     <div class="month-selector">
         <button class="month-btn" onclick="selectMonth(2025, 8)">2025년 8월</button>
         <button class="month-btn" onclick="selectMonth(2025, 9)">2025년 9월</button>
@@ -352,6 +335,25 @@
         <div class="day-header">토</div>
         <div class="day-header">일</div>
     </div>
+
+    <div class="header"> </div>
+    <div class="github-config">
+        <div class="config-title">🔧 GitHub 동기화 설정</div>
+        <div class="config-row">
+            <input type="text" id="githubUsername" class="config-input" placeholder="GitHub 사용자명 (예: myusername)" value="">
+            <input type="text" id="githubRepo" class="config-input" placeholder="Repository 이름 (예: daily-tasks)" value="">
+        </div>
+        <div class="config-row">
+            <input type="password" id="githubToken" class="config-input" placeholder="GitHub Personal Access Token">
+            <button class="config-btn" onclick="saveGitHubConfig()">설정 저장</button>
+            <button class="config-btn" onclick="testConnection()">연결 테스트</button>
+        </div>
+        <div class="sync-status">
+            <div class="status-indicator" id="statusIndicator"></div>
+            <div class="status-text" id="statusText">GitHub 설정이 필요합니다</div>
+        </div>
+    </div>
+
 
     <script>
         const tasks = [
@@ -791,6 +793,7 @@
                     btn.classList.add('active');
                 }
             });
+            
             
             updateTheme();
             await createCalendar();
