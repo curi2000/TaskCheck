@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>골프 연습 루틴</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 20px;
+            background-color: #f0f8ff;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2d5016;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .exercise-guide {
+            background-color: white;
+            border: 2px solid #2d5016;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .guide-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        
+        .guide-section {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #2d5016;
+        }
+        
+        .guide-section h4 {
+            margin: 0 0 10px 0;
+            color: #2d5016;
+            font-size: 16px;
+        }
+        
+        .guide-link {
+            display: block;
+            color: #3498db;
+            text-decoration: none;
+            padding: 5px 0;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+        
+        .guide-link:hover {
+            color: #2980b9;
+            text-decoration: underline;
+        }
+        
+        .guide-text {
+            display: block;
+            color: #666;
+            padding: 5px 0;
+            font-size: 14px;
+        }
+
+        /* 3. 오늘 루틴 섹션 스타일 */
+        .today-routine {
+            background-color: white;
+            border: 2px solid #2d5016;
+            border-radius: 8px;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .routine-header {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2d5016;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .routine-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .exercise-item {
+            font-size: 14px;
+            margin: 8px 0;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid #ddd;
+        }
+        
+        .exercise-item.strength { background-color: #fce7e7; color: #e74c3c; border-color: #e74c3c; }
+        .exercise-item.flexibility { background-color: #e7f4fc; color: #3498db; border-color: #3498db; }
+        .exercise-item.golf-basic { background-color: #e8f9e8; color: #27ae60; border-color: #27ae60; }
+
+        .exercise-item.completed {
+            opacity: 0.6;
+            text-decoration: line-through;
+            background-color: #f0f0f0;
+            color: #888;
+        }
+
+        .exercise-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        @media (max-width: 768px) {
+            .guide-links {
+                grid-template-columns: 1fr;
+            }
+            .exercise-item {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="title">🏌️ 골프 연습 루틴 ⛳</div>
+        <div class="subtitle">오늘의 루틴을 완료하고 체크하세요!</div>
+    </div>
+
+    <div class="exercise-guide">
+        <h3 style="text-align: center; color: #2d5016; margin-bottom: 15px;">📋 운동법 가이드</h3>
+        <div class="guide-links">
+            <div class="guide-section">
+                <h4>💪 근력 강화</h4>
+                <a href="https://www.youtube.com/shorts/1AibOpQgCQk" target="_blank" class="guide-link">
+                    🏋️ 스쿼트 운동법
+                </a>
+                <a href="https://planfit.ai/ko/exercise/push-up" target="_blank" class="guide-link">
+                    👐 푸쉬업 자세와 팁
+                </a>
+                <a href="https://planfit.ai/ko/exercise/plank" target="_blank" class="guide-link">
+                    🏃 플랭크 올바른 운동법
+                </a>
+                <a href="https://www.youtube.com/shorts/IONcAuMbyZ8" target="_blank" class="guide-link">
+                    🌉 브릿지: 하체와 허리 근력 강화
+                </a>                
+            </div>
+            <div class="guide-section">
+                <h4>🤸 유연성 운동</h4>
+                <a href="https://www.youtube.com/shorts/L_7gSEmY0ZE" target="_blank" class="guide-link">
+                    🔄 어깨허리 회전: 스윙 가동범위 확대
+                </a>
+                <a href="https://www.youtube.com/shorts/HSC3847R-aE" target="_blank" class="guide-link">
+                    🦵 햄스트링 스트레칭: 하체 안정성 향상
+                </a>
+                <a href="https://www.youtube.com/shorts/4S-0Pbkxv3Y" target="_blank" class="guide-link">
+                    🌀 흉추 회전: 상체 회전력 강화
+                </a>
+            </div>
+            <div class="guide-section">
+                <h4>⛳ 기초 골프 동작</h4>
+                <a href="https://www.youtube.com/shorts/nDzlm5klugo" target="_blank" class="guide-link">
+                    ✋ 그립 연습: 안정적인 잡기
+                </a>                
+                <a href="https://www.youtube.com/shorts/RauvtwUssDM" target="_blank" class="guide-link">
+                    🎯 어드레스 자세 가이드
+                </a>
+                <a href="https://www.youtube.com/shorts/lsBVN9qm7Dk" target="_blank" class="guide-link">
+                    ⛳ 하프스윙 마스터 가이드
+                </a>
+                <a href="https://www.youtube.com/shorts/43K9f-QUMSY" target="_blank" class="guide-link">
+                    🏌️ 풀스윙 단계별 가이드
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="today-routine">
+        <div class="routine-header" id="routineHeader"></div>
+        <ul class="routine-list" id="routineList">
+            </ul>
+    </div>
+
+    <script>
+        // 4. 운동 가이드와 내용, 항목을 쉽게 수정할 수 있도록 상세 주석 추가
+        
+        // ** 운동 루틴 데이터 정의 **
+        // 요일에 따라 다른 운동을 할 수 있도록 배열로 구성했습니다.
+        // weekDay: 1(월), 2(화), 3(수), 4(목), 5(금), 6(토), 0(일)
+        // items: 해당 요일에 할 운동 항목들의 배열
+        const exerciseData = [
+            // 일요일 (weekDay: 0) - 휴식일
+            {
+                weekDay: 0,
+                name: "휴식일",
+                items: [
+                    { name: "가벼운 산책 또는 스트레칭", type: "flexibility" }
+                ]
+            },
+            // 월, 화, 목, 금요일 (weekDay: 1, 2, 4, 5) - 일반적인 운동 루틴
+            {
+                weekDay: [1, 2, 4, 5],
+                name: "일반 골프 루틴",
+                items: [
+                    { name: "스쿼트 15회×2", type: "strength" },
+                    { name: "푸쉬업 10-15회×2", type: "strength" },
+                    { name: "플랭크 30초×2", type: "strength" },
+                    { name: "브릿지 15회×2", type: "strength" },
+                    { name: "어깨허리 회전 스트레칭", type: "flexibility" },
+                    { name: "햄스트링 스트레칭 30초×2", type: "flexibility" },
+                    { name: "흉추 회전운동 좌우 10회", type: "flexibility" },
+                    { name: "골프채 그립 연습 1분", type: "golf-basic" },
+                    { name: "어드레스 자세 5회", type: "golf-basic" },
+                    { name: "하프스윙 10회×2", type: "golf-basic" },
+                    { name: "풀스윙 모션 10회", type: "golf-basic" }
+                ]
+            },
+            // 수요일 (weekDay: 3) - 가벼운 운동 루틴
+            {
+                weekDay: 3,
+                name: "가벼운 골프 루틴",
+                items: [
+                    { name: "가벼운 스쿼트 10회×2", type: "strength" },
+                    { name: "플랭크 20초×2", type: "strength" },
+                    { name: "전신 스트레칭", type: "flexibility" },
+                    { name: "어깨허리 회전 스트레칭", type: "flexibility" },
+                    { name: "골프채 그립 연습 1분", type: "golf-basic" },
+                    { name: "어드레스 자세 5회", type: "golf-basic" }
+                ]
+            },
+            // 토요일 (weekDay: 6) - 종합 훈련 루틴
+            {
+                weekDay: 6,
+                name: "주말 종합 훈련",
+                items: [
+                    { name: "스쿼트 15회×3", type: "strength" },
+                    { name: "푸쉬업 15회×3", type: "strength" },
+                    { name: "플랭크 45초×2", type: "strength" },
+                    { name: "브릿지 15회×3", type: "strength" },
+                    { name: "어깨허리 회전 스트레칭", type: "flexibility" },
+                    { name: "햄스트링 스트레칭 45초×2", type: "flexibility" },
+                    { name: "흉추 회전운동 좌우 15회", type: "flexibility" },
+                    { name: "골프채 그립 연습 2분", type: "golf-basic" },
+                    { name: "어드레스 자세 10회", type: "golf-basic" },
+                    { name: "하프스윙 15회×3", type: "golf-basic" },
+                    { name: "풀스윙 모션 15회", type: "golf-basic" }
+                ]
+            }
+        ];
+
+        // ** 함수 정의 **
+        // 페이지 로드 시 오늘 날짜의 루틴을 가져와서 화면에 표시하는 함수입니다.
+        function displayTodayRoutine() {
+            const today = new Date();
+            const dayOfWeek = today.getDay(); // 0(일요일) ~ 6(토요일)
+            const todayDate = `${today.getMonth() + 1}월 ${today.getDate()}일`;
+            const weekDays = ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"];
+            
+            document.getElementById('routineHeader').textContent = `${todayDate} ${weekDays[dayOfWeek]} - 오늘의 루틴`;
+            
+            // 오늘 요일에 맞는 운동 루틴 찾기
+            const todayRoutine = exerciseData.find(routine => {
+                if (Array.isArray(routine.weekDay)) {
+                    return routine.weekDay.includes(dayOfWeek);
+                } else {
+                    return routine.weekDay === dayOfWeek;
+                }
+            });
+
+            const routineList = document.getElementById('routineList');
+            routineList.innerHTML = ''; // 기존 목록 초기화
+            
+            // LocalStorage에서 오늘 날짜의 완료 상태 가져오기
+            const todayKey = today.toLocaleDateString();
+            const savedTodayProgress = JSON.parse(localStorage.getItem(todayKey) || '{}');
+            
+            if (todayRoutine) {
+                todayRoutine.items.forEach((exercise, index) => {
+                    const isCompleted = savedTodayProgress[index] || false;
+                    const li = document.createElement('li');
+                    li.className = `exercise-item ${exercise.type} ${isCompleted ? 'completed' : ''}`;
+                    li.textContent = exercise.name;
+                    // 클릭 이벤트 추가
+                    li.onclick = () => toggleExercise(todayKey, index, li);
+                    routineList.appendChild(li);
+                });
+            } else {
+                routineList.innerHTML = '<li>오늘의 루틴이 없습니다.</li>';
+            }
+        }
+        
+        // 운동 항목을 클릭했을 때 완료 상태를 토글하고 LocalStorage에 저장하는 함수입니다.
+        function toggleExercise(dateKey, index, element) {
+            const savedProgress = JSON.parse(localStorage.getItem(dateKey) || '{}');
+            
+            if (element.classList.contains('completed')) {
+                element.classList.remove('completed');
+                delete savedProgress[index];
+            } else {
+                element.classList.add('completed');
+                savedProgress[index] = true;
+            }
+            
+            localStorage.setItem(dateKey, JSON.stringify(savedProgress));
+        }
+
+        // 페이지 로드 시 함수 실행
+        window.onload = displayTodayRoutine;
+    </script>
+</body>
+</html>
