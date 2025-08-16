@@ -93,48 +93,122 @@
             margin-bottom: 15px;
             text-align: center;
         }
+
+        .week-info {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #f0f8ff;
+            border-radius: 5px;
+            color: #2d5016;
+            font-weight: bold;
+        }
+        
+        .routine-groups {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        
+        .routine-group {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .routine-group.strength {
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .routine-group.flexibility {
+            border-left: 4px solid #3498db;
+        }
+        
+        .routine-group.golf-basic {
+            border-left: 4px solid #27ae60;
+        }
+        
+        .routine-group h4 {
+            margin: 0 0 15px 0;
+            font-size: 16px;
+            text-align: center;
+        }
+        
+        .routine-group.strength h4 { color: #e74c3c; }
+        .routine-group.flexibility h4 { color: #3498db; }
+        .routine-group.golf-basic h4 { color: #27ae60; }
         
         .routine-list {
             list-style: none;
             padding: 0;
-            max-width: 200px;
+            margin: 0;
         }
         
         .exercise-item {
-            font-size: 14px;
             margin: 8px 0;
-            padding: 8px 12px;
-            border-radius: 5px;
+            padding: 12px;
+            border-radius: 8px;
             cursor: pointer;
             transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 10px;
             border: 1px solid #ddd;
+            text-align: center;
         }
         
-        .exercise-item.strength { background-color: #fce7e7; color: #e74c3c; border-color: #e74c3c; }
-        .exercise-item.flexibility { background-color: #e7f4fc; color: #3498db; border-color: #3498db; }
-        .exercise-item.golf-basic { background-color: #e8f9e8; color: #27ae60; border-color: #27ae60; }
+        .exercise-name {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        
+        .exercise-reps {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .exercise-item.strength { 
+            background-color: #fce7e7; 
+            border-color: #e74c3c; 
+        }
+        .exercise-item.strength .exercise-name { color: #e74c3c; }
+        
+        .exercise-item.flexibility { 
+            background-color: #e7f4fc; 
+            border-color: #3498db; 
+        }
+        .exercise-item.flexibility .exercise-name { color: #3498db; }
+        
+        .exercise-item.golf-basic { 
+            background-color: #e8f9e8; 
+            border-color: #27ae60; 
+        }
+        .exercise-item.golf-basic .exercise-name { color: #27ae60; }
 
         .exercise-item.completed {
             opacity: 0.6;
             text-decoration: line-through;
             background-color: #f0f0f0;
+            border-color: #ccc;
+        }
+        
+        .exercise-item.completed .exercise-name,
+        .exercise-item.completed .exercise-reps {
             color: #888;
         }
 
-        .exercise-item:hover {
+        .exercise-item:hover:not(.completed) {
             transform: translateY(-2px);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
 
         @media (max-width: 768px) {
-            .guide-links {
+            .guide-links, .routine-groups {
                 grid-template-columns: 1fr;
             }
-            .exercise-item {
-                font-size: 12px;
+            .exercise-name {
+                font-size: 13px;
+            }
+            .exercise-reps {
+                font-size: 11px;
             }
         }
     </style>
@@ -195,24 +269,35 @@
     
     <div class="today-routine">
         <div class="routine-header" id="routineHeader"></div>
-        <ul class="routine-list" id="routineList">
-            </ul>
+        <div class="week-info" id="weekInfo"></div>
+        <div class="routine-groups" id="routineGroups">
+            <div class="routine-group strength">
+                <h4>💪 근력 강화</h4>
+                <ul class="routine-list" id="strengthList"></ul>
+            </div>
+            <div class="routine-group flexibility">
+                <h4>🤸 유연성 운동</h4>
+                <ul class="routine-list" id="flexibilityList"></ul>
+            </div>
+            <div class="routine-group golf-basic">
+                <h4>⛳ 골프 기초</h4>
+                <ul class="routine-list" id="golfBasicList"></ul>
+            </div>
+        </div>
     </div>
 
     <script>
-        // 4. 운동 가이드와 내용, 항목을 쉽게 수정할 수 있도록 상세 주석 추가
+        // 시작 날짜 설정 (오늘부터 시작)
+        const START_DATE = new Date('2025-08-15'); // 실제 시작 날짜로 변경하세요
         
-        // ** 운동 루틴 데이터 정의 **
-        // 요일에 따라 다른 운동을 할 수 있도록 배열로 구성했습니다.
-        // weekDay: 1(월), 2(화), 3(수), 4(목), 5(금), 6(토), 0(일)
-        // items: 해당 요일에 할 운동 항목들의 배열
+        // 운동 루틴 데이터 정의 (점진적 증가 포함)
         const exerciseData = [
             // 일요일 (weekDay: 0) - 휴식일
             {
                 weekDay: 0,
                 name: "휴식일",
                 items: [
-                    { name: "가벼운 산책 또는 스트레칭", type: "flexibility" }
+                    { name: "가벼운 산책", reps: "10-15분", type: "flexibility", progressType: "time", baseValue: 10, increment: 1 }
                 ]
             },
             // 월, 화, 목, 금요일 (weekDay: 1, 2, 4, 5) - 일반적인 운동 루틴
@@ -220,17 +305,20 @@
                 weekDay: [1, 2, 4, 5],
                 name: "일반 골프 루틴",
                 items: [
-                    { name: "스쿼트 15회×2", type: "strength" },
-                    { name: "푸쉬업 10-15회×2", type: "strength" },
-                    { name: "플랭크 30초×2", type: "strength" },
-                    { name: "브릿지 15회×2", type: "strength" },
-                    { name: "어깨허리 회전 스트레칭", type: "flexibility" },
-                    { name: "햄스트링 스트레칭 30초×2", type: "flexibility" },
-                    { name: "흉추 회전운동 좌우 10회", type: "flexibility" },
-                    { name: "골프채 그립 연습 1분", type: "golf-basic" },
-                    { name: "어드레스 자세 5회", type: "golf-basic" },
-                    { name: "하프스윙 10회×2", type: "golf-basic" },
-                    { name: "풀스윙 모션 10회", type: "golf-basic" }
+                    // 근력 운동
+                    { name: "스쿼트", reps: "10회×2", type: "strength", progressType: "reps", baseValue: 10, increment: 1, sets: 2 },
+                    { name: "푸쉬업", reps: "5회×2", type: "strength", progressType: "reps", baseValue: 5, increment: 1, sets: 2 },
+                    { name: "플랭크", reps: "20초×2", type: "strength", progressType: "time", baseValue: 20, increment: 5, sets: 2 },
+                    { name: "브릿지", reps: "10회×2", type: "strength", progressType: "reps", baseValue: 10, increment: 1, sets: 2 },
+                    // 유연성 운동
+                    { name: "어깨허리 회전", reps: "좌우 8회", type: "flexibility", progressType: "reps", baseValue: 8, increment: 1, sets: 1 },
+                    { name: "햄스트링 스트레칭", reps: "20초×2", type: "flexibility", progressType: "time", baseValue: 20, increment: 5, sets: 2 },
+                    { name: "흉추 회전운동", reps: "좌우 8회", type: "flexibility", progressType: "reps", baseValue: 8, increment: 1, sets: 1 },
+                    // 골프 기초
+                    { name: "그립 연습", reps: "30초", type: "golf-basic", progressType: "time", baseValue: 30, increment: 10, sets: 1 },
+                    { name: "어드레스 자세", reps: "3회", type: "golf-basic", progressType: "reps", baseValue: 3, increment: 1, sets: 1 },
+                    { name: "하프스윙", reps: "8회×2", type: "golf-basic", progressType: "reps", baseValue: 8, increment: 1, sets: 2 },
+                    { name: "풀스윙 모션", reps: "5회", type: "golf-basic", progressType: "reps", baseValue: 5, increment: 1, sets: 1 }
                 ]
             },
             // 수요일 (weekDay: 3) - 가벼운 운동 루틴
@@ -238,12 +326,12 @@
                 weekDay: 3,
                 name: "가벼운 골프 루틴",
                 items: [
-                    { name: "가벼운 스쿼트 10회×2", type: "strength" },
-                    { name: "플랭크 20초×2", type: "strength" },
-                    { name: "전신 스트레칭", type: "flexibility" },
-                    { name: "어깨허리 회전 스트레칭", type: "flexibility" },
-                    { name: "골프채 그립 연습 1분", type: "golf-basic" },
-                    { name: "어드레스 자세 5회", type: "golf-basic" }
+                    { name: "가벼운 스쿼트", reps: "8회×2", type: "strength", progressType: "reps", baseValue: 8, increment: 1, sets: 2 },
+                    { name: "플랭크", reps: "15초×2", type: "strength", progressType: "time", baseValue: 15, increment: 3, sets: 2 },
+                    { name: "전신 스트레칭", reps: "5분", type: "flexibility", progressType: "time", baseValue: 5, increment: 1, sets: 1 },
+                    { name: "어깨허리 회전", reps: "좌우 6회", type: "flexibility", progressType: "reps", baseValue: 6, increment: 1, sets: 1 },
+                    { name: "그립 연습", reps: "30초", type: "golf-basic", progressType: "time", baseValue: 30, increment: 5, sets: 1 },
+                    { name: "어드레스 자세", reps: "3회", type: "golf-basic", progressType: "reps", baseValue: 3, increment: 1, sets: 1 }
                 ]
             },
             // 토요일 (weekDay: 6) - 종합 훈련 루틴
@@ -251,30 +339,71 @@
                 weekDay: 6,
                 name: "주말 종합 훈련",
                 items: [
-                    { name: "스쿼트 15회×3", type: "strength" },
-                    { name: "푸쉬업 15회×3", type: "strength" },
-                    { name: "플랭크 45초×2", type: "strength" },
-                    { name: "브릿지 15회×3", type: "strength" },
-                    { name: "어깨허리 회전 스트레칭", type: "flexibility" },
-                    { name: "햄스트링 스트레칭 45초×2", type: "flexibility" },
-                    { name: "흉추 회전운동 좌우 15회", type: "flexibility" },
-                    { name: "골프채 그립 연습 2분", type: "golf-basic" },
-                    { name: "어드레스 자세 10회", type: "golf-basic" },
-                    { name: "하프스윙 15회×3", type: "golf-basic" },
-                    { name: "풀스윙 모션 15회", type: "golf-basic" }
+                    { name: "스쿼트", reps: "12회×3", type: "strength", progressType: "reps", baseValue: 12, increment: 1, sets: 3 },
+                    { name: "푸쉬업", reps: "8회×3", type: "strength", progressType: "reps", baseValue: 8, increment: 1, sets: 3 },
+                    { name: "플랭크", reps: "30초×2", type: "strength", progressType: "time", baseValue: 30, increment: 5, sets: 2 },
+                    { name: "브릿지", reps: "12회×3", type: "strength", progressType: "reps", baseValue: 12, increment: 1, sets: 3 },
+                    { name: "어깨허리 회전", reps: "좌우 10회", type: "flexibility", progressType: "reps", baseValue: 10, increment: 1, sets: 1 },
+                    { name: "햄스트링 스트레칭", reps: "30초×2", type: "flexibility", progressType: "time", baseValue: 30, increment: 5, sets: 2 },
+                    { name: "흉추 회전운동", reps: "좌우 10회", type: "flexibility", progressType: "reps", baseValue: 10, increment: 1, sets: 1 },
+                    { name: "그립 연습", reps: "1분", type: "golf-basic", progressType: "time", baseValue: 60, increment: 15, sets: 1 },
+                    { name: "어드레스 자세", reps: "5회", type: "golf-basic", progressType: "reps", baseValue: 5, increment: 1, sets: 1 },
+                    { name: "하프스윙", reps: "12회×3", type: "golf-basic", progressType: "reps", baseValue: 12, increment: 1, sets: 3 },
+                    { name: "풀스윙 모션", reps: "10회", type: "golf-basic", progressType: "reps", baseValue: 10, increment: 1, sets: 1 }
                 ]
             }
         ];
 
-        // ** 함수 정의 **
-        // 페이지 로드 시 오늘 날짜의 루틴을 가져와서 화면에 표시하는 함수입니다.
+        // 주차 계산 함수
+        function getWeekNumber() {
+            const today = new Date();
+            const diffTime = today.getTime() - START_DATE.getTime();
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            return Math.floor(diffDays / 7) + 1;
+        }
+
+        // 운동량 계산 함수 (점진적 증가)
+        function calculateProgress(exercise, weekNumber) {
+            const progressWeeks = Math.max(0, weekNumber - 1);
+            let currentValue = exercise.baseValue + (exercise.increment * progressWeeks);
+            
+            // 최대값 제한 (안전을 위해)
+            if (exercise.progressType === 'reps') {
+                currentValue = Math.min(currentValue, exercise.baseValue * 3);
+            } else if (exercise.progressType === 'time') {
+                currentValue = Math.min(currentValue, exercise.baseValue * 2.5);
+            }
+            
+            let displayText = '';
+            if (exercise.progressType === 'time') {
+                if (currentValue >= 60) {
+                    const minutes = Math.floor(currentValue / 60);
+                    const seconds = currentValue % 60;
+                    displayText = seconds > 0 ? `${minutes}분 ${seconds}초` : `${minutes}분`;
+                } else {
+                    displayText = `${currentValue}초`;
+                }
+            } else {
+                displayText = `${currentValue}회`;
+            }
+            
+            if (exercise.sets && exercise.sets > 1) {
+                displayText += `×${exercise.sets}`;
+            }
+            
+            return displayText;
+        }
+
+        // 페이지 로드 시 오늘 날짜의 루틴을 가져와서 화면에 표시하는 함수
         function displayTodayRoutine() {
             const today = new Date();
-            const dayOfWeek = today.getDay(); // 0(일요일) ~ 6(토요일)
+            const dayOfWeek = today.getDay();
             const todayDate = `${today.getMonth() + 1}월 ${today.getDate()}일`;
             const weekDays = ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"];
+            const currentWeek = getWeekNumber();
             
             document.getElementById('routineHeader').textContent = `${todayDate} ${weekDays[dayOfWeek]} - 오늘의 루틴`;
+            document.getElementById('weekInfo').textContent = `🗓️ ${currentWeek}주차 프로그램 (시작일: ${START_DATE.getMonth() + 1}/${START_DATE.getDate()})`;
             
             // 오늘 요일에 맞는 운동 루틴 찾기
             const todayRoutine = exerciseData.find(routine => {
@@ -285,8 +414,14 @@
                 }
             });
 
-            const routineList = document.getElementById('routineList');
-            routineList.innerHTML = ''; // 기존 목록 초기화
+            // 각 그룹별 리스트 초기화
+            const strengthList = document.getElementById('strengthList');
+            const flexibilityList = document.getElementById('flexibilityList');
+            const golfBasicList = document.getElementById('golfBasicList');
+            
+            strengthList.innerHTML = '';
+            flexibilityList.innerHTML = '';
+            golfBasicList.innerHTML = '';
             
             // LocalStorage에서 오늘 날짜의 완료 상태 가져오기
             const todayKey = today.toLocaleDateString();
@@ -297,17 +432,32 @@
                     const isCompleted = savedTodayProgress[index] || false;
                     const li = document.createElement('li');
                     li.className = `exercise-item ${exercise.type} ${isCompleted ? 'completed' : ''}`;
-                    li.textContent = exercise.name;
+                    
+                    const progressReps = calculateProgress(exercise, currentWeek);
+                    
+                    li.innerHTML = `
+                        <div class="exercise-name">${exercise.name}</div>
+                        <div class="exercise-reps">${progressReps}</div>
+                    `;
+                    
                     // 클릭 이벤트 추가
                     li.onclick = () => toggleExercise(todayKey, index, li);
-                    routineList.appendChild(li);
+                    
+                    // 운동 유형에 따라 적절한 리스트에 추가
+                    if (exercise.type === 'strength') {
+                        strengthList.appendChild(li);
+                    } else if (exercise.type === 'flexibility') {
+                        flexibilityList.appendChild(li);
+                    } else if (exercise.type === 'golf-basic') {
+                        golfBasicList.appendChild(li);
+                    }
                 });
             } else {
-                routineList.innerHTML = '<li>오늘의 루틴이 없습니다.</li>';
+                strengthList.innerHTML = '<li>오늘의 루틴이 없습니다.</li>';
             }
         }
         
-        // 운동 항목을 클릭했을 때 완료 상태를 토글하고 LocalStorage에 저장하는 함수입니다.
+        // 운동 항목을 클릭했을 때 완료 상태를 토글하고 LocalStorage에 저장하는 함수
         function toggleExercise(dateKey, index, element) {
             const savedProgress = JSON.parse(localStorage.getItem(dateKey) || '{}');
             
