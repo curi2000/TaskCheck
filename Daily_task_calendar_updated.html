@@ -228,9 +228,10 @@
             right: 20px;
             z-index: 1000;
             display: flex;
+            flex-direction: column;
             gap: 10px;
             background-color: rgba(255, 255, 255, 0.95);
-            padding: 10px;
+            padding: 15px;
             border-radius: 10px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             backdrop-filter: blur(5px);
@@ -243,17 +244,12 @@
             cursor: pointer;
             font-weight: bold;
             transition: all 0.3s ease;
+            font-size: 12px;
         }
         
         .save-btn {
             background-color: #38a169;
             color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: bold;
         }
         
         .save-btn:hover {
@@ -264,17 +260,30 @@
         .load-btn {
             background-color: #3182ce;
             color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: bold;
         }
         
         .load-btn:hover {
             background-color: #2c5282;
             transform: translateY(-2px);
+        }
+
+        .clear-btn {
+            background-color: #e53e3e;
+            color: white;
+        }
+        
+        .clear-btn:hover {
+            background-color: #c53030;
+            transform: translateY(-2px);
+        }
+        
+        .auto-save-info {
+            font-size: 10px;
+            color: #718096;
+            text-align: center;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e2e8f0;
         }
         
         .file-input {
@@ -306,13 +315,10 @@
                 gap: 15px;
             }
             
-            /* 모바일에서는 버튼을 상단 중앙에 고정 */
             .file-controls {
                 top: 10px;
                 right: 10px;
-                left: 10px;
-                justify-content: center;
-                padding: 8px;
+                padding: 10px;
             }
             
             .file-controls button {
@@ -343,9 +349,14 @@
     </div>    
 
     <div class="file-controls">
-        <button class="save-btn" onclick="saveProgress()">💾 즉시저장</button>
-        <button class="load-btn" onclick="document.getElementById('fileInput').click()">📂 파일선택</button>
-        <input type="file" id="fileInput" class="file-input" accept=".json" onchange="loadProgress(event)">
+        <button class="save-btn" onclick="saveProgressToFile()">💾 파일로 저장</button>
+        <button class="load-btn" onclick="document.getElementById('fileInput').click()">📂 파일에서 불러오기</button>
+        <button class="clear-btn" onclick="clearAllProgress()">🗑️ 모든 데이터 삭제</button>
+        <input type="file" id="fileInput" class="file-input" accept=".json" onchange="loadProgressFromFile(event)">
+        <div class="auto-save-info">
+            💾 자동저장 활성화<br>
+            변경사항이 자동으로 저장됩니다
+        </div>
     </div>
 
     <div class="calendar" id="calendar">
@@ -380,8 +391,36 @@
         const endDate = new Date(2026, 0, 14); // 2026년 1월 14일
         const today = new Date();
 
-        // 진행사항을 저장할 객체 (파일 저장용)
+        // 진행사항을 저장할 객체 (localStorage와 동기화)
         let taskProgress = {};
+
+        // localStorage 키
+        const STORAGE_KEY = 'dailyTaskProgress';
+
+        // localStorage에서 데이터 불러오기
+        function loadProgressFromStorage() {
+            try {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                if (stored) {
+                    taskProgress = JSON.parse(stored);
+                    console.log('localStorage에서 데이터를 불러왔습니다.');
+                }
+            } catch (error) {
+                console.error('localStorage 데이터 불러오기 오류:', error);
+                taskProgress = {};
+            }
+        }
+
+        // localStorage에 데이터 저장하기
+        function saveProgressToStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(taskProgress));
+                console.log('localStorage에 데이터가 저장되었습니다.');
+            } catch (error) {
+                console.error('localStorage 저장 오류:', error);
+                alert('데이터 저장 중 오류가 발생했습니다. 브라우저의 저장 공간이 부족할 수 있습니다.');
+            }
+        }
 
         // 월별 테마 색상 정의
         const monthThemes = {
@@ -560,6 +599,9 @@
             const totalItems = dayCell.querySelectorAll('.task-item').length;
             completionCounter.textContent = `${completedItems}/${totalItems}`;
             
+            // localStorage에 자동 저장
+            saveProgressToStorage();
+            
             updateMonthProgress();
         }
 
@@ -609,19 +651,25 @@
             });            
         }
 
-        // 파일 저장 기능
-        function saveProgress() {
+        // 파일로 저장 기능 (기존 기능 유지)
+        function saveProgressToFile() {
             const dataStr = JSON.stringify(taskProgress, null, 2);
             const dataBlob = new Blob([dataStr], {type: 'application/json'});
             
             const link = document.createElement('a');
             link.href = URL.createObjectURL(dataBlob);
-            link.download = 'daily_task_progress.json';
+            
+            // 현재 날짜로 파일명 생성
+            const today = new Date();
+            const dateStr = today.toISOString().split('T')[0];
+            link.download = `daily_task_progress_${dateStr}.json`;
+            
             link.click();
+            alert('파일로 저장이 완료되었습니다.');
         }
 
-        // 파일 불러오기 기능
-        function loadProgress(event) {
+        // 파일에서 불러오기 기능 (기존 기능 유지)
+        function loadProgressFromFile(event) {
             const file = event.target.files[0];
             if (!file) return;
             
@@ -630,18 +678,43 @@
                 try {
                     const data = JSON.parse(e.target.result);
                     taskProgress = data;
+                    
+                    // localStorage에도 저장
+                    saveProgressToStorage();
+                    
                     createCalendar();
                     updateMonthProgress();
-                    alert('진행사항이 성공적으로 불러와졌습니다.');
+                    alert('파일에서 데이터를 성공적으로 불러왔습니다.');
                 } catch (error) {
                     alert('파일을 읽는 중 오류가 발생했습니다.');
+                    console.error('파일 읽기 오류:', error);
                 }
             };
             reader.readAsText(file);
+            
+            // 파일 입력 초기화 (같은 파일을 다시 선택할 수 있도록)
+            event.target.value = '';
+        }
+
+        // 모든 데이터 삭제 기능
+        function clearAllProgress() {
+            if (confirm('정말로 모든 진행사항을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) {
+                taskProgress = {};
+                
+                // localStorage에서도 삭제
+                localStorage.removeItem(STORAGE_KEY);
+                
+                createCalendar();
+                updateMonthProgress();
+                alert('모든 데이터가 삭제되었습니다.');
+            }
         }
 
         // 페이지 로드 시 초기화
         document.addEventListener('DOMContentLoaded', function() {
+            // localStorage에서 데이터 불러오기
+            loadProgressFromStorage();
+            
             const todayMonth = today.getMonth() + 1;
             const todayYear = today.getFullYear();
             
@@ -659,6 +732,8 @@
             updateTheme();
             createCalendar();
             updateMonthProgress();
+            
+            console.log('매일 업무 체크리스트가 초기화되었습니다. 자동저장이 활성화되었습니다.');
         });
     </script>
 </body>
