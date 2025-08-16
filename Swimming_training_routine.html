@@ -173,3 +173,135 @@
                 <a href="https://www.youtube.com/watch?v=n030qdOt6Zo&list=PLhkZVYEI4DwOzDtwQ3BYgJsvR3-JHyjXj&index=19" target="_blank" class="guide-link">
                     📹 평영 스트로크
                 </a>
+                <a href="https://www.youtube.com/watch?v=VaLg-SKvfDg&list=PLhkZVYEI4DwOzDtwQ3BYgJsvR3-JHyjXj&index=20" target="_blank" class="guide-link">
+                    📹 배영 스트로크
+                </a>
+                <a href="https://www.youtube.com/watch?v=zyWs0LbkoRc&list=PLhkZVYEI4DwOzDtwQ3BYgJsvR3-JHyjXj&index=33" target="_blank" class="guide-link">
+                    📹 접영 스트로크
+                </a>
+                <a href="https://www.youtube.com/watch?v=wfhCP7Xkej8&list=PLhkZVYEI4DwOzDtwQ3BYgJsvR3-JHyjXj&index=38" target="_blank" class="guide-link">
+                    📹 플립턴
+                </a>
+                <a href="https://www.youtube.com/watch?v=pP7ZI0pLc2A&list=PLhkZVYEI4DwOzDtwQ3BYgJsvR3-JHyjXj&index=11" target="_blank" class="guide-link">
+                    📹 이미지 트레이닝
+                </a>
+            </div>
+            <div class="guide-section">
+                <h4>💧 수영 드릴</h4>
+                <a href="https://www.youtube.com/watch?v=vH9Ig05MlrM&t=0m47s" target="_blank" class="guide-link">
+                    📹 자유형 킥 드릴
+                </a>
+                <a href="https://www.youtube.com/watch?v=vH9Ig05MlrM&t=1m22s" target="_blank" class="guide-link">
+                    📹 자유형 스피드 드릴
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="today-routine">
+        <div class="routine-header" id="routineHeader"></div>
+        <ul class="routine-list" id="routineList">
+            </ul>
+    </div>
+
+    <script>
+        // ** 운동 루틴 데이터 정의 **
+        // 요일에 따라 다른 운동을 할 수 있도록 배열로 구성했습니다.
+        // weekDay: 1(월), 2(화), 3(수), 4(목), 5(금), 6(토), 0(일)
+        // items: 해당 요일에 할 운동 항목들의 배열
+        const exerciseData = [
+            // 일요일 (weekDay: 0) - 휴식일
+            {
+                weekDay: 0,
+                name: "휴식일",
+                items: [
+                    { name: "가벼운 산책 또는 스트레칭 (10분)", type: "flexibility" }
+                ]
+            },
+            // 월, 수, 금요일 (weekDay: 1, 3, 5) - 영법 및 코어 강화 루틴
+            {
+                weekDay: [1, 3, 5],
+                name: "영법 & 코어 강화 루틴",
+                items: [
+                    { name: "가슴 & 어깨 스트레칭", type: "flexibility" },
+                    { name: "플랭크 (30초 x 3세트)", type: "core" },
+                    { name: "자유형 스트로크 이미지 트레이닝", type: "swimming-stroke" },
+                    { name: "평영 스트로크 이미지 트레이닝", type: "swimming-stroke" },
+                    { name: "TheraBand 어깨 안정화 운동", type: "strength" }
+                ]
+            },
+            // 화, 목, 토요일 (weekDay: 2, 4, 6) - 드릴 및 기술 루틴
+            {
+                weekDay: [2, 4, 6],
+                name: "드릴 & 기술 루틴",
+                items: [
+                    { name: "발목 유연성 스트레칭", type: "flexibility" },
+                    { name: "자유형 킥 드릴 연습", type: "drill" },
+                    { name: "자유형 스피드 드릴 연습", type: "drill" },
+                    { name: "접영 스트로크 이미지 트레이닝", type: "swimming-stroke" },
+                    { name: "플립턴 이미지 트레이닝", type: "technique" }
+                ]
+            }
+        ];
+
+        // ** 함수 정의 **
+        // 페이지 로드 시 오늘 날짜의 루틴을 가져와서 화면에 표시하는 함수입니다.
+        function displayTodayRoutine() {
+            const today = new Date();
+            const dayOfWeek = today.getDay(); // 0(일요일) ~ 6(토요일)
+            const todayDate = `${today.getMonth() + 1}월 ${today.getDate()}일`;
+            const weekDays = ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"];
+            
+            document.getElementById('routineHeader').textContent = `${todayDate} ${weekDays[dayOfWeek]} - 오늘의 루틴`;
+            
+            // 오늘 요일에 맞는 운동 루틴 찾기
+            const todayRoutine = exerciseData.find(routine => {
+                if (Array.isArray(routine.weekDay)) {
+                    return routine.weekDay.includes(dayOfWeek);
+                } else {
+                    return routine.weekDay === dayOfWeek;
+                }
+            });
+
+            const routineList = document.getElementById('routineList');
+            routineList.innerHTML = ''; // 기존 목록 초기화
+            
+            // LocalStorage에서 오늘 날짜의 완료 상태 가져오기
+            const todayKey = today.toLocaleDateString();
+            const savedTodayProgress = JSON.parse(localStorage.getItem(todayKey) || '{}');
+            
+            if (todayRoutine) {
+                todayRoutine.items.forEach((exercise, index) => {
+                    const isCompleted = savedTodayProgress[index] || false;
+                    const li = document.createElement('li');
+                    li.className = `exercise-item ${exercise.type} ${isCompleted ? 'completed' : ''}`;
+                    li.textContent = exercise.name;
+                    // 클릭 이벤트 추가
+                    li.onclick = () => toggleExercise(todayKey, index, li);
+                    routineList.appendChild(li);
+                });
+            } else {
+                routineList.innerHTML = '<li>오늘의 루틴이 없습니다.</li>';
+            }
+        }
+        
+        // 운동 항목을 클릭했을 때 완료 상태를 토글하고 LocalStorage에 저장하는 함수입니다.
+        function toggleExercise(dateKey, index, element) {
+            const savedProgress = JSON.parse(localStorage.getItem(dateKey) || '{}');
+            
+            if (element.classList.contains('completed')) {
+                element.classList.remove('completed');
+                delete savedProgress[index];
+            } else {
+                element.classList.add('completed');
+                savedProgress[index] = true;
+            }
+            
+            localStorage.setItem(dateKey, JSON.stringify(savedProgress));
+        }
+
+        // 페이지 로드 시 함수 실행
+        window.onload = displayTodayRoutine;
+    </script>
+</body>
+</html>
