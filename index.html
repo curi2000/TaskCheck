@@ -1,34 +1,947 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Main Page</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>통합 일일 루틴 관리</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f4f8;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1a365d;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            color: #4a5568;
+            margin-bottom: 20px;
+        }
+
+        .date-info {
+            font-size: 14px;
+            color: #718096;
+            font-style: italic;
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 2fr 0.7fr;
+            gap: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* 왼쪽 영역 - 주간 업무 체크리스트 */
+        .weekly-tasks {
+            background-color: white;
+            border: 2px solid #1a365d;
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .section-header {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1a365d;
+            margin-bottom: 15px;
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .week-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .week-btn {
+            padding: 8px 16px;
+            border: 2px solid #1a365d;
+            background-color: white;
+            color: #1a365d;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 12px;
+        }
+
+        .week-btn:hover {
+            background-color: #e2e8f0;
+            transform: translateY(-2px);
+        }
+
+        .week-btn.active {
+            background-color: #1a365d;
+            color: white;
+        }
+
+        .weekly-progress {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #e2e8f0;
+            border-radius: 5px;
+            color: #1a365d;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+        }
+
+        .day-card {
+            background-color: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px;
+            min-height: 200px;
+        }
+
+        .day-header {
+            font-weight: bold;
+            font-size: 14px;
+            color: #1a365d;
+            text-align: center;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .day-card.today {
+            border: 3px solid #4299e1;
+            background-color: #ebf8ff;
+        }
+
+        .day-card.weekend {
+            background-color: #fef5e7;
+            border-color: #f6ad55;
+        }
+
+        .task-item {
+            font-size: 9px;
+            margin: 2px 0;
+            padding: 2px 4px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid #4299e1;
+            background-color: #ebf8ff;
+            color: #1a365d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .task-item:hover {
+            transform: scale(1.02);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .task-item.completed {
+            opacity: 0.7;
+            text-decoration: line-through;
+            background-color: #c6f6d5;
+            border-left-color: #38a169;
+        }
+
+        .task-name {
+            flex: 1;
+        }
+
+        .task-time {
+            font-size: 8px;
+            color: #666;
+            margin-left: 4px;
+            font-weight: normal;
+        }
+
+        .completion-counter {
+            text-align: center;
+            font-size: 10px;
+            font-weight: bold;
+            color: #1a365d;
+            background-color: #e2e8f0;
+            padding: 2px 5px;
+            border-radius: 10px;
+            margin-top: 5px;
+        }
+
+        .weekend-placeholder {
+            text-align: center;
+            font-size: 12px;
+            color: #d69e2e;
+            font-weight: bold;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #fff8dc;
+            border: 2px dashed #f6ad55;
+            border-radius: 8px;
+        }
+
+        /* 오른쪽 영역 - 운동 루틴 */
+        .exercise-area {
+            background-color: white;
+            border: 2px solid #2d5016;
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .exercise-area .section-header {
+            color: #2d5016;
+            border-bottom-color: #e6f3e6;
+        }
+
+        .exercise-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .exercise-btn {
+            padding: 8px 16px;
+            border: 2px solid #2d5016;
+            background-color: white;
+            color: #2d5016;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 12px;
+        }
+
+        .exercise-btn:hover {
+            background-color: #e6f3e6;
+        }
+
+        .exercise-btn.active {
+            background-color: #2d5016;
+            color: white;
+        }
+
+        .routine-info {
+            text-align: center;
+            margin-bottom: 15px;
+            padding: 8px;
+            background-color: #e7f4fc;
+            border-radius: 5px;
+            color: #2d5016;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .routine-groups {
+            display: grid;
+            gap: 15px;
+        }
+
+        .routine-group {
+            background-color: #f9f9f9;
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .routine-group.warmup {
+            border-left: 4px solid #3498db;
+        }
+
+        .routine-group.main {
+            border-left: 4px solid #e74c3c;
+        }
+
+        .routine-group.cooldown {
+            border-left: 4px solid #27ae60;
+        }
+
+        .routine-group.strength {
+            border-left: 4px solid #e74c3c;
+        }
+
+        .routine-group.flexibility {
+            border-left: 4px solid #3498db;
+        }
+
+        .routine-group.golf-basic {
+            border-left: 4px solid #27ae60;
+        }
+
+        .routine-group h4 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .routine-group.warmup h4 { color: #3498db; }
+        .routine-group.main h4 { color: #e74c3c; }
+        .routine-group.cooldown h4 { color: #27ae60; }
+        .routine-group.strength h4 { color: #e74c3c; }
+        .routine-group.flexibility h4 { color: #3498db; }
+        .routine-group.golf-basic h4 { color: #27ae60; }
+
+        .routine-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .exercise-item {
+            margin: 6px 0;
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid #ddd;
+            text-align: center;
+            font-size: 11px;
+        }
+
+        .exercise-name {
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+
+        .exercise-duration {
+            font-size: 10px;
+            color: #666;
+            font-weight: normal;
+        }
+
+        .exercise-item.warmup { 
+            background-color: #e7f4fc; 
+            border-color: #3498db; 
+        }
+        .exercise-item.warmup .exercise-name { color: #3498db; }
+
+        .exercise-item.main { 
+            background-color: #fce7e7; 
+            border-color: #e74c3c; 
+        }
+        .exercise-item.main .exercise-name { color: #e74c3c; }
+
+        .exercise-item.cooldown { 
+            background-color: #e8f9e8; 
+            border-color: #27ae60; 
+        }
+        .exercise-item.cooldown .exercise-name { color: #27ae60; }
+
+        .exercise-item.strength { 
+            background-color: #fce7e7; 
+            border-color: #e74c3c; 
+        }
+        .exercise-item.strength .exercise-name { color: #e74c3c; }
+
+        .exercise-item.flexibility { 
+            background-color: #e7f4fc; 
+            border-color: #3498db; 
+        }
+        .exercise-item.flexibility .exercise-name { color: #3498db; }
+
+        .exercise-item.golf-basic { 
+            background-color: #e8f9e8; 
+            border-color: #27ae60; 
+        }
+        .exercise-item.golf-basic .exercise-name { color: #27ae60; }
+
+        .exercise-item.completed {
+            opacity: 0.6;
+            text-decoration: line-through;
+            background-color: #f0f0f0;
+            border-color: #ccc;
+        }
+
+        .exercise-item.completed .exercise-name,
+        .exercise-item.completed .exercise-duration {
+            color: #888;
+        }
+
+        .exercise-item:hover:not(.completed) {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        @media (max-width: 1200px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .days-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .day-card {
+                min-height: 150px;
+            }
+            
+            .week-btn, .exercise-btn {
+                padding: 6px 12px;
+                font-size: 11px;
+            }
+        }
+    </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center h-screen">
-  <div class="text-center">
-    <h1 class="text-3xl font-bold mb-8">My Daily Routine</h1>
-    <div class="flex justify-center space-x-8">
-      <a href="Daily_task_calendar_updated.html" class="flex flex-col items-center p-4 bg-white rounded-lg shadow-md hover:bg-gray-200 transition">
-        <svg class="w-12 h-12 mb-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-        </svg>
-        <span class="text-lg font-semibold">매일 업무 체크리스트</span>
-      </a>
-      <a href="Golf_training_routine.html" class="flex flex-col items-center p-4 bg-white rounded-lg shadow-md hover:bg-gray-200 transition">
-        <svg class="w-12 h-12 mb-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0-1.1.9-2 2-2s2 .9 2 2-2 4-2 4m-4-2H6m10 0h4M8 7h8m-8 8h8m-9 4h10"></path>
-        </svg>
-        <span class="text-lg font-semibold">골프 연습 루틴</span>
-      </a>
-      <a href="Swimming_training_routine.html" class="flex flex-col items-center p-4 bg-white rounded-lg shadow-md hover:bg-gray-200 transition">
-        <svg class="w-12 h-12 mb-2 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-        </svg>
-        <span class="text-lg font-semibold">수영 연습 루틴</span>
-      </a>
+<body>
+    <div class="header">
+        <div class="title">🗓️ 통합 일일 루틴 관리</div>
+        <div class="subtitle">꾸준한 일상 관리와 운동으로 성장하는 매일을 만들어보세요!</div>
+        <div class="date-info" id="dateInfo"></div>
     </div>
-  </div>
+
+    <div class="main-container">
+        <div class="weekly-tasks">
+            <div class="section-header">📋 주간 업무 체크리스트</div>
+            
+            <div class="week-selector" id="weekSelector">
+                </div>
+            
+            <div class="weekly-progress" id="weeklyProgress">
+                </div>
+            
+            <div class="days-grid" id="daysGrid">
+                </div>
+        </div>
+
+        <div class="exercise-area">
+            <div class="section-header">🏃‍♂️ 오늘의 운동 루틴</div>
+            
+            <div class="exercise-selector">
+                <button class="exercise-btn active" onclick="selectExercise('swimming')" id="swimmingBtn">🏊‍♂️ 수영</button>
+                <button class="exercise-btn" onclick="selectExercise('golf')" id="golfBtn">⛳ 골프</button>
+            </div>
+            
+            <div class="routine-info" id="routineInfo">
+                </div>
+            
+            <div class="routine-groups" id="routineGroups">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        const tasks = [
+            { name: "Pills", type: "health" },
+            /*{ name: "Golf Training", type: "sports" },*/
+            { name: "E-Mail Check", type: "work" },
+            { name: "Dictation / Speaking", type: "study" },
+            { name: "Grammer / Writing", type: "study" },
+            { name: "Reading a Paper", type: "study" },
+            { name: "My business / Report", type: "business" },
+            { name: "Exercise / Drill", type: "exercise" },
+            { name: "Modelica / Dymola", type: "technical" },
+            { name: "Python / AI Coding", type: "technical" },
+            { name: "Reading a Book", type: "reading" },
+            { name: "Job Planning", type: "planning" }
+        ];
+
+        const startDate = new Date(2025, 7, 31);
+        const endDate = new Date(2026, 0, 14);
+        let taskProgress = {};
+        let exerciseProgress = {};
+        let currentWeek = 1;
+        let currentExercise = 'swimming';
+
+        const swimmingDatabase = {
+            warmup: [
+                { name: "가슴 & 어깨 스트레칭", duration: "2분", link: "https://www.youtube.com/watch?v=W8bV-kse8fw&t=4m17s", emoji: "🤸‍♂️" },
+                { name: "발목 유연성 스트레칭", duration: "1분 30초", link: "https://www.youtube.com/watch?v=W8bV-kse8fw&t=10m14s", emoji: "🦵" },
+                { name: "어깨 회전 운동", duration: "1분", link: "https://www.youtube.com/watch?v=W8bV-kse8fw&t=5m24s", emoji: "🌀" },
+                { name: "목 & 등 스트레칭", duration: "1분 30초", link: "https://www.youtube.com/watch?v=W8bV-kse8fw&t=4m17s", emoji: "🙆‍♂️" }
+            ],
+            main: [
+                { name: "자유형 이미지 트레이닝", duration: "2분", link: "https://www.youtube.com/watch?v=pP7ZI0pLc2A&list=PLhkZVYEI4DwOzDtwQ3BYgJsvR3-JHyjXj&index=11", emoji: "🏊‍♂️" },
+                { name: "평영 이미지 트레이닝", duration: "2분", link: "https://www.youtube.com/watch?v=n030qdOt6Zo&list=PLhkZVYEI4DwOzDtwQ3BYgJsvR3-JHyjXj&index=19", emoji: "🐸" },
+                { name: "배영 이미지 트레이닝", duration: "2분", link: "https://www.youtube.com/watch?v=VaLg-SKvfDg&list=PLhkZVYEI4DwOzDtwQ3BYgJsvR3-JHyjXj&index=20", emoji: "🏊‍♀️" },
+                { name: "자유형 킥 드릴 연습", duration: "3분", link: "https://www.youtube.com/watch?v=vH9Ig05MlrM&t=0m47s", emoji: "🦵" },
+                { name: "자유형 스피드 드릴", duration: "2분", link: "https://www.youtube.com/watch?v=vH9Ig05MlrM&t=1m22s", emoji: "⚡" },
+                { name: "접영 이미지 트레이닝", duration: "2분 30초", link: "https://www.youtube.com/watch?v=zyWs0LbkoRc&list=PLhkZVYEI4DwOzDtwQ3BYgJsvR3-JHyjXj&index=33", emoji: "🦋" },
+                { name: "플립턴 이미지 트레이닝", duration: "2분", link: "https://www.youtube.com/watch?v=wfhCP7Xkej8&list=PLhkZVYEI4DwOzDtwQ3BYgJsvR3-JHyjXj&index=38", emoji: "🔄" },
+                { name: "TheraBand 어깨 강화", duration: "3분", link: "https://www.youtube.com/watch?v=W8bV-kse8fw&t=5m24s", emoji: "💪" }
+            ],
+            cooldown: [
+                { name: "코어 강화 (플랭크)", duration: "1분 (30초×2)", link: "https://www.youtube.com/watch?v=W8bV-kse8fw&t=9m0s", emoji: "🧘‍♂️" },
+                { name: "전신 이완 스트레칭", duration: "3분", link: "https://www.youtube.com/watch?v=W8bV-kse8fw&t=4m17s", emoji: "🤸‍♀️" },
+                { name: "심호흡 & 명상", duration: "2분", link: "https://www.youtube.com/watch?v=pP7ZI0pLc2A&list=PLhkZVYEI4DwOzDtwQ3BYgJsvR3-JHyjXj&index=11", emoji: "🧘" },
+                { name: "어깨 & 목 마사지", duration: "2분", link: "https://www.youtube.com/watch?v=W8bV-kse8fw&t=4m17s", emoji: "💆‍♂️" }
+            ]
+        };
+
+        const golfDatabase = [
+            {
+                weekDay: 0,
+                name: "휴식일",
+                items: [
+                    { name: "가벼운 산책", reps: "10-15분", type: "flexibility" }
+                ]
+            },
+            {
+                weekDay: [1, 2, 4, 5],
+                name: "일반 골프 루틴",
+                items: [
+                    { name: "스쿼트", reps: "10회×2", type: "strength", link: "https://www.youtube.com/shorts/1AibOpQgCQk" },
+                    { name: "푸쉬업", reps: "5회×2", type: "strength", link: "https://planfit.ai/ko/exercise/push-up" },
+                    { name: "플랭크", reps: "20초×2", type: "strength", link: "https://planfit.ai/ko/exercise/plank" },
+                    { name: "브릿지", reps: "10회×2", type: "strength", link: "https://www.youtube.com/shorts/IONcAuMbyZ8" },
+                    { name: "어깨허리 회전", reps: "좌우 8회", type: "flexibility", link: "https://www.youtube.com/shorts/L_7gSEmY0ZE" },
+                    { name: "햄스트링 스트레칭", reps: "20초×2", type: "flexibility", link: "https://www.youtube.com/shorts/HSC3847R-aE" },
+                    { name: "흉추 회전운동", reps: "좌우 8회", type: "flexibility", link: "https://www.youtube.com/shorts/4S-0Pbkxv3Y" },
+                    { name: "그립 연습", reps: "30초", type: "golf-basic", link: "https://www.youtube.com/shorts/nDzlm5klugo" },
+                    { name: "어드레스 자세", reps: "3회", type: "golf-basic", link: "https://www.youtube.com/shorts/RauvtwUssDM" },
+                    { name: "하프스윙", reps: "8회×2", type: "golf-basic", link: "https://www.youtube.com/shorts/lsBVN9qm7Dk" },
+                    { name: "풀스윙 모션", reps: "5회", type: "golf-basic", link: "https://www.youtube.com/shorts/43K9f-QUMSY" }
+                ]
+            },
+            {
+                weekDay: 3,
+                name: "가벼운 골프 루틴",
+                items: [
+                    { name: "가벼운 스쿼트", reps: "8회×2", type: "strength", link: "https://www.youtube.com/shorts/1AibOpQgCQk" },
+                    { name: "플랭크", reps: "15초×2", type: "strength", link: "https://planfit.ai/ko/exercise/plank" },
+                    { name: "전신 스트레칭", reps: "5분", type: "flexibility", link: "https://www.youtube.com/shorts/4S-0Pbkxv3Y" },
+                    { name: "어깨허리 회전", reps: "좌우 6회", type: "flexibility", link: "https://www.youtube.com/shorts/L_7gSEmY0ZE" },
+                    { name: "그립 연습", reps: "30초", type: "golf-basic", link: "https://www.youtube.com/shorts/nDzlm5klugo" },
+                    { name: "어드레스 자세", reps: "3회", type: "golf-basic", link: "https://www.youtube.com/shorts/RauvtwUssDM" }
+                ]
+            },
+            {
+                weekDay: 6,
+                name: "주말 종합 훈련",
+                items: [
+                    { name: "스쿼트", reps: "12회×3", type: "strength", link: "https://www.youtube.com/shorts/1AibOpQgCQk" },
+                    { name: "푸쉬업", reps: "8회×3", type: "strength", link: "https://planfit.ai/ko/exercise/push-up" },
+                    { name: "플랭크", reps: "30초×2", type: "strength", link: "https://planfit.ai/ko/exercise/plank" },
+                    { name: "브릿지", reps: "12회×3", type: "strength", link: "https://www.youtube.com/shorts/IONcAuMbyZ8" },
+                    { name: "어깨허리 회전", reps: "좌우 10회", type: "flexibility", link: "https://www.youtube.com/shorts/L_7gSEmY0ZE" },
+                    { name: "햄스트링 스트레칭", reps: "30초×2", type: "flexibility", link: "https://www.youtube.com/shorts/HSC3847R-aE" },
+                    { name: "흉추 회전운동", reps: "좌우 10회", type: "flexibility", link: "https://www.youtube.com/shorts/4S-0Pbkxv3Y" },
+                    { name: "그립 연습", reps: "1분", type: "golf-basic", link: "https://www.youtube.com/shorts/nDzlm5klugo" },
+                    { name: "어드레스 자세", reps: "5회", type: "golf-basic", link: "https://www.youtube.com/shorts/RauvtwUssDM" },
+                    { name: "하프스윙", reps: "12회×3", type: "golf-basic", link: "https://www.youtube.com/shorts/lsBVN9qm7Dk" },
+                    { name: "풀스윙 모션", reps: "10회", type: "golf-basic", link: "https://www.youtube.com/shorts/43K9f-QUMSY" }
+                ]
+            }
+        ];
+
+        // 로컬 스토리지에서 데이터 불러오기
+        function loadProgress() {
+            try {
+                const taskData = localStorage.getItem('weeklyTaskProgress');
+                const exerciseData = localStorage.getItem('dailyExerciseProgress');
+                if (taskData) taskProgress = JSON.parse(taskData);
+                if (exerciseData) exerciseProgress = JSON.parse(exerciseData);
+            } catch (error) {
+                console.error('데이터 불러오기 오류:', error);
+            }
+        }
+
+        // 로컬 스토리지에 데이터 저장
+        function saveProgress() {
+            try {
+                localStorage.setItem('weeklyTaskProgress', JSON.stringify(taskProgress));
+                localStorage.setItem('dailyExerciseProgress', JSON.stringify(exerciseProgress));
+            } catch (error) {
+                console.error('데이터 저장 오류:', error);
+            }
+        }
+
+        // 주차 계산
+        function getWeekNumber(date) {
+            const diffTime = date.getTime() - startDate.getTime();
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            return Math.floor(diffDays / 7) + 1;
+        }
+
+        // 주차 선택기 생성
+        function createWeekSelector() {
+            const selector = document.getElementById('weekSelector');
+            const today = new Date();
+            const currentWeekNum = getWeekNumber(today);
+            
+            for (let week = 1; week <= 20; week++) {
+                const btn = document.createElement('button');
+                btn.className = 'week-btn';
+                btn.textContent = `W${week}`;
+                btn.dataset.week = week;
+                btn.onclick = () => selectWeek(week);
+                if (week === currentWeekNum) {
+                    btn.classList.add('active');
+                    currentWeek = week;
+                }
+                selector.appendChild(btn);
+            }            
+        }
+
+        // 주차 선택
+        function selectWeek(week) {
+            currentWeek = week;
+            document.querySelectorAll('.week-btn').forEach(btn => btn.classList.remove('active'));
+            const selectedBtn = document.querySelector(`.week-btn[data-week="${week}"]`);
+            if (selectedBtn) {
+                selectedBtn.classList.add('active');
+            }
+            updateWeekView();
+        }
+
+        // 주간 뷰 업데이트
+        function updateWeekView() {
+            const today = new Date();
+            const weekStart = new Date(startDate);
+            weekStart.setDate(startDate.getDate() + (currentWeek - 1) * 7);
+            
+            updateWeeklyProgress();
+            
+            const daysGrid = document.getElementById('daysGrid');
+            daysGrid.innerHTML = '';
+            
+            const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+            
+            for (let i = 0; i < 7; i++) {
+                const currentDate = new Date(weekStart);
+                currentDate.setDate(weekStart.getDate() + i);
+                
+                const dayCard = document.createElement('div');
+                dayCard.className = 'day-card';
+                
+                if (currentDate.toDateString() === today.toDateString()) {
+                    dayCard.classList.add('today');
+                }
+                
+                if (i === 0 || i === 6) {
+                    dayCard.classList.add('weekend');
+                }
+                
+                const dayHeader = document.createElement('div');
+                dayHeader.className = 'day-header';
+                dayHeader.textContent = `${dayNames[i]} (${currentDate.getMonth() + 1}/${currentDate.getDate()})`;
+                dayCard.appendChild(dayHeader);
+                
+                if (i === 0) {
+                    const placeholder = document.createElement('div');
+                    placeholder.className = 'weekend-placeholder';
+                    placeholder.innerHTML = '🎨 하고 싶은 일 미리하기<br><br>💊 약먹기<br>잊지 않기';
+                    dayCard.appendChild(placeholder);
+                } else if (i === 6) {
+                    const placeholder = document.createElement('div');
+                    placeholder.className = 'weekend-placeholder';
+                    placeholder.innerHTML = '🎯 못한 일<br>완료하기<br><br>💊 약먹기<br>잊지 않기';
+                    dayCard.appendChild(placeholder);
+                } else {
+                    let completedCount = 0;
+                    
+                    tasks.forEach((task, index) => {
+                        const taskId = `${currentWeek}-${i}_task${index}`;
+                        const taskData = taskProgress[taskId];
+                        const isCompleted = taskData && taskData.completed;
+                        const completionTime = taskData && taskData.time ? taskData.time : '';
+                        
+                        if (isCompleted) completedCount++;
+                        
+                        const taskItem = document.createElement('div');
+                        taskItem.className = `task-item ${isCompleted ? 'completed' : ''}`;
+                        taskItem.onclick = () => toggleTask(taskId, taskItem);
+                        
+                        taskItem.innerHTML = `
+                            <span class="task-name">${task.name}</span>
+                            <span class="task-time">${completionTime}</span>
+                        `;
+                        
+                        dayCard.appendChild(taskItem);
+                    });
+                    
+                    const counter = document.createElement('div');
+                    counter.className = 'completion-counter';
+                    counter.textContent = `${completedCount}/${tasks.length}`;
+                    dayCard.appendChild(counter);
+                }
+                
+                daysGrid.appendChild(dayCard);
+            }
+        }
+
+        // 주간 진행률 업데이트
+        function updateWeeklyProgress() {
+            const totalTasks = tasks.length * 5;
+            let completedTasks = 0;
+            
+            for (let day = 1; day <= 5; day++) {
+                tasks.forEach((task, index) => {
+                    const taskId = `${currentWeek}-${day}_task${index}`;
+                    if (taskProgress[taskId] && taskProgress[taskId].completed) {
+                        completedTasks++;
+                    }
+                });
+            }
+            
+            const progressPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+            document.getElementById('weeklyProgress').textContent = 
+                `📊 ${currentWeek}주차 진행률: ${progressPercent}% (${completedTasks}/${totalTasks} 완료)`;
+        }
+
+        // 업무 토글
+        function toggleTask(taskId, element) {
+            const now = new Date();
+            const timeString = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+            
+            if (element.classList.contains('completed')) {
+                element.classList.remove('completed');
+                delete taskProgress[taskId];
+                element.querySelector('.task-time').textContent = '';
+            } else {
+                element.classList.add('completed');
+                taskProgress[taskId] = {
+                    completed: true,
+                    time: timeString
+                };
+                element.querySelector('.task-time').textContent = timeString;
+            }
+            
+            const dayCard = element.parentElement;
+            const counter = dayCard.querySelector('.completion-counter');
+            if (counter) {
+                const completedItems = dayCard.querySelectorAll('.task-item.completed').length;
+                const totalItems = dayCard.querySelectorAll('.task-item').length;
+                counter.textContent = `${completedItems}/${totalItems}`;
+            }
+            
+            saveProgress();
+            updateWeeklyProgress();
+        }
+
+        // 운동 선택
+        function selectExercise(type) {
+            currentExercise = type;
+            document.querySelectorAll('.exercise-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`${type}Btn`).classList.add('active');
+            updateExerciseView();
+        }
+
+        // 운동 뷰 업데이트
+        function updateExerciseView() {
+            const today = new Date();
+            const dayOfWeek = today.getDay();
+            
+            if (currentExercise === 'swimming') {
+                updateSwimmingView();
+            } else {
+                updateGolfView(dayOfWeek);
+            }
+        }
+
+        // 수영 뷰 업데이트
+        function updateSwimmingView() {
+            document.getElementById('routineInfo').textContent = '🕐 총 소요시간: 약 20분 (초보자 맞춤형)';
+            
+            const routineGroups = document.getElementById('routineGroups');
+            routineGroups.innerHTML = `
+                <div class="routine-group warmup">
+                    <h4>🌊 준비운동 (5분)</h4>
+                    <ul class="routine-list" id="warmupList"></ul>
+                </div>
+                <div class="routine-group main">
+                    <h4>🏊‍♂️ 메인 연습 (10분)</h4>
+                    <ul class="routine-list" id="mainList"></ul>
+                </div>
+                <div class="routine-group cooldown">
+                    <h4>🧘‍♂️ 마무리 (5분)</h4>
+                    <ul class="routine-list" id="cooldownList"></ul>
+                </div>
+            `;
+            
+            const todayRoutine = {
+                warmup: getRandomExercises(swimmingDatabase.warmup, 2),
+                main: getRandomExercises(swimmingDatabase.main, 3),
+                cooldown: getRandomExercises(swimmingDatabase.cooldown, 2)
+            };
+            
+            const todayKey = new Date().toLocaleDateString() + '_swimming';
+            const savedProgress = exerciseProgress[todayKey] || {};
+            
+            let exerciseIndex = 0;
+            Object.keys(todayRoutine).forEach(category => {
+                const listElement = document.getElementById(`${category}List`);
+                
+                todayRoutine[category].forEach(exercise => {
+                    const isCompleted = savedProgress[exerciseIndex] || false;
+                    const li = document.createElement('li');
+                    li.className = `exercise-item ${category} ${isCompleted ? 'completed' : ''}`;
+                    
+                    li.innerHTML = `
+                        <div class="exercise-name">${exercise.emoji} ${exercise.name}
+                        <font class="exercise-duration">${exercise.duration}</font></div>
+                    `;
+                    
+                    li.onclick = () => openLinkAndToggle(exercise.link, todayKey, exerciseIndex, li);
+                    
+                    listElement.appendChild(li);
+                    exerciseIndex++;
+                });
+            });
+        }
+
+        // 유튜브 링크 팝업 및 운동 체크 함수
+        function openLinkAndToggle(link, dateKey, index, element) {
+            if (link) {
+                window.open(link, '_blank');
+            }
+            toggleExercise(dateKey, index, element);
+        }
+
+        // 골프 뷰 업데이트
+        function updateGolfView(dayOfWeek) {
+            const todayRoutine = golfDatabase.find(routine => {
+                if (Array.isArray(routine.weekDay)) {
+                    return routine.weekDay.includes(dayOfWeek);
+                } else {
+                    return routine.weekDay === dayOfWeek;
+                }
+            });
+
+            if (!todayRoutine) {
+                document.getElementById('routineInfo').textContent = '오늘은 골프 루틴이 없습니다.';
+                document.getElementById('routineGroups').innerHTML = '';
+                return;
+            }
+
+            document.getElementById('routineInfo').textContent = `🏌️ ${todayRoutine.name} - 꾸준한 연습으로 실력 향상!`;
+            
+            const routineGroups = document.getElementById('routineGroups');
+            routineGroups.innerHTML = `
+                <div class="routine-group strength">
+                    <h4>💪 근력 강화</h4>
+                    <ul class="routine-list" id="strengthList"></ul>
+                </div>
+                <div class="routine-group flexibility">
+                    <h4>🤸 유연성 운동</h4>
+                    <ul class="routine-list" id="flexibilityList"></ul>
+                </div>
+                <div class="routine-group golf-basic">
+                    <h4>⛳ 골프 기초</h4>
+                    <ul class="routine-list" id="golfBasicList"></ul>
+                </div>
+            `;
+            
+            const todayKey = new Date().toLocaleDateString() + '_golf';
+            const savedProgress = exerciseProgress[todayKey] || {};
+            
+            const strengthItems = todayRoutine.items.filter(item => item.type === 'strength');
+            const flexibilityItems = todayRoutine.items.filter(item => item.type === 'flexibility');
+            const golfBasicItems = todayRoutine.items.filter(item => item.type === 'golf-basic');
+
+            const selectedStrength = getRandomExercises(strengthItems, 2);
+            const selectedFlexibility = getRandomExercises(flexibilityItems, 3);
+            const selectedGolfBasic = getRandomExercises(golfBasicItems, 2);
+
+            const allSelectedItems = [...selectedStrength, ...selectedFlexibility, ...selectedGolfBasic];
+            
+            let exerciseIndex = 0;
+            
+            allSelectedItems.forEach(exercise => {
+                const isCompleted = savedProgress[exerciseIndex] || false;
+                const li = document.createElement('li');
+                li.className = `exercise-item ${exercise.type} ${isCompleted ? 'completed' : ''}`;
+                
+                li.innerHTML = `
+                    <div class="exercise-name">${exercise.name}
+                    <font class="exercise-duration">${exercise.reps}</font></div>
+                `;
+                
+                li.onclick = () => openLinkAndToggle(exercise.link, todayKey, exerciseIndex, li);
+                
+                const listId = exercise.type === 'strength' ? 'strengthList' : 
+                              exercise.type === 'flexibility' ? 'flexibilityList' : 'golfBasicList';
+                document.getElementById(listId).appendChild(li);
+
+                exerciseIndex++;
+            });
+        }
+
+        // 랜덤 운동 선택
+        function getRandomExercises(exercises, count) {
+            const shuffled = [...exercises].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, count);
+        }
+
+        // 운동 토글
+        function toggleExercise(dateKey, index, element) {
+            if (!exerciseProgress[dateKey]) {
+                exerciseProgress[dateKey] = {};
+            }
+            
+            if (element.classList.contains('completed')) {
+                element.classList.remove('completed');
+                delete exerciseProgress[dateKey][index];
+            } else {
+                element.classList.add('completed');
+                exerciseProgress[dateKey][index] = true;
+            }
+            
+            saveProgress();
+        }
+
+        // 날짜 정보 업데이트
+        function updateDateInfo() {
+            const today = new Date();
+            const options = { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric', 
+                weekday: 'long' 
+            };
+            document.getElementById('dateInfo').textContent = today.toLocaleDateString('ko-KR', options);
+        }
+
+        // 오늘에 맞는 운동 자동 선택
+        function selectTodayExercise() {
+            const today = new Date();
+            const dayOfWeek = today.getDay();
+            
+            if (dayOfWeek === 1 || dayOfWeek === 3 || dayOfWeek === 5 || dayOfWeek === 0) {
+                selectExercise('swimming');
+            } else {
+                selectExercise('golf');
+            }
+        }
+
+        // 초기화
+        function init() {
+            loadProgress();
+            updateDateInfo();
+            createWeekSelector();
+            updateWeekView();
+            selectTodayExercise();
+            
+            console.log('통합 일일 루틴 관리 시스템이 초기화되었습니다.');
+        }
+
+        // 페이지 로드시 초기화
+        window.addEventListener('DOMContentLoaded', init);
+        
+    </script>
 </body>
 </html>
