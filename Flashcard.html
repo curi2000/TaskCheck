@@ -466,7 +466,7 @@
             // ✅ 수정: Correct가 0인 문장만 필터링해서 표시
             const incorrect_data = study_data.filter(item => (item.correctCount || 0) === 0);                        
             // ID 역순으로 정렬 (최신 입력이 위로)
-            const sorted_data = [...incorrect_data].sort((a, b) => b.id.localeCompare(a.id));
+            const sorted_data = [...incorrect_data].sort((a, b) => a.id < b.id ? 1 : -1);
             
             sorted_data.forEach(item => {
                 const study_count = item.studyCount || 0;
@@ -881,7 +881,8 @@
             <header class="bg-white shadow-md rounded-lg p-6 mb-6 flex justify-between items-center">
                 <div>
                     <h1 class="text-3xl font-bold text-blue-700">영어 문장 학습 웹 앱</h1>
-                    <p class="text-gray-600 mt-2">Firestore & Gemini API Ver. 20251101-01</p>
+                    <p class="text-gray-600 mt-2">Firestore & Gemini API</p>
+                    <p class="text-gray-600 mt-2" style="font-size:10pt; font-stype: italic;">ver. 20251101_02</p>
                 </div>
                 <div class="text-right">
                     <p class="text-gray-700 font-semibold mb-2">사용자: <span id="user-info" class="text-blue-600"></span></p>
