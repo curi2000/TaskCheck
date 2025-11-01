@@ -651,7 +651,13 @@
             const user_answer = userAnswerEntry.value.trim();
             if (!user_answer) return;
             
-            const is_correct_attempt = user_answer.toLowerCase() === current_question.english.toLowerCase();
+            // 특수문자 제거 함수
+            const removeSpecialChars = (str) => str.replace(/[^a-zA-Z0-9\s]/g, '').trim();
+            
+            const userAnswerCleaned = removeSpecialChars(user_answer.toLowerCase());
+            const correctAnswerCleaned = removeSpecialChars(current_question.english.toLowerCase());
+            
+            const is_correct_attempt = userAnswerCleaned === correctAnswerCleaned;
 
             if (is_retry_mode && !is_correct_attempt) {
                 next_question();
