@@ -4,17 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>영어 문장 학습 웹 앱</title>
-    <!-- 1. Tailwind CSS 로드 -->
+    <!-- Tailwind CSS 로드 -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- 2. Firebase SDK 로드 -->
+    <!-- Firebase SDK 로드 -->
     <script type="module">
         // Firebase SDK import
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { 
             getAuth, 
-            signInAnonymously, 
-            onAuthStateChanged,
-            signInWithCustomToken // signInWithCustomToken 임포트 추가
+            createUserWithEmailAndPassword,
+            signInWithEmailAndPassword,
+            signOut,
+            onAuthStateChanged
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { 
             getFirestore, 
@@ -26,12 +27,9 @@
             onSnapshot,
             query
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 
-        // --- 사용자 제공 설정값 ---
-        
-        // 3. (요청) Firebase Config 설정
-        const userProvidedConfig = {
+        // Firebase Config 설정
+        const firebaseConfig = {
             apiKey: "AIzaSyDei-FcTB97MjImOmQTLErKHpcjTi37bgI",
             authDomain: "flashcards-a103a.firebaseapp.com",
             projectId: "flashcards-a103a",
@@ -41,41 +39,36 @@
             measurementId: "G-07LGW9QKQF"
         };
         
-        // Canvas 환경 변수 우선 사용, 없으면 사용자가 제공한 값 사용
-        const firebaseConfig = typeof __firebase_config !== 'undefined' 
-            ? JSON.parse(__firebase_config) 
-            : userProvidedConfig;
-
-        // 4. (요청) Gemini API 키 설정
+        // Gemini API 키 설정
         const GEMINI_API_KEY = "AIzaSyCBH6MrHK2JVTwAYE5jol32PRb_A8AG89I";
         const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`;
 
-        // Canvas App ID (Firestore 경로에 필수)
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const appId = 'default-app-id';
 
-        // --- 전역 변수 및 상태 ---
+        // 전역 변수
         let app, db, auth;
         let userId = null;
         let sentencesCollectionRef = null;
-        let study_data = []; // Firestore 데이터를 담을 로컬 캐시
-        let mode = 'input'; // 'input', 'study', 'reading'
+        let study_data = [];
+        let mode = 'input';
         let current_question = null;
         let is_retry_mode = false;
-        let selectedSentenceId = null; // Treeview(테이블)에서 선택된 항목의 ID
+        let selectedSentenceId = null;
         
-        // 읽기 모드 상태
         let reading_list = [];
         let current_read_index = 0;
         let is_playing = false;
-        let reading_speed = 0.5; // 중간 속도 (단어당 0.5초)
+        let reading_speed = 0.5;
         let readTimer = null;
         let countdownTimer = null;
         let countdown = 0;
-
-        // 학습 모드 상태
         let autoNextTimer = null;
 
-        // --- DOM 요소 참조 ---
+        // DOM 요소 참조
+        let authFrame, mainFrame;
+        let signupEmail, signupPassword, signupBtn;
+        let loginEmail, loginPassword, loginBtn;
+        let logoutBtn, userInfoSpan;
         let modeButtons, inputFrame, studyFrame, readingFrame;
         let inputEnglish, addSentenceBtn, fileInput, deleteBtn;
         let sentenceListBody;
@@ -84,19 +77,26 @@
         let messageModal, messageTitle, messageText, messageCloseBtn;
         let fileProgressModal, fileProgressText;
 
-        // --- 초기화 ---
+        // 초기화
         document.addEventListener('DOMContentLoaded', () => {
-            // DOM 요소 바인딩
             bindDOMElements();
-            // 이벤트 리스너 설정
             setupEventListeners();
-            // Firebase 초기화
             initFirebase();
-            // 초기 모드 설정
-            switch_mode('input');
         });
 
         function bindDOMElements() {
+            // 인증 관련
+            authFrame = document.getElementById('auth-frame');
+            mainFrame = document.getElementById('main-frame');
+            signupEmail = document.getElementById('signup-email');
+            signupPassword = document.getElementById('signup-password');
+            signupBtn = document.getElementById('signup-btn');
+            loginEmail = document.getElementById('login-email');
+            loginPassword = document.getElementById('login-password');
+            loginBtn = document.getElementById('login-btn');
+            logoutBtn = document.getElementById('logout-btn');
+            userInfoSpan = document.getElementById('user-info');
+
             modeButtons = {
                 input: document.getElementById('input-mode-btn'),
                 study: document.getElementById('study-mode-btn'),
@@ -142,6 +142,11 @@
         }
 
         function setupEventListeners() {
+            // 인증 이벤트
+            signupBtn.addEventListener('click', handle_signup);
+            loginBtn.addEventListener('click', handle_login);
+            logoutBtn.addEventListener('click', handle_logout);
+
             // 모드 전환 버튼
             modeButtons.input.addEventListener('click', () => switch_mode('input'));
             modeButtons.study.addEventListener('click', start_study);
@@ -170,61 +175,37 @@
             messageCloseBtn.addEventListener('click', () => messageModal.classList.add('hidden'));
         }
 
-        // --- Firebase 및 데이터 ---
-
         function initFirebase() {
             try {
-                // setLogLevel('debug'); // 디버그 로그 필요시 주석 해제
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
                 
-                // 인증 상태 변경 감지
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
                         userId = user.uid;
-                        // console.log("로그인 성공, userId:", userId);
+                        userInfoSpan.textContent = user.email;
                         
-                        // (FIX): Canvas 보안 규칙에 맞는 Firestore 경로로 수정
-                        // old path: collection(db, 'users', userId, 'sentences');
                         sentencesCollectionRef = collection(db, 'artifacts', appId, 'users', userId, 'sentences');
                         
-                        // 데이터 실시간 감지 시작
+                        authFrame.classList.add('hidden');
+                        mainFrame.classList.remove('hidden');
+                        
                         loadData();
+                        switch_mode('input');
                     } else {
                         userId = null;
                         study_data = [];
-                        render_sentence_list();
-                        console.log("로그아웃 상태, 로그인 시도...");
-                        // 사용자가 없으면 로그인 시도
-                        signInUser();
+                        
+                        authFrame.classList.remove('hidden');
+                        mainFrame.classList.add('hidden');
+                        
+                        loginEmail.value = '';
+                        loginPassword.value = '';
+                        signupEmail.value = '';
+                        signupPassword.value = '';
                     }
                 });
-
-                // 로그인 로직을 별도 함수로 분리
-                async function signInUser() {
-                    try {
-                        if (typeof __initial_auth_token !== 'undefined' && typeof __firebase_config !== 'undefined') {
-                            // Canvas 환경: Custom Token으로 로그인
-                            await signInWithCustomToken(auth, __initial_auth_token);
-                        } else {
-                            // 로컬/대체 환경: 익명으로 로그인
-                            // 이 경우 사용자의 'flashcards-a103a' 프로젝트에 '익명' 공급자가 활성화되어 있어야 합니다.
-                            await signInAnonymously(auth);
-                        }
-                        // 성공하면 onAuthStateChanged가 다시 호출됨
-                    } catch (error) {
-                        console.error("로그인 실패:", error);
-                        let userMessage = "인증에 실패했습니다. " + error.message;
-                        // 사용자가 제공한 config를 사용 중일 때 이 오류가 발생하면, 명확한 안내 제공
-                        if (error.code === 'auth/configuration-not-found' && typeof __firebase_config === 'undefined') {
-                            userMessage = "Firebase 인증 오류: '익명' 로그인 공급자가 'flashcards-a103a' 프로젝트의 Firebase 콘솔에서 활성화되어 있지 않습니다. (auth/configuration-not-found)";
-                        } else if (error.code === 'auth/configuration-not-found') {
-                             userMessage = "Firebase 인증 오류: Canvas 프로젝트 설정에 '익명' 로그인이 활성화되어 있지 않습니다. (auth/configuration-not-found)";
-                        }
-                        showMessage("Firebase 오류", userMessage);
-                    }
-                }
 
             } catch (error) {
                 console.error("Firebase 초기화 실패:", error);
@@ -232,26 +213,93 @@
             }
         }
 
-        /**
-         * Firestore에서 데이터를 로드하고 실시간 변경 사항을 감지합니다.
-         * (Python의 load_data() 대체)
-         */
+        async function handle_signup() {
+            const email = signupEmail.value.trim();
+            const password = signupPassword.value.trim();
+            
+            if (!email || !password) {
+                showMessage("경고", "이메일과 비밀번호를 입력해주세요!");
+                return;
+            }
+
+            try {
+                signupBtn.disabled = true;
+                signupBtn.textContent = '가입 중...';
+                
+                await createUserWithEmailAndPassword(auth, email, password);
+                showMessage("성공", "회원가입 완료! 로그인되었습니다.");
+                
+                signupEmail.value = '';
+                signupPassword.value = '';
+            } catch (error) {
+                let message = "회원가입 실패했습니다.";
+                if (error.code === 'auth/email-already-in-use') {
+                    message = "이미 사용 중인 이메일입니다.";
+                } else if (error.code === 'auth/weak-password') {
+                    message = "비밀번호가 너무 약합니다. (최소 6자)";
+                } else if (error.code === 'auth/invalid-email') {
+                    message = "유효하지 않은 이메일입니다.";
+                }
+                showMessage("오류", message);
+            } finally {
+                signupBtn.disabled = false;
+                signupBtn.textContent = '회원가입';
+            }
+        }
+
+        async function handle_login() {
+            const email = loginEmail.value.trim();
+            const password = loginPassword.value.trim();
+            
+            if (!email || !password) {
+                showMessage("경고", "이메일과 비밀번호를 입력해주세요!");
+                return;
+            }
+
+            try {
+                loginBtn.disabled = true;
+                loginBtn.textContent = '로그인 중...';
+                
+                await signInWithEmailAndPassword(auth, email, password);
+                showMessage("성공", "로그인 되었습니다!");
+            } catch (error) {
+                let message = "로그인 실패했습니다.";
+                if (error.code === 'auth/user-not-found') {
+                    message = "등록되지 않은 이메일입니다.";
+                } else if (error.code === 'auth/wrong-password') {
+                    message = "비밀번호가 틀렸습니다.";
+                } else if (error.code === 'auth/invalid-email') {
+                    message = "유효하지 않은 이메일입니다.";
+                }
+                showMessage("오류", message);
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = '로그인';
+            }
+        }
+
+        async function handle_logout() {
+            try {
+                await signOut(auth);
+                showMessage("로그아웃", "로그아웃 되었습니다.");
+                stop_reading();
+            } catch (error) {
+                showMessage("오류", "로그아웃 실패: " + error.message);
+            }
+        }
+
         function loadData() {
             if (!sentencesCollectionRef) return;
 
-            // 실시간 리스너 설정
             onSnapshot(query(sentencesCollectionRef), (snapshot) => {
-                study_data = []; // 로컬 캐시 초기화
+                study_data = [];
                 snapshot.forEach((doc) => {
                     study_data.push({ 
-                        id: doc.id, // Firestore 문서 ID 포함
+                        id: doc.id,
                         ...doc.data() 
                     });
                 });
                 
-                // console.log("데이터 로드됨:", study_data.length, "개");
-                
-                // 데이터가 변경될 때마다 UI 갱신
                 if (mode === 'input') {
                     render_sentence_list();
                 }
@@ -263,9 +311,6 @@
             });
         }
         
-        /**
-         * 전체 학습 통계를 업데이트합니다.
-         */
         function updateOverallStats() {
             const total_study = study_data.reduce((sum, item) => sum + (item.studyCount || 0), 0);
             const total_correct = study_data.reduce((sum, item) => sum + (item.correctCount || 0), 0);
@@ -273,53 +318,14 @@
             const ratio = total_study > 0 ? `${(total_correct / total_study * 100).toFixed(1)}%` : "N/A";
             
             if (studyStatsOverall) {
-                studyStatsOverall.textContent = `총 문장 수: ${total_sentences} | 전체 학습 횟수: ${total_study} | 전체 정답률: ${ratio}`;
+                studyStatsOverall.textContent = `이 문장 수: ${total_sentences} | 전체 학습 횟수: ${total_study} | 전체 정답률: ${ratio}`;
             }
         }
 
-        // --- 핵심 로직 (Python 포팅) ---
-
-        /**
-         * 모드를 전환합니다.
-         * (Python의 switch_mode)
-         */
-        function switch_mode(new_mode) {
-            mode = new_mode;
-
-            // 모든 프레임 숨기기
-            inputFrame.classList.add('hidden');
-            studyFrame.classList.add('hidden');
-            readingFrame.classList.add('hidden');
-            
-            // 모드 버튼 활성/비활성
-            Object.values(modeButtons).forEach(btn => btn.disabled = false);
-            if (modeButtons[new_mode]) {
-                modeButtons[new_mode].disabled = true;
-            }
-
-            // 읽기 모드 중지 (타이머 정리)
-            stop_reading();
-
-            // 새 모드 프레임 표시
-            if (new_mode === 'input') {
-                inputFrame.classList.remove('hidden');
-                render_sentence_list(); // 목록 새로고침
-            } else if (new_mode === 'study') {
-                studyFrame.classList.remove('hidden');
-            } else if (new_mode === 'reading') {
-                readingFrame.classList.remove('hidden');
-            }
-        }
-
-        /**
-         * (요청) Gemini API를 호출하여 번역합니다.
-         * (Python의 translator.translate 대체)
-         */
         async function getTranslation(englishText) {
             const payload = {
                 contents: [{
                     parts: [{
-                        // Gemini에게 명확한 역할 부여
                         text: `Translate the following English text to Korean. Provide only the Korean translation and nothing else:\n\n${englishText}`
                     }]
                 }]
@@ -349,10 +355,6 @@
             }
         }
 
-        /**
-         * 새 문장을 입력하고 번역하여 Firestore에 추가합니다.
-         * (Python의 handle_add_sentence + save_data 일부)
-         */
         async function handle_add_sentence() {
             const english = inputEnglish.value.trim();
             if (!english) {
@@ -366,23 +368,19 @@
             try {
                 const korean = await getTranslation(english);
                 
-                const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+                const today = new Date().toISOString().split('T')[0];
 
                 const new_entry = {
-                    // 'id'는 Firestore에서 자동 생성됩니다.
                     date: today,
                     english: english,
                     korean: korean,
                     studyCount: 0,
                     correctCount: 0,
                     lastStudyDate: null,
-                    nextReviewDate: today // 다음 복습 날짜 (처음엔 오늘)
+                    nextReviewDate: today
                 };
 
-                // Firestore에 문서 추가
                 await addDoc(sentencesCollectionRef, new_entry);
-                
-                // onSnapshot이 UI를 자동 갱신합니다.
                 inputEnglish.value = '';
 
             } catch (error) {
@@ -394,10 +392,6 @@
             }
         }
 
-        /**
-         * 텍스트 파일에서 문장을 읽어와 Firestore에 추가합니다.
-         * (Python의 load_from_file)
-         */
         function load_from_file() {
             const file = fileInput.files[0];
             if (!file) {
@@ -409,17 +403,15 @@
             reader.onload = async (event) => {
                 const content = event.target.result;
                 
-                // 마침표 단위로 문장 분리 (Python 로직과 동일)
                 const sentences = content.split('.')
                     .map(s => s.trim())
-                    .filter(s => s && s.length > 5); // 너무 짧은 문장 제외
+                    .filter(s => s && s.length > 5);
 
                 if (sentences.length === 0) {
                     showMessage("경고", "유효한 문장을 찾을 수 없습니다.");
                     return;
                 }
 
-                // 진행 상황 모달 표시
                 fileProgressModal.classList.remove('hidden');
                 
                 let added_count = 0;
@@ -446,18 +438,15 @@
                         await addDoc(sentencesCollectionRef, new_entry);
                         added_count++;
 
-                        // API 제한 방지를 위한 짧은 대기 (Python의 time.sleep)
-                        await new Promise(resolve => setTimeout(resolve, 200)); // 200ms
+                        await new Promise(resolve => setTimeout(resolve, 200));
 
                     } catch (error) {
                         console.error(`파일 문장 처리 오류: ${sentence}`, error);
-                        // 오류가 나도 계속 진행
                     }
                 }
                 
                 fileProgressModal.classList.add('hidden');
                 showMessage("완료", `${added_count}개의 문장이 추가되었습니다.`);
-                // onSnapshot이 목록을 자동 갱신합니다.
             };
 
             reader.onerror = () => {
@@ -467,18 +456,14 @@
             reader.readAsText(file);
         }
 
-        /**
-         * 입력 모드의 목록(테이블)을 렌더링합니다.
-         * (Python의 render_sentence_list)
-         */
         function render_sentence_list() {
             if (!sentenceListBody) return;
             
-            sentenceListBody.innerHTML = ''; // 목록 비우기
-            selectedSentenceId = null; // 선택 해제
+            sentenceListBody.innerHTML = '';
+            selectedSentenceId = null;
             deleteBtn.disabled = true;
 
-            const sorted_data = [...study_data].sort((a, b) => new Date(b.date) - new Date(a.date)); // 날짜 내림차순
+            const sorted_data = [...study_data].sort((a, b) => new Date(b.date) - new Date(a.date));
 
             sorted_data.forEach(item => {
                 const study_count = item.studyCount || 0;
@@ -488,7 +473,7 @@
 
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-gray-100 cursor-pointer border-b border-gray-200';
-                tr.dataset.id = item.id; // Firestore ID 저장
+                tr.dataset.id = item.id;
                 
                 tr.innerHTML = `
                     <td class="p-3">${item.english}</td>
@@ -500,13 +485,10 @@
                     <td class="p-3 text-center">${next_review}</td>
                 `;
 
-                // 선택 이벤트
                 tr.addEventListener('click', () => {
-                    // 기존 선택 해제
                     Array.from(sentenceListBody.children).forEach(row => {
                         row.classList.remove('bg-blue-100', 'font-semibold');
                     });
-                    // 새 항목 선택
                     tr.classList.add('bg-blue-100', 'font-semibold');
                     selectedSentenceId = item.id;
                     deleteBtn.disabled = false;
@@ -516,10 +498,6 @@
             });
         }
 
-        /**
-         * 선택된 문장을 삭제합니다.
-         * (Python의 delete_selected_sentence)
-         */
         async function delete_selected_sentence() {
             if (!selectedSentenceId) {
                 showMessage("경고", "삭제할 문장을 먼저 목록에서 선택해주세요.");
@@ -531,13 +509,9 @@
             }
 
             try {
-                // Firestore에서 문서 삭제
                 await deleteDoc(doc(sentencesCollectionRef, selectedSentenceId));
-                
-                // onSnapshot이 UI를 자동 갱신합니다.
                 selectedSentenceId = null;
                 deleteBtn.disabled = true;
-                // showMessage("삭제 완료", "선택한 문장이 삭제되었습니다."); // onSnapshot이 갱신하므로 불필요
 
             } catch (error) {
                 console.error("삭제 실패:", error);
@@ -545,10 +519,6 @@
             }
         }
 
-        /**
-         * 에빙하우스 망각 곡선 기반 다음 복습 날짜 계산
-         * (Python의 calculate_next_review_date 포팅)
-         */
         function calculate_next_review_date(study_count, correct_rate) {
             const base_intervals = [1, 2, 4, 7, 15, 30, 60, 90];
             const interval_index = Math.min(study_count, base_intervals.length - 1);
@@ -567,13 +537,9 @@
             
             const next_date = new Date();
             next_date.setDate(next_date.getDate() + Math.round(adjusted_interval));
-            return next_date.toISOString().split('T')[0]; // YYYY-MM-DD
+            return next_date.toISOString().split('T')[0];
         }
 
-        /**
-         * 망각 곡선 기반 우선순위 계산 (Helper)
-         * (Python의 start_study/get_priority 포팅)
-         */
         function get_priority(item) {
             const today = new Date();
             const todayStr = today.toISOString().split('T')[0];
@@ -585,29 +551,17 @@
 
             const correct_rate = correct_count / Math.max(1, study_count);
             
-            // 복습 예정일이 지났는지 확인
             const nextReviewDate = new Date(next_review);
             const days_overdue = Math.max(0, (today.getTime() - nextReviewDate.getTime()) / (1000 * 60 * 60 * 24));
 
-            // 우선순위 (낮을수록 먼저 학습)
-            // 1. 복습 예정일이 지난 항목 우선
-            // 2. 정답률이 낮은 항목 우선
-            // 3. 학습 횟수가 적은 항목 우선
-            // 4. 오래된 항목 우선
-            
-            // JavaScript의 sort()를 위해 비교 가능한 값 반환
-            // Python의 튜플 정렬을 배열/객체로 흉내
             return {
-                p1: -days_overdue, // (음수로 만들어 값이 작을수록 우선)
-                p2: correct_rate,  // (정답률 낮을수록 우선)
-                p3: study_count,   // (학습 횟수 적을수록 우선)
-                p4: new Date(last_study).getTime() // (오래된 날짜일수록 우선)
+                p1: -days_overdue,
+                p2: correct_rate,
+                p3: study_count,
+                p4: new Date(last_study).getTime()
             };
         }
         
-        /**
-         * 우선순위에 따라 정렬된 학습 목록을 반환합니다.
-         */
         function get_prioritized_list() {
             if (study_data.length === 0) return [];
 
@@ -622,10 +576,30 @@
             });
         }
 
-        /**
-         * '다시 공부하기' 모드를 시작합니다.
-         * (Python의 start_study 포팅)
-         */
+        function switch_mode(new_mode) {
+            mode = new_mode;
+
+            inputFrame.classList.add('hidden');
+            studyFrame.classList.add('hidden');
+            readingFrame.classList.add('hidden');
+            
+            Object.values(modeButtons).forEach(btn => btn.disabled = false);
+            if (modeButtons[new_mode]) {
+                modeButtons[new_mode].disabled = true;
+            }
+
+            stop_reading();
+
+            if (new_mode === 'input') {
+                inputFrame.classList.remove('hidden');
+                render_sentence_list();
+            } else if (new_mode === 'study') {
+                studyFrame.classList.remove('hidden');
+            } else if (new_mode === 'reading') {
+                readingFrame.classList.remove('hidden');
+            }
+        }
+
         function start_study() {
             if (study_data.length === 0) {
                 showMessage("경고", "저장된 문장이 없습니다!");
@@ -635,10 +609,8 @@
             switch_mode('study');
             is_retry_mode = false;
 
-            // 우선순위 목록 가져오기
             const sorted_data = get_prioritized_list();
             
-            // 상위 30%에서 무작위 선택 (최소 3개, 최대 전체)
             const top_count = Math.max(3, Math.min(sorted_data.length, Math.ceil(sorted_data.length * 0.3)));
             const top_items = sorted_data.slice(0, top_count);
             
@@ -655,34 +627,26 @@
             userAnswerEntry.disabled = false;
             userAnswerEntry.focus();
 
-            // 결과 프레임 초기화
             resultFrame.classList.add('hidden');
             nextQuestionBtn.disabled = true;
 
-            // 자동 이동 타이머 취소
             if (autoNextTimer) {
                 clearTimeout(autoNextTimer);
                 autoNextTimer = null;
             }
 
-            // 현재 문장 통계
             const study_count = current_question.studyCount || 0;
             const correct_count = current_question.correctCount || 0;
             const next_review = current_question.nextReviewDate || 'N/A';
-            studyStats.textContent = `**현재 문장 통계:** 학습 ${study_count}회 | 정답 ${correct_count}회 | 다음 복습: ${next_review}`;
+            studyStats.textContent = `학습 ${study_count}회 | 정답 ${correct_count}회 | 다음 복습: ${next_review}`;
         }
 
-        /**
-         * 답안을 확인합니다.
-         * (Python의 check_answer 포팅)
-         */
         async function check_answer() {
             const user_answer = userAnswerEntry.value.trim();
             if (!user_answer) return;
             
             const is_correct_attempt = user_answer.toLowerCase() === current_question.english.toLowerCase();
 
-            // 재시도 모드에서 오답 -> '다음 학습'
             if (is_retry_mode && !is_correct_attempt) {
                 next_question();
                 return;
@@ -690,7 +654,6 @@
             
             resultFrame.classList.remove('hidden');
             
-            // Firestore 업데이트용 객체
             let updatedData = {};
             
             if (is_correct_attempt) {
@@ -699,7 +662,6 @@
                 userInputLabel.textContent = "";
                 correctAnswerLabel.textContent = `정답: ${current_question.english}`;
 
-                // 첫 시도에만 카운트 업데이트
                 if (!is_retry_mode) {
                     const study_count = (current_question.studyCount || 0) + 1;
                     const correct_count = (current_question.correctCount || 0) + 1;
@@ -715,21 +677,19 @@
                 
                 is_retry_mode = false;
                 nextQuestionBtn.disabled = false;
-                userAnswerEntry.disabled = true; // 정답 시 입력 비활성화
+                userAnswerEntry.disabled = true;
                 
-                // 2초 후 자동 이동
                 autoNextTimer = setTimeout(next_question, 2000);
 
-            } else { // 오답
+            } else {
                 resultLabel.textContent = "❌ 틀렸습니다";
                 resultLabel.className = "text-3xl font-bold text-red-600";
                 userInputLabel.textContent = `입력: ${user_answer}`;
                 correctAnswerLabel.textContent = `정답: ${current_question.english}`;
 
-                // 첫 시도에만 오답으로 카운트 증가
                 if (!is_retry_mode) {
                     const study_count = (current_question.studyCount || 0) + 1;
-                    const correct_count = current_question.correctCount || 0; // 정답 수는 그대로
+                    const correct_count = current_question.correctCount || 0;
                     const correct_rate = correct_count / study_count;
 
                     updatedData = {
@@ -745,16 +705,14 @@
                 userAnswerEntry.focus();
             }
 
-            // Firestore 업데이트 (데이터가 있는 경우에만)
             if (Object.keys(updatedData).length > 0) {
                 try {
                     await updateDoc(doc(sentencesCollectionRef, current_question.id), updatedData);
                     
-                    // onSnapshot이 통계를 갱신하지만, 즉각적인 피드백을 위해 수동 갱신
                     const item = study_data.find(d => d.id === current_question.id);
                     if(item) {
-                        Object.assign(item, updatedData); // 로컬 캐시도 갱신
-                        studyStats.textContent = `**현재 문장 통계:** 학습 ${item.studyCount}회 | 정답 ${item.correctCount}회 | 다음 복습: ${item.nextReviewDate}`;
+                        Object.assign(item, updatedData);
+                        studyStats.textContent = `학습 ${item.studyCount}회 | 정답 ${item.correctCount}회 | 다음 복습: ${item.nextReviewDate}`;
                     }
 
                 } catch (error) {
@@ -764,25 +722,15 @@
             }
         }
 
-        /**
-         * 다음 문제로 넘어갑니다.
-         * (Python의 next_question)
-         */
         function next_question() {
             if (autoNextTimer) {
                 clearTimeout(autoNextTimer);
                 autoNextTimer = null;
             }
             userAnswerEntry.disabled = false;
-            start_study(); // 새 학습 시작
+            start_study();
         }
 
-        // --- 읽기 모드 로직 (Python 포팅) ---
-
-        /**
-         * '그냥 읽기' 모드를 시작합니다.
-         * (Python의 start_reading)
-         */
         function start_reading() {
             if (study_data.length === 0) {
                 showMessage("경고", "저장된 문장이 없습니다!");
@@ -790,22 +738,15 @@
             }
             
             switch_mode('reading');
-
-            // 우선순위 순으로 정렬 (학습 모드와 동일)
             reading_list = get_prioritized_list();
-            
             current_read_index = 0;
             is_playing = false;
             playBtn.disabled = false;
             stopBtn.disabled = true;
             readingDisplay.textContent = "";
-            readingProgress.textContent = `총 ${reading_list.length}개 문장 준비 완료 (복습 우선순위 순)`;
+            readingProgress.textContent = `이 ${reading_list.length}개 문장 준비 완료 (복습 우선순위 순)`;
         }
         
-        /**
-         * 읽기 속도를 업데이트합니다.
-         * (Python의 update_reading_speed)
-         */
         function update_reading_speed() {
             const speed_map = {
                 "빠르게": 0.3,
@@ -815,14 +756,10 @@
             reading_speed = speed_map[speedSelect.value] || 0.5;
         }
         
-        /**
-         * 문장 표시 시간을 계산합니다.
-         * (Python의 calculate_display_time)
-         */
         function calculate_display_time(sentence) {
             const word_count = sentence.split(' ').length;
             const display_time_sec = Math.max(2, Math.min(15, word_count * reading_speed));
-            return Math.round(display_time_sec); // 초 단위 정수
+            return Math.round(display_time_sec);
         }
 
         function play_reading() {
@@ -863,15 +800,12 @@
             readingDisplay.textContent = current_sentence;
             readingProgress.textContent = `${current_read_index + 1} / ${reading_list.length}`;
             
-            // 타이머 중지
             if (readTimer) clearTimeout(readTimer);
             if (countdownTimer) clearInterval(countdownTimer);
 
-            // 표시 시간 계산
             countdown = calculate_display_time(current_sentence);
             countdownDisplay.textContent = countdown;
             
-            // 카운트다운 타이머 시작 (1초마다)
             countdownTimer = setInterval(() => {
                 countdown--;
                 if (countdown >= 0) {
@@ -882,17 +816,11 @@
                 }
             }, 1000);
 
-            // 다음 문장 타이머 시작
             readTimer = setTimeout(() => {
                 show_next_sentence(index + 1);
             }, countdown * 1000);
         }
 
-        // --- 유틸리티 ---
-
-        /**
-         * (Python의 messagebox 대체)
-         */
         function showMessage(title, message) {
             messageTitle.textContent = title;
             messageText.textContent = message;
@@ -903,142 +831,185 @@
 </head>
 <body class="bg-gray-100 font-sans antialiased text-gray-800">
 
-    <div class="container mx-auto p-4 md:p-8 max-w-5xl">
+    <div class="container mx-auto p-4 md:p-8 max-w-6xl">
 
-        <!-- 상단: 앱 타이틀 -->
-        <header class="bg-white shadow-md rounded-lg p-6 mb-6">
-            <h1 class="text-3xl font-bold text-center text-blue-700">영어 문장 학습 웹 앱</h1>
-            <p class="text-center text-gray-600 mt-2">Firestore & Gemini API Ver. 2 (updated 2025/10/31)</p>
-        </header>
-
-        <!-- 모드 전환 버튼 -->
-        <nav class="flex flex-wrap justify-center gap-4 mb-6">
-            <button id="input-mode-btn" class="flex-1 min-w-[150px] bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out disabled:bg-gray-400 disabled:cursor-not-allowed">
-                📝 문장 입력 및 관리
-            </button>
-            <button id="study-mode-btn" class="flex-1 min-w-[150px] bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out disabled:bg-gray-400 disabled:cursor-not-allowed">
-                🧠 다시 공부하기 (학습)
-            </button>
-            <button id="reading-mode-btn" class="flex-1 min-w-[150px] bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out disabled:bg-gray-400 disabled:cursor-not-allowed">
-                📖 그냥 읽기 (복습)
-            </button>
-        </nav>
-
-        <!-- 메인 콘텐츠 영역 -->
-        <main>
-            <!-- 1. 문장 입력 모드 -->
-            <div id="input-frame" class="bg-white p-6 rounded-lg shadow-lg hidden">
-                <!-- 입력 섹션 -->
-                <div class="bg-yellow-50 p-6 rounded-lg border-2 border-yellow-200">
-                    <label for="input-english" class="block text-lg font-semibold mb-2 text-gray-700">영어 문장 또는 단어:</label>
-                    <input type="text" id="input-english" class="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 text-lg" placeholder="여기에 영어 문장 입력 후 Enter...">
-                    
-                    <div class="flex flex-wrap gap-4 mt-4 justify-center">
-                        <button id="add-sentence-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out">
-                            ✓ 입력 및 번역
-                        </button>
-                        
-                        <!-- 파일 입력 버튼 (디자인 개선) -->
-                        <label for="file-input" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md cursor-pointer transition duration-300 ease-in-out">
-                            📁 파일로 입력하기
-                        </label>
-                        <input type="file" id="file-input" class="hidden" accept=".txt">
-                        
-                        <button id="delete-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out disabled:bg-gray-400" disabled>
-                            🗑️ 선택 삭제
-                        </button>
+        <!-- 인증 화면 -->
+        <div id="auth-frame" class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-20">
+            <!-- 로그인 섹션 -->
+            <div class="bg-white p-8 rounded-lg shadow-lg">
+                <h2 class="text-3xl font-bold text-center text-blue-700 mb-6">로그인</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-2">이메일:</label>
+                        <input type="email" id="login-email" class="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500" placeholder="your@email.com">
                     </div>
-                </div>
-
-                <!-- 저장된 문장 목록 (Table) -->
-                <div class="mt-8">
-                    <h3 class="text-2xl font-semibold mb-4 text-gray-800">저장된 문장 목록</h3>
-                    <!-- 모바일 화면에서 가로 스크롤 가능하도록 설정 -->
-                    <div class="overflow-x-auto shadow-md rounded-lg border border-gray-200">
-                        <table class="w-full min-w-[800px] bg-white">
-                            <thead class="bg-gray-200">
-                                <tr>
-                                    <th class="p-3 text-left font-semibold text-gray-700">English Sentence</th>
-                                    <th class="p-3 text-left font-semibold text-gray-700">Korean Meaning</th>
-                                    <th class="p-3 text-center font-semibold text-gray-700">Date</th>
-                                    <th class="p-3 text-center font-semibold text-gray-700">Study</th>
-                                    <th class="p-3 text-center font-semibold text-gray-700">Correct</th>
-                                    <th class="p-3 text-center font-semibold text-gray-700">Ratio</th>
-                                    <th class="p-3 text-center font-semibold text-gray-700">Next Review</th>
-                                </tr>
-                            </thead>
-                            <tbody id="sentence-list-body">
-                                <!-- JS로 렌더링 -->
-                                <tr>
-                                    <td colspan="7" class="p-6 text-center text-gray-500">데이터를 불러오는 중...</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-2">비밀번호:</label>
+                        <input type="password" id="login-password" class="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500" placeholder="비밀번호">
                     </div>
-                </div>
-            </div>
-
-            <!-- 2. 다시 공부하기 모드 -->
-            <div id="study-frame" class="bg-green-50 p-6 md:p-10 rounded-lg shadow-lg text-center hidden">
-                <p id="study-stats-overall" class="text-md font-semibold text-green-800 mb-4"></p>
-                <h2 class="text-2xl font-bold text-green-900 mb-6">다음 문장을 영어로 작성하세요:</h2>
-
-                <div class="bg-white p-6 md:p-10 rounded-lg shadow-inner min-h-[150px] flex items-center justify-center">
-                    <p id="question-korean" class="text-3xl font-bold text-gray-800"></p>
-                </div>
-
-                <input type="text" id="user-answer-entry" class="w-full max-w-2xl mx-auto p-4 mt-8 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:ring-green-500 text-lg" placeholder="여기에 영어 답안 입력 후 Enter...">
-
-                <!-- 결과 피드백 -->
-                <div id="result-frame" class="bg-orange-50 p-6 rounded-lg shadow-inner mt-6 max-w-2xl mx-auto hidden">
-                    <h3 id="result-label" class="text-3xl font-bold mb-4"></h3>
-                    <p id="correct-answer-label" class="text-lg text-gray-700 mb-2"></p>
-                    <p id="user-input-label" class="text-lg text-red-600"></p>
-                    
-                    <div class="mt-6">
-                        <button id="next-question-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out disabled:bg-gray-400">
-                            ➡️ 다음 학습
-                        </button>
-                    </div>
-                </div>
-
-                <p id="study-stats" class="text-md text-gray-600 mt-6 font-semibold"></p>
-            </div>
-
-            <!-- 3. 그냥 읽기 모드 -->
-            <div id="reading-frame" class="bg-blue-50 p-6 md:p-10 rounded-lg shadow-lg text-center hidden">
-                <h2 class="text-2xl font-bold text-blue-900 mb-6">📖 그냥 읽기 (복습 모드)</h2>
-                
-                <div class="mb-6">
-                    <label for="speed-select" class="text-lg font-semibold text-gray-700 mr-3">읽기 속도 선택:</label>
-                    <select id="speed-select" class="p-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500">
-                        <option value="빠르게">빠르게</option>
-                        <option value="중간" selected>중간</option>
-                        <option value="느리게">느리게</option>
-                    </select>
-                </div>
-
-                <!-- 문장 표시 영역 -->
-                <div class="bg-white p-10 rounded-lg shadow-inner min-h-[250px] flex items-center justify-center relative">
-                    <p id="reading-display" class="text-4xl font-bold text-gray-800"></p>
-                    <p id="countdown-display" class="absolute top-4 right-6 text-4xl font-bold text-orange-600"></p>
-                </div>
-
-                <p id="reading-progress" class="text-lg text-blue-800 mt-6 font-semibold"></p>
-                
-                <div class="flex justify-center gap-6 mt-6">
-                    <button id="play-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition duration-300 ease-in-out text-2xl">
-                        ▶ Play
-                    </button>
-                    <button id="stop-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition duration-300 ease-in-out text-2xl disabled:bg-gray-400" disabled>
-                        ⏸ Stop
+                    <button id="login-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition duration-300">
+                        로그인
                     </button>
                 </div>
             </div>
-        </main>
+
+            <!-- 회원가입 섹션 -->
+            <div class="bg-white p-8 rounded-lg shadow-lg">
+                <h2 class="text-3xl font-bold text-center text-green-700 mb-6">회원가입</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-2">이메일:</label>
+                        <input type="email" id="signup-email" class="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:ring-green-500" placeholder="your@email.com">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-semibold mb-2">비밀번호 (최소 6자):</label>
+                        <input type="password" id="signup-password" class="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:ring-green-500" placeholder="비밀번호">
+                    </div>
+                    <button id="signup-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition duration-300">
+                        회원가입
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 메인 화면 -->
+        <div id="main-frame" class="hidden">
+            <!-- 상단: 앱 타이틀 및 로그아웃 -->
+            <header class="bg-white shadow-md rounded-lg p-6 mb-6 flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-blue-700">영어 문장 학습 웹 앱</h1>
+                    <p class="text-gray-600 mt-2">Firestore & Gemini API Ver.</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-gray-700 font-semibold mb-2">사용자: <span id="user-info" class="text-blue-600"></span></p>
+                    <button id="logout-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
+                        로그아웃
+                    </button>
+                </div>
+            </header>
+
+            <!-- 모드 전환 버튼 -->
+            <nav class="flex flex-wrap justify-center gap-4 mb-6">
+                <button id="input-mode-btn" class="flex-1 min-w-[150px] bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-300 disabled:bg-gray-400">
+                    📝 문장 입력 및 관리
+                </button>
+                <button id="study-mode-btn" class="flex-1 min-w-[150px] bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-300 disabled:bg-gray-400">
+                    🧠 다시 공부하기 (학습)
+                </button>
+                <button id="reading-mode-btn" class="flex-1 min-w-[150px] bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-300 disabled:bg-gray-400">
+                    📖 그냥 읽기 (복습)
+                </button>
+            </nav>
+
+            <!-- 메인 콘텐츠 영역 -->
+            <main>
+                <!-- 1. 문장 입력 모드 -->
+                <div id="input-frame" class="bg-white p-6 rounded-lg shadow-lg hidden">
+                    <div class="bg-yellow-50 p-6 rounded-lg border-2 border-yellow-200 mb-6">
+                        <label for="input-english" class="block text-lg font-semibold mb-2 text-gray-700">영어 문장 또는 단어:</label>
+                        <input type="text" id="input-english" class="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500 text-lg" placeholder="여기에 영어 문장 입력 후 Enter...">
+                        
+                        <div class="flex flex-wrap gap-4 mt-4 justify-center">
+                            <button id="add-sentence-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300">
+                                ✓ 입력 및 번역
+                            </button>
+                            
+                            <label for="file-input" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md cursor-pointer transition duration-300">
+                                📄 파일로 입력하기
+                            </label>
+                            <input type="file" id="file-input" class="hidden" accept=".txt">
+                            
+                            <button id="delete-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 disabled:bg-gray-400" disabled>
+                                🗑️ 선택 삭제
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mt-8">
+                        <h3 class="text-2xl font-semibold mb-4 text-gray-800">저장된 문장 목록</h3>
+                        <div class="overflow-x-auto shadow-md rounded-lg border border-gray-200">
+                            <table class="w-full min-w-[800px] bg-white">
+                                <thead class="bg-gray-200">
+                                    <tr>
+                                        <th class="p-3 text-left font-semibold text-gray-700">English Sentence</th>
+                                        <th class="p-3 text-left font-semibold text-gray-700">Korean Meaning</th>
+                                        <th class="p-3 text-center font-semibold text-gray-700">Date</th>
+                                        <th class="p-3 text-center font-semibold text-gray-700">Study</th>
+                                        <th class="p-3 text-center font-semibold text-gray-700">Correct</th>
+                                        <th class="p-3 text-center font-semibold text-gray-700">Ratio</th>
+                                        <th class="p-3 text-center font-semibold text-gray-700">Next Review</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="sentence-list-body">
+                                    <tr>
+                                        <td colspan="7" class="p-6 text-center text-gray-500">데이터를 불러오는 중...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. 학습 모드 -->
+                <div id="study-frame" class="bg-green-50 p-6 md:p-10 rounded-lg shadow-lg text-center hidden">
+                    <p id="study-stats-overall" class="text-md font-semibold text-green-800 mb-4"></p>
+                    <h2 class="text-2xl font-bold text-green-900 mb-6">다음 문장을 영어로 작성하세요:</h2>
+
+                    <div class="bg-white p-6 md:p-10 rounded-lg shadow-inner min-h-[150px] flex items-center justify-center">
+                        <p id="question-korean" class="text-3xl font-bold text-gray-800"></p>
+                    </div>
+
+                    <input type="text" id="user-answer-entry" class="w-full max-w-2xl mx-auto p-4 mt-8 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:ring-green-500 text-lg" placeholder="여기에 영어 답안 입력 후 Enter...">
+
+                    <div id="result-frame" class="bg-orange-50 p-6 rounded-lg shadow-inner mt-6 max-w-2xl mx-auto hidden">
+                        <h3 id="result-label" class="text-3xl font-bold mb-4"></h3>
+                        <p id="correct-answer-label" class="text-lg text-gray-700 mb-2"></p>
+                        <p id="user-input-label" class="text-lg text-red-600"></p>
+                        
+                        <div class="mt-6">
+                            <button id="next-question-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 disabled:bg-gray-400">
+                                ➡️ 다음 학습
+                            </button>
+                        </div>
+                    </div>
+
+                    <p id="study-stats" class="text-md text-gray-600 mt-6 font-semibold"></p>
+                </div>
+
+                <!-- 3. 읽기 모드 -->
+                <div id="reading-frame" class="bg-blue-50 p-6 md:p-10 rounded-lg shadow-lg text-center hidden">
+                    <h2 class="text-2xl font-bold text-blue-900 mb-6">📖 그냥 읽기 (복습 모드)</h2>
+                    
+                    <div class="mb-6">
+                        <label for="speed-select" class="text-lg font-semibold text-gray-700 mr-3">읽기 속도 선택:</label>
+                        <select id="speed-select" class="p-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500">
+                            <option value="빠르게">빠르게</option>
+                            <option value="중간" selected>중간</option>
+                            <option value="느리게">느리게</option>
+                        </select>
+                    </div>
+
+                    <div class="bg-white p-10 rounded-lg shadow-inner min-h-[250px] flex items-center justify-center relative">
+                        <p id="reading-display" class="text-4xl font-bold text-gray-800"></p>
+                        <p id="countdown-display" class="absolute top-4 right-6 text-4xl font-bold text-orange-600"></p>
+                    </div>
+
+                    <p id="reading-progress" class="text-lg text-blue-800 mt-6 font-semibold"></p>
+                    
+                    <div class="flex justify-center gap-6 mt-6">
+                        <button id="play-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition duration-300 text-2xl">
+                            ▶ Play
+                        </button>
+                        <button id="stop-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition duration-300 text-2xl disabled:bg-gray-400" disabled>
+                            ⏸ Stop
+                        </button>
+                    </div>
+                </div>
+            </main>
+        </div>
     </div>
 
-    <!-- 범용 메시지 모달 (Python의 messagebox 대체) -->
+    <!-- 메시지 모달 -->
     <div id="message-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
         <div class="bg-white rounded-lg shadow-xl max-w-sm w-full">
             <div class="p-6 border-b border-gray-200">
@@ -1048,7 +1019,7 @@
                 <p id="message-text" class="text-gray-600"></p>
             </div>
             <div class="p-4 bg-gray-50 text-right rounded-b-lg">
-                <button id="message-close-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg transition duration-300 ease-in-out">
+                <button id="message-close-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg transition duration-300">
                     확인
                 </button>
             </div>
@@ -1059,7 +1030,6 @@
     <div id="file-progress-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 hidden z-50">
         <div class="bg-white rounded-lg shadow-xl p-8 text-center max-w-sm w-full">
             <h3 class="text-xl font-semibold text-gray-800 mb-4">파일 처리 중</h3>
-            <!-- 간단한 스피너 -->
             <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
             <p id="file-progress-text" class="text-gray-700 text-lg"></p>
         </div>
@@ -1067,5 +1037,3 @@
 
 </body>
 </html>
-
-
