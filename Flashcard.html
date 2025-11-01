@@ -466,8 +466,7 @@
             // ✅ 수정: Correct가 0인 문장만 필터링해서 표시
             const incorrect_data = study_data.filter(item => (item.correctCount || 0) === 0);
             const sorted_data = [...incorrect_data].sort((a, b) => new Date(b.date) - new Date(a.date)); // 날짜 내림차순
-
-            const sorted_data = [...study_data].sort((a, b) => new Date(b.date) - new Date(a.date));
+            //const sorted_data = [...study_data].sort((a, b) => new Date(b.date) - new Date(a.date));
 
             sorted_data.forEach(item => {
                 const study_count = item.studyCount || 0;
@@ -929,27 +928,31 @@
                         </div>
                     </div>
 
+                    <!-- 저장된 문장 목록 (Table) -->
                     <div class="mt-8">
                         <h3 class="text-2xl font-semibold mb-4 text-gray-800">저장된 문장 목록</h3>
-                        <div class="overflow-x-auto shadow-md rounded-lg border border-gray-200 h-80">
-                            <table class="w-full min-w-[800px] bg-white">
-                                <thead class="bg-gray-200 sticky top-0">
-                                    <tr>
-                                        <th class="p-3 text-left font-semibold text-gray-700">English Sentence</th>
-                                        <th class="p-3 text-left font-semibold text-gray-700">Korean Meaning</th>
-                                        <th class="p-3 text-center font-semibold text-gray-700">Date</th>
-                                        <th class="p-3 text-center font-semibold text-gray-700">Study</th>
-                                        <th class="p-3 text-center font-semibold text-gray-700">Correct</th>
-                                        <th class="p-3 text-center font-semibold text-gray-700">Ratio</th>
-                                        <th class="p-3 text-center font-semibold text-gray-700">Next Review</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="sentence-list-body" class="overflow-y-auto block">
-                                    <tr>
-                                        <td colspan="7" class="p-6 text-center text-gray-500">데이터를 불러오는 중...</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                        <!-- 모바일 화면에서 가로 스크롤 가능하도록 설정 -->
+                        <div class="shadow-md rounded-lg border border-gray-200">
+                            <div class="overflow-y-auto h-80">
+                                <table class="w-full min-w-[800px] bg-white">
+                                    <thead class="bg-gray-200 sticky top-0">
+                                        <tr>
+                                            <th class="p-3 text-left font-semibold text-gray-700">English Sentence</th>
+                                            <th class="p-3 text-left font-semibold text-gray-700">Korean Meaning</th>
+                                            <th class="p-3 text-center font-semibold text-gray-700">Date</th>
+                                            <th class="p-3 text-center font-semibold text-gray-700">Study</th>
+                                            <th class="p-3 text-center font-semibold text-gray-700">Correct</th>
+                                            <th class="p-3 text-center font-semibold text-gray-700">Ratio</th>
+                                            <th class="p-3 text-center font-semibold text-gray-700">Next Review</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="sentence-list-body">
+                                        <tr>
+                                            <td colspan="7" class="p-6 text-center text-gray-500">데이터를 불러오는 중...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
