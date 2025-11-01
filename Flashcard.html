@@ -464,9 +464,13 @@
             deleteBtn.disabled = true;
 
             // ✅ 수정: Correct가 0인 문장만 필터링해서 표시
-            const incorrect_data = study_data.filter(item => (item.correctCount || 0) === 0);
-            const sorted_data = [...incorrect_data].sort((a, b) => new Date(b.date) - new Date(a.date)); // 날짜 내림차순
-            //const sorted_data = [...study_data].sort((a, b) => new Date(b.date) - new Date(a.date));
+            const incorrect_data = study_data.filter(item => (item.correctCount || 0) === 0);            
+            // 날짜 내림차순, 같은 날짜면 문서 ID 내림차순 (최신 입력이 위로)
+            const sorted_data = [...incorrect_data].sort((a, b) => {
+                const dateCompare = new Date(b.date) - new Date(a.date);
+                if (dateCompare !== 0) return dateCompare; // 날짜가 다르면 날짜 기준
+                return b.id.localeCompare(a.id); // 같은 날짜면 ID 기준 (ID는 타임스탬프 기반)
+            });
 
             sorted_data.forEach(item => {
                 const study_count = item.studyCount || 0;
