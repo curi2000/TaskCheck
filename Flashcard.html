@@ -625,7 +625,10 @@
                 return;
             }
 
-            questionKorean.textContent = current_question.korean || '(번역 없음)';
+            //questionKorean.textContent = current_question.korean || '(번역 없음)';
+            const firstWord = current_question.english.split(' ')[0]; // 영어 첫 단어 추출
+            questionKorean.innerHTML = `${current_question.korean || '(번역 없음)'}<br><span style="font-size: 14pt; color: #666; margin-top: 8px; display: block;">${firstWord} ... </span>`;
+            
             userAnswerEntry.value = '';
             userAnswerEntry.disabled = false;
             userAnswerEntry.focus();
@@ -879,7 +882,7 @@
         <div id="main-frame" class="hidden">
             <!-- 상단: 앱 타이틀 및 로그아웃 -->
             <header class="bg-white shadow-md rounded-lg p-6 mb-6 flex justify-between items-center">
-                <p class="text-gray-600 mt-2 text-right" style="font-size:10pt; font-style: italic;">Last update 2025.11.01 ver.03</p>
+                <p class="text-gray-600 mt-2 text-right" style="font-size:10pt; font-style: italic;">Last update 2025.11.01 ver.05</p>
                 <div>
                     <h1 class="text-3xl font-bold text-blue-700">영어 문장 학습 웹 앱</h1>
                     <p class="text-gray-600 font-semibold mt-2">Firestore & Gemini API</p>                    
