@@ -5,10 +5,8 @@
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
-
     <script>
-    // Firebase 프로젝트 설정 (본인 프로젝트로 교체!)
-    
+    // Firebase 프로젝트 설정 (본인 프로젝트로 교체!)    
     const firebaseConfig = {
       apiKey: "AIzaSyCv9qO_dTwSXTACNjrjQ5H13h09JzJwN9A",
       authDomain: "dailyroutine-ea1a1.firebaseapp.com",
@@ -18,17 +16,16 @@
       appId: "1:389292492309:web:77dea07659d73391f3b01c",
       measurementId: "G-XQ2D0VB96G"
     };
-
-
     // Firebase 초기화
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
     </script>
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>통합 일일 루틴 관리</title>
-    <style>
+    <style>        
         * {
             box-sizing: border-box;
         }
@@ -482,11 +479,11 @@
         </div>
 
         <div class="exercise-area">
-            <div class="section-header">🏃‍♂️ 오늘의 운동 루틴</div>
+            <div class="section-header">🏃‍♂️ My Task </div>
             
             <div class="exercise-selector">
-                <button class="exercise-btn active" onclick="selectExercise('swimming')" id="swimmingBtn">🏊‍♂️ MEDITATION</button>
-                <button class="exercise-btn" onclick="selectExercise('golf')" id="golfBtn">⛳ WORKOUT</button>
+                <button class="exercise-btn active" onclick="selectExercise('swimming')" id="swimmingBtn">⛳ Daily Tasks</button>
+                <button class="exercise-btn" onclick="selectExercise('golf')" id="golfBtn">🏊‍♂️ WORKOUT</button>
             </div>
             
             <div class="routine-info" id="routineInfo">
@@ -505,25 +502,102 @@
 
         const tasks = [ /* 기존 tasks 배열 그대로 */ 
             { name: "Pills&Coffee", type: "health" },
-            { name: "UPhone", type: "study" },
-            { name: "E-Mail", type: "work" },
-            { name: "Flashcard", type: "interest" },                       
-            { name: "In-person", type: "study" },
-            { name: "Report", type: "business" },
-            { name: "Book/Paper", type: "study" },
-            { name: "Dymola", type: "technical" },
-            { name: "AI-Coding", type: "technical" },
-            { name: "Shadowing", type: "reading" },
-            { name: "Swimming", type: "exercise" },
-            { name: "Planning", type: "planning" }
+            { name: "Flashcard", type: "study" },
+            { name: "U-Phone", type: "study" },
+            { name: "English", type: "study" },                       
+            { name: "Email/To-Do", type: "business" },
+            { name: "1D-Simulation", type: "business" },
+            { name: "Monthly Report", type: "business" },            
+            { name: "Task 1", type: "business" },
+            { name: "Task 2", type: "business" },
+            { name: "Task 3", type: "business" },            
+            { name: "Workout", type: "exercise" },
+            { name: "EnglishShow", type: "habbit" }
         ];
 
         const startDate = new Date(2025, 7, 31);
         let currentWeek = 1;
         let currentExercise = 'swimming';
 
-        const swimmingDatabase = { /* 기존 그대로 */ };
-        const golfDatabase = [ /* 기존 그대로 */ ];
+        
+        const swimmingDatabase = {
+            warmup: [
+                { name: "매일 5분 스트레칭", duration: "5분", link: "https://www.youtube.com/watch?v=WdT4wzneh24&list=PLhkZVYEI4DwM2ugZbGpXo1QyyoAkDKXYn&index=1", emoji: "🤸‍♂️" },
+                { name: "서서하는 스트레칭", duration: "8분", link: "https://www.youtube.com/watch?v=YQ8ZDRQPsKI&list=PLhkZVYEI4DwM2ugZbGpXo1QyyoAkDKXYn&index=2", emoji: "🦵" },
+                { name: "간단한 요가 동작", duration: "10분", link: "https://www.youtube.com/watch?v=El7yTMfqkzs&list=PLhkZVYEI4DwM2ugZbGpXo1QyyoAkDKXYn&index=3", emoji: "🌀" },
+                { name: "10분 전신 스트레칭", duration: "13분", link: "https://www.youtube.com/watch?v=kB0_xQdt2ow&list=PLhkZVYEI4DwM2ugZbGpXo1QyyoAkDKXYn&index=4", emoji: "🙆‍♂️" }
+            ],
+            main: [
+                { name: "자유형 이미지 트레이닝", duration: "2분", link: "https://www.youtube.com/watch?v=pP7ZI0pLc2A&list=PLhkZVYEI4DwOzDtwQ3BYgJsvR3-JHyjXj&index=11", emoji: "🏊‍♂️" },
+                { name: "평영 이미지 트레이닝", duration: "2분", link: "https://www.youtube.com/watch?v=n030qdOt6Zo&list=PLhkZVYEI4DwOzDtwQ3BYgJsvR3-JHyjXj&index=19", emoji: "🐸" },
+                { name: "배영 이미지 트레이닝", duration: "2분", link: "https://www.youtube.com/watch?v=VaLg-SKvfDg&list=PLhkZVYEI4DwOzDtwQ3BYgJsvR3-JHyjXj&index=20", emoji: "🏊‍♀️" },
+                { name: "자유형 킥 드릴 연습", duration: "3분", link: "https://www.youtube.com/watch?v=vH9Ig05MlrM&t=0m47s", emoji: "🦵" },
+                { name: "자유형 스피드 드릴", duration: "2분", link: "https://www.youtube.com/watch?v=vH9Ig05MlrM&t=1m22s", emoji: "⚡" },
+                { name: "접영 이미지 트레이닝", duration: "2분 30초", link: "https://www.youtube.com/watch?v=zyWs0LbkoRc&list=PLhkZVYEI4DwOzDtwQ3BYgJsvR3-JHyjXj&index=33", emoji: "🦋" },
+                { name: "플립턴 이미지 트레이닝", duration: "2분", link: "https://www.youtube.com/watch?v=wfhCP7Xkej8&list=PLhkZVYEI4DwOzDtwQ3BYgJsvR3-JHyjXj&index=38", emoji: "🔄" },
+                { name: "TheraBand 어깨 강화", duration: "3분", link: "https://www.youtube.com/watch?v=W8bV-kse8fw&t=5m24s", emoji: "💪" }
+            ],
+            cooldown: [
+                { name: "5분 호흡명상", duration: "7분", link: "https://www.youtube.com/watch?v=dZewQEbQQM0&list=PLhkZVYEI4DwPhxwTaOhwf2Tmu-ZLa187U", emoji: "🧘‍♂️" },
+                { name: "5분 명상", duration: "8분", link: "https://www.youtube.com/watch?v=6Qu5E3MrVH8&list=PLhkZVYEI4DwPhxwTaOhwf2Tmu-ZLa187U&index=2", emoji: "🧘‍♂️" },
+                { name: "5분 아침명상", duration: "5분", link: "https://www.youtube.com/watch?v=quQoNETX3s8&list=PLhkZVYEI4DwPhxwTaOhwf2Tmu-ZLa187U&index=3", emoji: "🧘‍♂️" },
+                { name: "5분 호흡명상", duration: "7분", link: "https://www.youtube.com/watch?v=VwERiv2CxRI&list=PLhkZVYEI4DwPhxwTaOhwf2Tmu-ZLa187U&index=4", emoji: "🧘‍♂️" },
+                { name: "빼기 명상", duration: "5분", link: "https://www.youtube.com/watch?v=LaM3-_ntnjU&list=PLhkZVYEI4DwPhxwTaOhwf2Tmu-ZLa187U&index=5", emoji: "🧘‍♂️" }
+            ]
+        };
+
+        const golfDatabase = [
+            {
+                weekDay: 0,
+                name: "휴식일",
+                items: [
+                    { name: "가벼운 산책", reps: "20-40분", type: "flexibility" }
+                ]
+            },
+            {
+                weekDay: [2, 4, 6],
+                name: "기본 근력력 운동 루틴",
+                items: [
+                    { name: "플랭크", reps: "30초×3세트", type: "strength", link: "https://www.youtube.com/shorts/UBErzTq0Xcs" },
+                    { name: "스쿼트", reps: "15회×3세트", type: "strength", link: "https://www.youtube.com/shorts/WjLvyBtRX_I" },
+                    { name: "런지", reps: "각12회x3세트", type: "strength", link: "https://www.youtube.com/shorts/lO8B4wEFt4k" },
+                    { name: "푸시업", reps: "10회x3세트", type: "strength", link: "https://m.youtube.com/shorts/kzxjsK_i2EE" },
+                    { name: "힙브릿지", reps: "15회×3세트", type: "strength", link: "https://www.youtube.com/shorts/lyp7w3wE3FA" },
+                    { name: "버드독", reps: "10회x3세트", type: "strength", link: "https://m.youtube.com/shorts/nR3gnkcx1fg" },                    
+                    { name: "아기 자세", reps: "40초x2세트", type: "flexibility", link: "https://www.youtube.com/shorts/D2JRyK413LE" },
+                    { name: "햄스트링 스트레칭", reps: "각30초x2세트", type: "flexibility", link: "https://www.youtube.com/shorts/Oaz_PeM6Now" },
+                    { name: "엉덩이 스트레칭", reps: "각30초x2세", type: "flexibility", link: "https://www.youtube.com/shorts/zICrR1-sFis" },
+                    { name: "골프 레슨 1", reps: "10초~10분", type: "golf-basic", link: "https://www.youtube.com/watch?v=JzgT-m6u5tc&list=PLhkZVYEI4DwPNE7wERRGnSKgSYzFNee53&index=1" },     
+                    { name: "골프 레슨 2", reps: "10초~10분", type: "golf-basic", link: "https://www.youtube.com/watch?v=a8xdxzSjCaU&list=PLhkZVYEI4DwPNE7wERRGnSKgSYzFNee53&index=4" },     
+                    { name: "골프 레슨 3", reps: "10초~10분", type: "golf-basic", link: "https://www.youtube.com/watch?v=L8XKMOQaQQg&list=PLhkZVYEI4DwPNE7wERRGnSKgSYzFNee53&index=7" },   
+                    { name: "골프 레슨 4", reps: "10초~10분", type: "golf-basic", link: "https://www.youtube.com/watch?v=PUn9hi5yJKU&list=PLhkZVYEI4DwPNE7wERRGnSKgSYzFNee53&index=11" },
+                    { name: "골프 레슨 5", reps: "10초~10분", type: "golf-basic", link: "https://www.youtube.com/watch?v=xPiTWUhTaA0&list=PLhkZVYEI4DwPNE7wERRGnSKgSYzFNee53&index=15" }
+                ]
+            },
+            {
+                weekDay: [1, 3, 5],
+                name: "스트레칭 운동 루틴",
+                items: [     
+                    { name: "힙브릿지", reps: "15회×3세트", type: "strength", link: "https://www.youtube.com/shorts/lyp7w3wE3FA" },
+                    { name: "버드독", reps: "10회x3세트", type: "strength", link: "https://m.youtube.com/shorts/nR3gnkcx1fg" },
+                    { name: "런지", reps: "각12회x3세트", type: "strength", link: "https://www.youtube.com/shorts/lO8B4wEFt4k" },
+                    { name: "고양이-소 자세", reps: "10회x2세트", type: "flexibility", link: "https://www.youtube.com/shorts/ZfeUIoX2WVg" },
+                    { name: "고관절 스트레칭", reps: "각30초x2세트", type: "flexibility", link: "https://www.youtube.com/shorts/Epz5t2sUIus" },
+                    { name: "흉추 회전 스트레칭", reps: "각10회x2세트", type: "flexibility", link: "https://www.youtube.com/watch?v=nKMQMj6o1vo" },
+                    { name: "벽 스트레칭", reps: "각30초x2세트", type: "flexibility", link: "https://m.youtube.com/shorts/JKGDc6BguPc" },
+                    { name: "아기 자세", reps: "40초x2세트", type: "flexibility", link: "https://www.youtube.com/shorts/D2JRyK413LE" },
+                    { name: "햄스트링 스트레칭", reps: "각30초x2세트", type: "flexibility", link: "https://www.youtube.com/shorts/Oaz_PeM6Now" },
+                    { name: "이상근 스트레칭", reps: "각30초x2세", type: "flexibility", link: "https://www.youtube.com/watch?v=XTX6qOoIAXA" },
+                    { name: "골프 레슨", reps: "10초~10분", type: "golf-basic", link: "https://www.youtube.com/watch?v=xPiTWUhTaA0&list=PLhkZVYEI4DwPNE7wERRGnSKgSYzFNee53&index=15" },
+                    { name: "골프 레슨 1", reps: "10초~10분", type: "golf-basic", link: "https://www.youtube.com/watch?v=ACQh138gJeo&list=PLhkZVYEI4DwPNE7wERRGnSKgSYzFNee53&index=19" },     
+                    { name: "골프 레슨 2", reps: "10초~10분", type: "golf-basic", link: "https://www.youtube.com/watch?v=LlPJD-T2bFM&list=PLhkZVYEI4DwPNE7wERRGnSKgSYzFNee53&index=23" },     
+                    { name: "드라이버 레슨", reps: "14분", type: "golf-basic", link: "https://www.youtube.com/watch?v=7huvGFnP0Xc" },   
+                    { name: "아이언 레슨", reps: "11분", type: "golf-basic", link: "https://www.youtube.com/watch?v=SYZoT4pO5-0&t=32s" },
+                    { name: "스윙 레", reps: "10분", type: "golf-basic", link: "https://www.youtube.com/watch?v=4wirbEkrJ10" }
+                    
+                ]            
+            }
+        ];
 
         // === UI 요소 ===
         const authForm = document.getElementById('authForm');
@@ -795,7 +869,7 @@
             updateWeeklyProgress();
         }
 
-        // === 운동 관련 함수 (기존 유지) ===
+        // === 오른쪽 일일 Task / 운동 / 취미 관련  ===
         function selectExercise(type) {
             currentExercise = type;
             document.querySelectorAll('.exercise-btn').forEach(btn => btn.classList.remove('active'));
@@ -811,12 +885,12 @@
         }
 
         function updateSwimmingView() {
-            document.getElementById('routineInfo').textContent = '총 소요시간: 약 20분 (초보자 맞춤형)';
+            document.getElementById('routineInfo').textContent = '매일 각 Task 25 x 2회 이상 수행하기';
             const routineGroups = document.getElementById('routineGroups');
             routineGroups.innerHTML = `
-            <div class="routine-group warmup"><h4>스트레칭 (10분)</h4><ul class="routine-list" id="warmupList"></ul></div>
-            <div class="routine-group main"><h4>이미지 트레이닝 (10분)</h4><ul class="routine-list" id="mainList"></ul></div>
-            <div class="routine-group cooldown"><h4>명상 (5~8분)</h4><ul class="routine-list" id="cooldownList"></ul></div>
+            <div class="routine-group warmup"><h4>Task 1</h4><ul class="routine-list" id="warmupList"></ul></div>
+            <div class="routine-group main"><h4>Task 2</h4><ul class="routine-list" id="mainList"></ul></div>
+            <div class="routine-group cooldown"><h4>Task 3</h4><ul class="routine-list" id="cooldownList"></ul></div>
             `;
 
             const todayRoutine = {
