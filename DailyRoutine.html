@@ -510,9 +510,9 @@
             { name: "Datacenter", type: "business" },
             { name: "CycleBook", type: "business" },            
             { name: "GuideBook", type: "hobby" },            
-            { name: "Workout", type: "health" },                        
-            { name: "Sketch", type: "hobby" },
-            { name: "Flashcard", type: "study" }
+            { name: "Workout", type: "health" },                                    
+            { name: "Flashcard", type: "study" },
+            { name: "Reading", type: "hobby" }
         ];
 
         const startDate = new Date(2025, 7, 31);
@@ -551,7 +551,9 @@
                 weekDay: 0,
                 name: "휴식일",
                 items: [
-                    { name: "가벼운 산책", reps: "20-40분", type: "flexibility" }
+                    { name: "가벼운 산책", reps: "40-60분", type: "flexibility" },
+                    { name: "어반 스케치", reps: "40-60분", type: "flexibility" },
+                    { name: "영화 보기", reps: "90-150분", type: "flexibility" }
                 ]
             },
             {
@@ -885,7 +887,7 @@
         }
 
         function updateSwimmingView() {
-            document.getElementById('routineInfo').textContent = '집중! 감량, 근력 향상';
+            document.getElementById('routineInfo').textContent = '이루고 싶은 일들을 잊지 말자!';
             const routineGroups = document.getElementById('routineGroups');
             routineGroups.innerHTML = `
             <div class="routine-group warmup"><h4>Task 1</h4><ul class="routine-list" id="warmupList"></ul></div>
@@ -934,7 +936,7 @@
             const savedProgress = exerciseProgress[todayKey] || {};
 
             const strength = getRandomExercises(todayRoutine.items.filter(i => i.type === 'strength'), 2);
-            const flexibility = getRandomExercises(todayRoutine.items.filter(i => i.type === 'flexibility'), 3);
+            const flexibility = getRandomExercises(todayRoutine.items.filter(i => i.type === 'flexibility'), 2);
             const golfBasic = getRandomExercises(todayRoutine.items.filter(i => i.type === 'golf-basic'), 2);
             const all = [...strength, ...flexibility, ...golfBasic];
 
