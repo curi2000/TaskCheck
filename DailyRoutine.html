@@ -501,18 +501,18 @@
         let unsubscribeExercise = null;
 
         const tasks = [ /* 기존 tasks 배열 그대로 */ 
-            { name: "Pills&Coffee", type: "health" },
-            { name: "Flashcard", type: "study" },
+            { name: "Pills&Coffee", type: "health" },            
             { name: "U-Phone", type: "study" },
             { name: "GraInUse", type: "study" },                       
             { name: "Email/ToDo", type: "business" },
             { name: "Dymola", type: "business" },
             { name: "Monthly", type: "business" },            
             { name: "Datacenter", type: "business" },
-            { name: "GuideBook", type: "business" },
             { name: "CycleBook", type: "business" },            
-            { name: "Workout", type: "exercise" },
-            { name: "E-Show", type: "habbit" }
+            { name: "GuideBook", type: "hobby" },            
+            { name: "Workout", type: "health" },                        
+            { name: "Sketch", type: "hobby" },
+            { name: "Flashcard", type: "study" }
         ];
 
         const startDate = new Date(2025, 7, 31);
@@ -885,7 +885,7 @@
         }
 
         function updateSwimmingView() {
-            document.getElementById('routineInfo').textContent = '매일 각 Task 25 x 2회 이상 수행하기';
+            document.getElementById('routineInfo').textContent = '집중! 감량, 근력 향상';
             const routineGroups = document.getElementById('routineGroups');
             routineGroups.innerHTML = `
             <div class="routine-group warmup"><h4>Task 1</h4><ul class="routine-list" id="warmupList"></ul></div>
@@ -922,7 +922,7 @@
             Array.isArray(r.weekDay) ? r.weekDay.includes(dayOfWeek) : r.weekDay === dayOfWeek
             ) || { name: "휴식일", items: [{ name: "가벼운 산책", reps: "20-40분", type: "flexibility" }] };
 
-            document.getElementById('routineInfo').textContent = `${todayRoutine.name} - 꾸준한 연습으로 실력 향상!`;
+            document.getElementById('routineInfo').textContent = `${todayRoutine.name} - 집중! 감량, 근력 향상`;
             const routineGroups = document.getElementById('routineGroups');
             routineGroups.innerHTML = `
             <div class="routine-group strength"><h4>근력 강화</h4><ul class="routine-list" id="strengthList"></ul></div>
