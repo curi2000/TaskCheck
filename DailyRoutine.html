@@ -6,495 +6,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
     <script>
-    // Firebase 프로젝트 설정 (본인 프로젝트로 교체!)    
-    const firebaseConfig = {
-      apiKey: "AIzaSyCv9qO_dTwSXTACNjrjQ5H13h09JzJwN9A",
-      authDomain: "dailyroutine-ea1a1.firebaseapp.com",
-      projectId: "dailyroutine-ea1a1",
-      storageBucket: "dailyroutine-ea1a1.firebasestorage.app",
-      messagingSenderId: "389292492309",
-      appId: "1:389292492309:web:77dea07659d73391f3b01c",
-      measurementId: "G-XQ2D0VB96G"
-    };
-    // Firebase 초기화
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-    </script>
-    
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>통합 일일 루틴 관리</title>
-    <style>        
-        * {
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Arial', sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f0f4f8;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .title {
-            font-size: 28px;
-            font-weight: bold;
-            color: #1a365d;
-            margin-bottom: 10px;
-        }
-
-        .subtitle {
-            font-size: 16px;
-            color: #4a5568;
-            margin-bottom: 20px;
-        }
-
-        .date-info {
-            font-size: 14px;
-            color: #718096;
-            font-style: italic;
-        }
-
-        .main-container {
-            display: grid;
-            grid-template-columns: 2fr 0.7fr;
-            gap: 30px;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        /* 왼쪽 영역 - 주간 업무 체크리스트 */
-        .weekly-tasks {
-            background-color: white;
-            border: 2px solid #1a365d;
-            border-radius: 10px;
-            padding: 10px;
-        }
-
-        .section-header {
-            font-size: 20px;
-            font-weight: bold;
-            color: #1a365d;
-            margin-bottom: 15px;
-            text-align: center;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #e2e8f0;
-        }
-
-        .week-selector {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .week-btn {
-            padding: 8px 16px;
-            border: 2px solid #1a365d;
-            background-color: white;
-            color: #1a365d;
-            border-radius: 20px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            font-size: 12px;
-        }
-
-        .week-btn:hover {
-            background-color: #e2e8f0;
-            transform: translateY(-2px);
-        }
-
-        .week-btn.active {
-            background-color: #1a365d;
-            color: white;
-        }
-
-        .weekly-progress {
-            text-align: center;
-            margin-bottom: 20px;
-            padding: 10px;
-            background-color: #e2e8f0;
-            border-radius: 5px;
-            color: #1a365d;
-            font-weight: bold;
-            font-size: 16px;
-        }
-
-        .days-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 10px;
-        }
-
-        .day-card {
-            background-color: #f7fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 10px;
-            min-height: 200px;
-        }
-
-        .day-header {
-            font-weight: bold;
-            font-size: 14px;
-            color: #1a365d;
-            text-align: center;
-            margin-bottom: 10px;
-            padding-bottom: 5px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        .day-card.today {
-            border: 3px solid #4299e1;
-            background-color: #ebf8ff;
-        }
-
-        .day-card.weekend {
-            background-color: #fef5e7;
-            border-color: #f6ad55;
-        }
-
-        .task-item {
-            font-size: 11px;
-            margin: 2px 0;
-            padding: 2px 4px;
-            border-radius: 3px;
-            cursor: pointer;
-            transition: all 0.2s;
-            border-left: 3px solid #4299e1;
-            background-color: #ebf8ff;
-            color: #1a365d;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .task-item:hover {
-            transform: scale(1.02);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        .task-item.completed {
-            opacity: 0.7;
-            text-decoration: line-through;
-            background-color: #c6f6d5;
-            border-left-color: #38a169;
-        }
-
-        .task-name {
-            flex: 1;
-        }
-
-        .task-time {
-            font-size: 8px;
-            color: #666;
-            margin-left: 4px;
-            font-weight: normal;
-        }
-
-        .completion-counter {
-            text-align: center;
-            font-size: 10px;
-            font-weight: bold;
-            color: #1a365d;
-            background-color: #e2e8f0;
-            padding: 2px 5px;
-            border-radius: 10px;
-            margin-top: 5px;
-        }
-
-        .weekend-placeholder {
-            text-align: center;
-            font-size: 12px;
-            color: #d69e2e;
-            font-weight: bold;
-            margin: 10px 0;
-            padding: 10px;
-            background-color: #fff8dc;
-            border: 2px dashed #f6ad55;
-            border-radius: 8px;
-        }
-
-        /* 오른쪽 영역 - 운동 루틴 */
-        .exercise-area {
-            background-color: white;
-            border: 2px solid #2d5016;
-            border-radius: 10px;
-            padding: 10px;
-        }
-
-        .exercise-area .section-header {
-            color: #2d5016;
-            border-bottom-color: #e6f3e6;
-        }
-
-        .exercise-selector {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .exercise-btn {
-            padding: 8px 16px;
-            border: 2px solid #2d5016;
-            background-color: white;
-            color: #2d5016;
-            border-radius: 20px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            font-size: 12px;
-        }
-
-        .exercise-btn:hover {
-            background-color: #e6f3e6;
-        }
-
-        .exercise-btn.active {
-            background-color: #2d5016;
-            color: white;
-        }
-
-        .routine-info {
-            text-align: center;
-            margin-bottom: 15px;
-            padding: 8px;
-            background-color: #e7f4fc;
-            border-radius: 5px;
-            color: #2d5016;
-            font-weight: bold;
-            font-size: 12px;
-        }
-
-        .routine-groups {
-            display: grid;
-            gap: 15px;
-        }
-
-        .routine-group {
-            background-color: #f9f9f9;
-            padding: 12px;
-            border-radius: 8px;
-        }
-
-        .routine-group.warmup {
-            border-left: 4px solid #3498db;
-        }
-
-        .routine-group.main {
-            border-left: 4px solid #e74c3c;
-        }
-
-        .routine-group.cooldown {
-            border-left: 4px solid #27ae60;
-        }
-
-        .routine-group.strength {
-            border-left: 4px solid #e74c3c;
-        }
-
-        .routine-group.flexibility {
-            border-left: 4px solid #3498db;
-        }
-
-        .routine-group.golf-basic {
-            border-left: 4px solid #27ae60;
-        }
-
-        .routine-group h4 {
-            margin: 0 0 10px 0;
-            font-size: 14px;
-            text-align: center;
-            font-weight: bold;
-        }
-
-        .routine-group.warmup h4 { color: #3498db; }
-        .routine-group.main h4 { color: #e74c3c; }
-        .routine-group.cooldown h4 { color: #27ae60; }
-        .routine-group.strength h4 { color: #e74c3c; }
-        .routine-group.flexibility h4 { color: #3498db; }
-        .routine-group.golf-basic h4 { color: #27ae60; }
-
-        .routine-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .exercise-item {
-            margin: 6px 0;
-            padding: 8px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: 1px solid #ddd;
-            text-align: center;
-            font-size: 11px;
-        }
-
-        .exercise-name {
-            font-weight: bold;
-            margin-bottom: 2px;
-        }
-
-        .exercise-duration {
-            font-size: 10px;
-            color: #666;
-            font-weight: normal;
-        }
-
-        .exercise-item.warmup { 
-            background-color: #e7f4fc; 
-            border-color: #3498db; 
-        }
-        .exercise-item.warmup .exercise-name { color: #3498db; }
-
-        .exercise-item.main { 
-            background-color: #fce7e7; 
-            border-color: #e74c3c; 
-        }
-        .exercise-item.main .exercise-name { color: #e74c3c; }
-
-        .exercise-item.cooldown { 
-            background-color: #e8f9e8; 
-            border-color: #27ae60; 
-        }
-        .exercise-item.cooldown .exercise-name { color: #27ae60; }
-
-        .exercise-item.strength { 
-            background-color: #fce7e7; 
-            border-color: #e74c3c; 
-        }
-        .exercise-item.strength .exercise-name { color: #e74c3c; }
-
-        .exercise-item.flexibility { 
-            background-color: #e7f4fc; 
-            border-color: #3498db; 
-        }
-        .exercise-item.flexibility .exercise-name { color: #3498db; }
-
-        .exercise-item.golf-basic { 
-            background-color: #e8f9e8; 
-            border-color: #27ae60; 
-        }
-        .exercise-item.golf-basic .exercise-name { color: #27ae60; }
-
-        .exercise-item.completed {
-            opacity: 0.6;
-            text-decoration: line-through;
-            background-color: #f0f0f0;
-            border-color: #ccc;
-        }
-
-        .exercise-item.completed .exercise-name,
-        .exercise-item.completed .exercise-duration {
-            color: #888;
-        }
-
-        .exercise-item:hover:not(.completed) {
-            transform: translateY(-2px);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-        }
-
-        @media (max-width: 1200px) {
-            .main-container {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .days-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .day-card {
-                min-height: 150px;
-            }
-            
-            .week-btn, .exercise-btn {
-                padding: 6px 12px;
-                font-size: 11px;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <div class="date-info" style="font-size:9px; text-align:right;">Last update 2025.11.03 ver.03</div>
-        <div class="title">🗓️ 통합 일일 루틴 관리</div>
-        <div class="subtitle">꾸준한 일상 관리와 운동으로 성장하는 매일을 만들어보세요!</div>        
-        <div class="date-info" id="dateInfo"></div>        
-        <div id="authContainer" style="max-width:400px; margin:5px auto; padding:5px; border-radius:3px; text-align:center;">        
-        <form id="authForm">
-            <input type="email" id="email" placeholder="이메일" required 
-                style="width:100%; padding:10px; margin:8px 0; border:1px solid #ccc; border-radius:6px; font-size:10px;">
-            <input type="password" id="password" placeholder="비밀번호 (6자 이상)" required minlength="6"
-                style="width:100%; padding:10px; margin:8px 0; border:1px solid #ccc; border-radius:6px; font-size:10px;">
-            
-            <div style="display:flex; gap:10px; margin-top:5px;">
-            <button type="submit" id="loginBtn" 
-                    style="flex:1; padding:12px; background:#1a365d; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">
-                로그인
-            </button>
-            <button type="button" id="signupBtn" 
-                    style="flex:1; padding:12px; background:#2d5016; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">
-                회원가입
-            </button>
-            </div>
-        </form>
-
-        <div id="authMessage" style="margin-top:5px; color:#e74c3c; font-size:10px;"></div>
-        <div id="userInfo" style="margin-top:5px; display:none; align-items:center; justify-content:center; gap:10px;">
-            <img id="userPhoto" width="40" style="border-radius:50%;">
-            <span id="userName" style="font-weight:normal; font-size:10px;"></span>
-            <button id="logoutBtn" style="padding:6px 10px; font-size:10px; background:#e74c3c; color:white; border:none; border-radius:4px; cursor:pointer;">
-            로그아웃
-            </button>
-        </div>
-    </div>
-      
-
-    <div class="main-container">
-        <div class="weekly-tasks">
-            <div class="section-header">📋 주간 업무 체크리스트</div>
-            
-            <div class="week-selector" id="weekSelector">
-                </div>
-            
-            <div class="weekly-progress" id="weeklyProgress">
-                </div>
-            
-            <div class="days-grid" id="daysGrid">
-                </div>
-        </div>
-
-        <div class="exercise-area">
-            <div class="section-header">🏃‍♂️ My Task </div>
-            
-            <div class="exercise-selector">
-                <button class="exercise-btn active" onclick="selectExercise('swimming')" id="swimmingBtn">⛳ Daily Tasks</button>
-                <button class="exercise-btn" onclick="selectExercise('golf')" id="golfBtn">🏊‍♂️ WORKOUT</button>
-            </div>
-            
-            <div class="routine-info" id="routineInfo">
-                </div>
-            
-            <div class="routine-groups" id="routineGroups">
-                </div>
-        </div>
-    </div>
-
-    <script>
         // 전역 변수
         let currentUser = null;
         let unsubscribeTasks = null;
@@ -996,6 +507,493 @@
         }
 
         window.addEventListener('DOMContentLoaded', init);
-</script>
+     
+    // Firebase 프로젝트 설정 (본인 프로젝트로 교체!)    
+    const firebaseConfig = {
+      apiKey: "AIzaSyCv9qO_dTwSXTACNjrjQ5H13h09JzJwN9A",
+      authDomain: "dailyroutine-ea1a1.firebaseapp.com",
+      projectId: "dailyroutine-ea1a1",
+      storageBucket: "dailyroutine-ea1a1.firebasestorage.app",
+      messagingSenderId: "389292492309",
+      appId: "1:389292492309:web:77dea07659d73391f3b01c",
+      measurementId: "G-XQ2D0VB96G"
+    };
+    // Firebase 초기화
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    </script>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>통합 일일 루틴 관리</title>
+    <style>        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f4f8;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1a365d;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            color: #4a5568;
+            margin-bottom: 20px;
+        }
+
+        .date-info {
+            font-size: 14px;
+            color: #718096;
+            font-style: italic;
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 2fr 0.7fr;
+            gap: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* 왼쪽 영역 - 주간 업무 체크리스트 */
+        .weekly-tasks {
+            background-color: white;
+            border: 2px solid #1a365d;
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .section-header {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1a365d;
+            margin-bottom: 15px;
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .week-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .week-btn {
+            padding: 8px 16px;
+            border: 2px solid #1a365d;
+            background-color: white;
+            color: #1a365d;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 12px;
+        }
+
+        .week-btn:hover {
+            background-color: #e2e8f0;
+            transform: translateY(-2px);
+        }
+
+        .week-btn.active {
+            background-color: #1a365d;
+            color: white;
+        }
+
+        .weekly-progress {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #e2e8f0;
+            border-radius: 5px;
+            color: #1a365d;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+        }
+
+        .day-card {
+            background-color: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px;
+            min-height: 200px;
+        }
+
+        .day-header {
+            font-weight: bold;
+            font-size: 14px;
+            color: #1a365d;
+            text-align: center;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .day-card.today {
+            border: 3px solid #4299e1;
+            background-color: #ebf8ff;
+        }
+
+        .day-card.weekend {
+            background-color: #fef5e7;
+            border-color: #f6ad55;
+        }
+
+        .task-item {
+            font-size: 11px;
+            margin: 2px 0;
+            padding: 2px 4px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid #4299e1;
+            background-color: #ebf8ff;
+            color: #1a365d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .task-item:hover {
+            transform: scale(1.02);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .task-item.completed {
+            opacity: 0.7;
+            text-decoration: line-through;
+            background-color: #c6f6d5;
+            border-left-color: #38a169;
+        }
+
+        .task-name {
+            flex: 1;
+        }
+
+        .task-time {
+            font-size: 8px;
+            color: #666;
+            margin-left: 4px;
+            font-weight: normal;
+        }
+
+        .completion-counter {
+            text-align: center;
+            font-size: 10px;
+            font-weight: bold;
+            color: #1a365d;
+            background-color: #e2e8f0;
+            padding: 2px 5px;
+            border-radius: 10px;
+            margin-top: 5px;
+        }
+
+        .weekend-placeholder {
+            text-align: center;
+            font-size: 12px;
+            color: #d69e2e;
+            font-weight: bold;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #fff8dc;
+            border: 2px dashed #f6ad55;
+            border-radius: 8px;
+        }
+
+        /* 오른쪽 영역 - 운동 루틴 */
+        .exercise-area {
+            background-color: white;
+            border: 2px solid #2d5016;
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .exercise-area .section-header {
+            color: #2d5016;
+            border-bottom-color: #e6f3e6;
+        }
+
+        .exercise-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .exercise-btn {
+            padding: 8px 16px;
+            border: 2px solid #2d5016;
+            background-color: white;
+            color: #2d5016;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 12px;
+        }
+
+        .exercise-btn:hover {
+            background-color: #e6f3e6;
+        }
+
+        .exercise-btn.active {
+            background-color: #2d5016;
+            color: white;
+        }
+
+        .routine-info {
+            text-align: center;
+            margin-bottom: 15px;
+            padding: 8px;
+            background-color: #e7f4fc;
+            border-radius: 5px;
+            color: #2d5016;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .routine-groups {
+            display: grid;
+            gap: 15px;
+        }
+
+        .routine-group {
+            background-color: #f9f9f9;
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .routine-group.warmup {
+            border-left: 4px solid #3498db;
+        }
+
+        .routine-group.main {
+            border-left: 4px solid #e74c3c;
+        }
+
+        .routine-group.cooldown {
+            border-left: 4px solid #27ae60;
+        }
+
+        .routine-group.strength {
+            border-left: 4px solid #e74c3c;
+        }
+
+        .routine-group.flexibility {
+            border-left: 4px solid #3498db;
+        }
+
+        .routine-group.golf-basic {
+            border-left: 4px solid #27ae60;
+        }
+
+        .routine-group h4 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .routine-group.warmup h4 { color: #3498db; }
+        .routine-group.main h4 { color: #e74c3c; }
+        .routine-group.cooldown h4 { color: #27ae60; }
+        .routine-group.strength h4 { color: #e74c3c; }
+        .routine-group.flexibility h4 { color: #3498db; }
+        .routine-group.golf-basic h4 { color: #27ae60; }
+
+        .routine-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .exercise-item {
+            margin: 6px 0;
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid #ddd;
+            text-align: center;
+            font-size: 11px;
+        }
+
+        .exercise-name {
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+
+        .exercise-duration {
+            font-size: 10px;
+            color: #666;
+            font-weight: normal;
+        }
+
+        .exercise-item.warmup { 
+            background-color: #e7f4fc; 
+            border-color: #3498db; 
+        }
+        .exercise-item.warmup .exercise-name { color: #3498db; }
+
+        .exercise-item.main { 
+            background-color: #fce7e7; 
+            border-color: #e74c3c; 
+        }
+        .exercise-item.main .exercise-name { color: #e74c3c; }
+
+        .exercise-item.cooldown { 
+            background-color: #e8f9e8; 
+            border-color: #27ae60; 
+        }
+        .exercise-item.cooldown .exercise-name { color: #27ae60; }
+
+        .exercise-item.strength { 
+            background-color: #fce7e7; 
+            border-color: #e74c3c; 
+        }
+        .exercise-item.strength .exercise-name { color: #e74c3c; }
+
+        .exercise-item.flexibility { 
+            background-color: #e7f4fc; 
+            border-color: #3498db; 
+        }
+        .exercise-item.flexibility .exercise-name { color: #3498db; }
+
+        .exercise-item.golf-basic { 
+            background-color: #e8f9e8; 
+            border-color: #27ae60; 
+        }
+        .exercise-item.golf-basic .exercise-name { color: #27ae60; }
+
+        .exercise-item.completed {
+            opacity: 0.6;
+            text-decoration: line-through;
+            background-color: #f0f0f0;
+            border-color: #ccc;
+        }
+
+        .exercise-item.completed .exercise-name,
+        .exercise-item.completed .exercise-duration {
+            color: #888;
+        }
+
+        .exercise-item:hover:not(.completed) {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        @media (max-width: 1200px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .days-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .day-card {
+                min-height: 150px;
+            }
+            
+            .week-btn, .exercise-btn {
+                padding: 6px 12px;
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="date-info" style="font-size:9px; text-align:right;">Last update 2025.11.03 ver.03</div>
+        <div class="title">🗓️ 통합 일일 루틴 관리</div>
+        <div class="subtitle">꾸준한 일상 관리와 운동으로 성장하는 매일을 만들어보세요!</div>        
+        <div class="date-info" id="dateInfo"></div>        
+        <div id="authContainer" style="max-width:400px; margin:5px auto; padding:5px; border-radius:3px; text-align:center;">        
+        <form id="authForm">
+            <input type="email" id="email" placeholder="이메일" required 
+                style="width:100%; padding:10px; margin:8px 0; border:1px solid #ccc; border-radius:6px; font-size:10px;">
+            <input type="password" id="password" placeholder="비밀번호 (6자 이상)" required minlength="6"
+                style="width:100%; padding:10px; margin:8px 0; border:1px solid #ccc; border-radius:6px; font-size:10px;">
+            
+            <div style="display:flex; gap:10px; margin-top:5px;">
+            <button type="submit" id="loginBtn" 
+                    style="flex:1; padding:12px; background:#1a365d; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">
+                로그인
+            </button>
+            <button type="button" id="signupBtn" 
+                    style="flex:1; padding:12px; background:#2d5016; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">
+                회원가입
+            </button>
+            </div>
+        </form>
+
+        <div id="authMessage" style="margin-top:5px; color:#e74c3c; font-size:10px;"></div>
+        <div id="userInfo" style="margin-top:5px; display:none; align-items:center; justify-content:center; gap:10px;">
+            <img id="userPhoto" width="40" style="border-radius:50%;">
+            <span id="userName" style="font-weight:normal; font-size:10px;"></span>
+            <button id="logoutBtn" style="padding:6px 10px; font-size:10px; background:#e74c3c; color:white; border:none; border-radius:4px; cursor:pointer;">
+            로그아웃
+            </button>
+        </div>
+    </div>      
+
+    <div class="main-container">
+        <div class="weekly-tasks">
+            <div class="section-header">📋 주간 업무 체크리스트</div>
+            
+            <div class="week-selector" id="weekSelector">
+                </div>
+            
+            <div class="weekly-progress" id="weeklyProgress">
+                </div>
+            
+            <div class="days-grid" id="daysGrid">
+                </div>
+        </div>
+
+        <div class="exercise-area">
+            <div class="section-header">🏃‍♂️ My Task </div>
+            
+            <div class="exercise-selector">
+                <button class="exercise-btn active" onclick="selectExercise('swimming')" id="swimmingBtn">⛳ Daily Tasks</button>
+                <button class="exercise-btn" onclick="selectExercise('golf')" id="golfBtn">🏊‍♂️ WORKOUT</button>
+            </div>
+            
+            <div class="routine-info" id="routineInfo">
+                </div>
+            
+            <div class="routine-groups" id="routineGroups">
+                </div>
+        </div>
+    </div>
+
 </body>
 </html>
