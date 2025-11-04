@@ -5,7 +5,24 @@
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
-    
+    <script>
+    // Firebase 프로젝트 설정 (본인 프로젝트로 교체!)    
+    const firebaseConfig = {
+      apiKey: "AIzaSyCv9qO_dTwSXTACNjrjQ5H13h09JzJwN9A",
+      authDomain: "dailyroutine-ea1a1.firebaseapp.com",
+      projectId: "dailyroutine-ea1a1",
+      storageBucket: "dailyroutine-ea1a1.firebasestorage.app",
+      messagingSenderId: "389292492309",
+      appId: "1:389292492309:web:77dea07659d73391f3b01c",
+      measurementId: "G-XQ2D0VB96G"
+    };
+
+
+    // Firebase 초기화
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>통합 일일 루틴 관리</title>
@@ -978,22 +995,7 @@
             selectTodayExercise();
         }
 
-        window.addEventListener('DOMContentLoaded', init);
-     
-    // Firebase 프로젝트 설정 (본인 프로젝트로 교체!)    
-    const firebaseConfig = {
-      apiKey: "AIzaSyCv9qO_dTwSXTACNjrjQ5H13h09JzJwN9A",
-      authDomain: "dailyroutine-ea1a1.firebaseapp.com",
-      projectId: "dailyroutine-ea1a1",
-      storageBucket: "dailyroutine-ea1a1.firebasestorage.app",
-      messagingSenderId: "389292492309",
-      appId: "1:389292492309:web:77dea07659d73391f3b01c",
-      measurementId: "G-XQ2D0VB96G"
-    };
-    // Firebase 초기화
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+        window.addEventListener('DOMContentLoaded', init);    
     </script>
 </body>
 </html>
