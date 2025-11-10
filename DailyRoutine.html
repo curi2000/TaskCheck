@@ -501,17 +501,17 @@
         let unsubscribeExercise = null;
 
         const tasks = [ /* 기존 tasks 배열 그대로 */ 
-            { name: "Pills&Coffee", type: "health" },            
-            { name: "U-Phone", type: "study" },                               
-            { name: "Email/ToDo", type: "business" },
+            { name: "Pills&Coffee", type: "health" },                                                 
+            { name: "Email/ToDo", type: "business" },            
+            { name: "Monthly", type: "business" },   
             { name: "Dymola", type: "business" },
-            { name: "Monthly", type: "business" },            
             { name: "Datacenter", type: "business" },
             { name: "CycleBook", type: "business" },            
-            { name: "GuideBook", type: "hobby" },            
-            { name: "Workout", type: "health" },                                    
+            { name: "Workout", type: "health" },      
+            { name: "GuideBook", type: "hobby" },                                                                 
+            { name: "AI-Coding", type: "hobby" },            
+            { name: "U-Phone", type: "study" },  
             { name: "Flashcard", type: "study" },
-            { name: "AI-Coding", type: "hobby" },
             { name: "EnglishBook", type: "study" }
         ];
 
@@ -771,13 +771,20 @@
             const today = new Date();
             const weekStart = new Date(startDate);
             weekStart.setDate(startDate.getDate() + (currentWeek - 1) * 7);
+            // weekStart가 속한 주의 월요일을 찾습니다.
+            const dayOfWeek = weekStart.getDay(); // 0(일) ~ 6(토)
+            // 0이 일요일이므로, 월요일(1)이 되도록 조정합니다. 
+            // 일요일(0)이면 -6일 (다음 월요일), 월요일(1)이면 0일, 화요일(2)이면 -1일...
+            // M=1, T=2, W=3, T=4, F=5, S=6, S=0
+            let diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; 
+            weekStart.setDate(weekStart.getDate() + diff); // 해당 주의 월요일로 설정
             
             updateWeeklyProgress();
             
             const daysGrid = document.getElementById('daysGrid');
             daysGrid.innerHTML = '';
             
-            const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+            const dayNames = ['월', '화', '수', '목', '금', '토', '일'];
             
             for (let i = 0; i < 7; i++) {
             const currentDate = new Date(weekStart);
@@ -786,14 +793,17 @@
             const dayCard = document.createElement('div');
             dayCard.className = 'day-card';
             if (currentDate.toDateString() === today.toDateString()) dayCard.classList.add('today');
-            if (i === 0 || i === 6) dayCard.classList.add('weekend');
+            // 3. 주말 조건 수정: 토요일(i=5) 또는 일요일(i=6)
+            if (i === 5 || i === 6) dayCard.classList.add('weekend');
             
             const dayHeader = document.createElement('div');
             dayHeader.className = 'day-header';
+            // dayNames[i]를 사용하여 월요일부터 일요일까지 순서대로 표시됩니다.
             dayHeader.textContent = `${dayNames[i]} (${currentDate.getMonth() + 1}/${currentDate.getDate()})`;
             dayCard.appendChild(dayHeader);
-            
-            if (i === 0 || i === 6) {
+
+            // 4. 주말 placeholder 로직 수정    
+            if (i === 5 || i === 6) {
                 const placeholder = document.createElement('div');
                 placeholder.className = 'weekend-placeholder';
                 placeholder.innerHTML = i === 0 
