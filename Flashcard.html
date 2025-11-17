@@ -486,8 +486,12 @@
             selectedSentenceId = null;
             deleteBtn.disabled = true;
 
-            // ✅ 수정: Correct가 0인 문장만 필터링해서 표시
-            const incorrect_data = study_data.filter(item => (item.correctCount || 0) === 0);                        
+            const today = new Date().toISOString().split('T')[0];  // 오늘 날짜 (YYYY-MM-DD)
+    
+            // ✅ 수정: 오늘 날짜로 저장한 문장 + Correct가 0인 문장만 필터링
+            const incorrect_data = study_data.filter(item => 
+                (item.correctCount || 0) === 0 && item.date === today
+            );                        
             // ID 역순으로 정렬 (최신 입력이 위로)
             const sorted_data = [...incorrect_data].sort((a, b) => a.id < b.id ? 1 : -1);
             
@@ -908,7 +912,7 @@
         </div>
 
         <!-- 메인 화면 -->
-        <div class="text-gray-600 mt-2 text-right" style="font-size:10pt; font-style: italic;">Last update 2025.11.04 ver.06</div>
+        <div class="text-gray-600 mt-2 text-right" style="font-size:10pt; font-style: italic;">Last update 2025.11.17 ver.07</div>
         <div id="main-frame" class="hidden">
             <!-- 상단: 앱 타이틀 및 로그아웃 -->            
             <header class="bg-white shadow-md rounded-lg p-6 mb-6 flex justify-between items-center">                
