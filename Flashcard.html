@@ -390,7 +390,13 @@
 
             try {
                 const korean = await getTranslationWithRetry(english);
-
+                
+                // ✅ 수정: korean이 undefined가 아닌지 확인
+                if (!korean) {
+                    showMessage("오류", "번역에 실패했습니다. 다시 시도해주세요.");
+                    return;
+                }
+                
                 const today = new Date().toISOString().split('T')[0];
 
                 const new_entry = {
