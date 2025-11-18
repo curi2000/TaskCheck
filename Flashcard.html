@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>영어 문장 학습 웹 앱 ver.07 (2025/11/17)</title>
+    <title>영어 문장 학습 웹 앱 ver.06 (2025/11/04)</title>
     <!-- Tailwind CSS 로드 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Firebase SDK 로드 -->
@@ -399,7 +399,7 @@
                     korean: korean,
                     studyCount: 0,
                     correctCount: 0,
-                    lastStudyDate: today,
+                    lastStudyDate: null,
                     nextReviewDate: today
                 };
 
@@ -454,7 +454,7 @@
                             korean: korean,
                             studyCount: 0,
                             correctCount: 0,
-                            lastStudyDate: today,
+                            lastStudyDate: null,
                             nextReviewDate: today
                         };
                         
@@ -487,8 +487,9 @@
             deleteBtn.disabled = true;
 
             // ✅ 수정: Correct가 0인 문장만 필터링해서 표시
-            const incorrect_data = study_data.filter(item => (item.correctCount || 0) === 0);              
-            
+            const incorrect_data = study_data.filter(item => (item.correctCount || 0) === 0);                        
+            //const incorrect_data = study_data.filter(item => (item.date) === today);                        
+
             // ID 역순으로 정렬 (최신 입력이 위로)
             const sorted_data = [...incorrect_data].sort((a, b) => a.id < b.id ? 1 : -1);
             
@@ -909,13 +910,13 @@
         </div>
 
         <!-- 메인 화면 -->
-        <div class="text-gray-600 mt-2 text-right" style="font-size:10pt; font-style: italic;">Last update 2025.11.17 ver.07</div>
+        <div class="text-gray-600 mt-2 text-right" style="font-size:10pt; font-style: italic;">Last update 2025.11.04 ver.06</div>
         <div id="main-frame" class="hidden">
             <!-- 상단: 앱 타이틀 및 로그아웃 -->            
             <header class="bg-white shadow-md rounded-lg p-6 mb-6 flex justify-between items-center">                
                 <div>
                     <h1 class="text-3xl font-bold text-blue-700">영어 문장 학습 웹 앱</h1>
-                    <p class="text-gray-600 font-semibold mt-2">Firestore & Gemini API <br>     Add function getTranslationWithRetry.</p>
+                    <p class="text-gray-600 font-semibold mt-2">Firestore & Gemini API<br>add function getTranslationWithRetry</p>                    
                 </div>
                 <div class="text-right">                    
                     <p class="text-gray-700 font-semibold mb-2">사용자: <span id="user-info" class="text-blue-600"></span></p>
