@@ -486,8 +486,8 @@
             selectedSentenceId = null;
             deleteBtn.disabled = true;
 
-            // ✅ 수정: Correct가 0인 문장만 필터링해서 표시
-            const incorrect_data = study_data.filter(item => (item.correctCount || 0) === 0 && item.date === today);                        
+            // ✅ 수정: Correct가 0인 문장만 필터링해서 표시 → 오늘 날짜인 것으로 수정
+            const incorrect_data = study_data.filter(item => item.date === today);                        
             // ID 역순으로 정렬 (최신 입력이 위로)
             const sorted_data = [...incorrect_data].sort((a, b) => a.id < b.id ? 1 : -1);
             
@@ -914,7 +914,7 @@
             <header class="bg-white shadow-md rounded-lg p-6 mb-6 flex justify-between items-center">                
                 <div>
                     <h1 class="text-3xl font-bold text-blue-700">영어 문장 학습 웹 앱</h1>
-                    <p class="text-gray-600 font-semibold mt-2">Firestore & Gemini API<br>add function getTranslationWithRetry</p>                    
+                    <p class="text-gray-600 mt-2">Firestore & Gemini API<br>add function getTranslationWithRetry and sorting</p>                    
                 </div>
                 <div class="text-right">                    
                     <p class="text-gray-700 font-semibold mb-2">사용자: <span id="user-info" class="text-blue-600"></span></p>
