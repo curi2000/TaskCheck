@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCv9qO_dTwSXTACNjrjQ5H13h09JzJwN9A",
+      authDomain: "dailyroutine-ea1a1.firebaseapp.com",
+      projectId: "dailyroutine-ea1a1",
+      storageBucket: "dailyroutine-ea1a1.firebasestorage.app",
+      messagingSenderId: "389292492309",
+      appId: "1:389292492309:web:77dea07659d73391f3b01c",
+      measurementId: "G-XQ2D0VB96G"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Odyssey Checklist</title>
+  <style>
+    /* ============================================================
+       ODYSSEY CHECKLIST  –  ver.01  2026.03
+    ============================================================ */
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap');
+
+    :root {
+      --navy:   #1a365d;
+      --navy-md:#2a4a7f;
+      --sky:    #4299e1;
+      --mint:   #c6f6d5;
+      --green:  #38a169;
+      --amber:  #f6ad55;
+      --amber-bg:#fff8ee;
+      --life-bg:#f0faf4;
+      --work-bg:#f7faff;
+      --border: #d6e4f0;
+      --text:   #2d3748;
+      --muted:  #718096;
+      --done-bg:#d4edda;
+      --done-txt:#276749;
+      --white:  #ffffff;
+      --bg:     #eef2f7;
+      --radius: 6px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'IBM Plex Sans KR', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 13px;
+      padding: 12px 16px 30px;
+    }
+
+    /* ─── HEADER ─────────────────────────────── */
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .app-title { font-size: 20px; font-weight: 700; color: var(--navy); letter-spacing: -0.5px; }
+    .app-date  { font-size: 11px; color: var(--muted); }
+    .auth-area { display: flex; align-items: center; gap: 6px; }
+    .auth-form { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .auth-form input {
+      padding: 5px 8px; border: 1px solid var(--border); border-radius: var(--radius);
+      font-size: 11px; width: 150px;
+    }
+    .btn-sm {
+      padding: 5px 10px; border: none; border-radius: var(--radius);
+      cursor: pointer; font-size: 11px; font-weight: 600;
+    }
+    .btn-login  { background: var(--navy);  color: #fff; }
+    .btn-signup { background: var(--green); color: #fff; }
+    .btn-logout { background: #e53e3e; color: #fff; }
+    .user-info  { display: none; align-items: center; gap: 8px; font-size: 11px; }
+    .auth-msg   { font-size: 10px; color: #e53e3e; }
+
+    /* ─── CARD ───────────────────────────────── */
+    .card {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+    .card-header {
+      background: var(--navy);
+      color: #fff;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .card-body { padding: 10px 12px; }
+
+    /* ─── ODYSSEY PLAN ───────────────────────── */
+    /* 전체 레이아웃: 라벨(64px) + 5열 균등 */
+    .od-row {
+      display: grid;
+      grid-template-columns: 64px repeat(5, 1fr);
+      align-items: stretch;
+      margin-bottom: 5px;
+    }
+    .od-row-label {
+      font-size: 10px; font-weight: 700; color: var(--muted);
+      text-align: right; padding-right: 8px;
+      display: flex; align-items: center; justify-content: flex-end;
+      line-height: 1.3;
+    }
+    .od-cell { padding: 0 3px; }
+    .mission-chip {
+      display: block;
+      background: var(--work-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 3px 7px;
+      font-size: 11px;
+      height: 100%;
+      box-sizing: border-box;
+    }
+    .mission-chip .chip-label {
+      font-size: 9px; font-weight: 700; color: var(--sky);
+      display: block; margin-bottom: 1px;
+    }
+    .mission-chip.personal { background: var(--life-bg); }
+    .mission-chip.personal .chip-label { color: var(--green); }
+
+    /* ─── WORKING TARGET ─────────────────────── */
+    .target-list { list-style: none; }
+    .target-list li {
+      display: flex; gap: 8px; align-items: flex-start;
+      padding: 3px 0;
+      border-bottom: 1px dashed var(--border);
+    }
+    .target-list li:last-child { border-bottom: none; }
+    .target-num {
+      font-size: 10px; font-weight: 700; color: var(--sky);
+      min-width: 16px;
+    }
+    .target-text { font-size: 11px; line-height: 1.5; }
+
+    /* ─── WEEKLY CHECKLIST ───────────────────── */
+    .checklist-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 6px 12px;
+      background: var(--navy);
+      color: #fff;
+    }
+    .checklist-title { font-size: 13px; font-weight: 700; }
+    .week-nav { display: flex; align-items: center; gap: 10px; }
+    .week-nav button {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: #fff; padding: 2px 10px;
+      border-radius: 4px; cursor: pointer; font-size: 14px;
+      transition: background 0.2s;
+    }
+    .week-nav button:hover { background: rgba(255,255,255,0.3); }
+    .week-label { font-size: 15px; font-weight: 700; font-family: 'IBM Plex Mono', monospace; }
+    .week-dates { font-size: 10px; color: rgba(255,255,255,0.7); }
+
+    /* Core Task Panel */
+    .core-task-wrapper {
+      background: var(--amber-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 8px 12px;
+      display: flex; align-items: flex-start; gap: 8px;
+    }
+    .core-task-label {
+      font-size: 10px; font-weight: 700; color: var(--navy);
+      min-width: 70px; padding-top: 6px;
+      text-align: center; line-height: 1.3;
+    }
+    .core-task-grid {
+      flex: 1;
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 5px;
+    }
+    .core-task-item {
+      display: flex; align-items: center; gap: 6px;
+    }
+    .core-task-name {
+      font-size: 11px; font-weight: 700; color: var(--navy-md);
+      min-width: 80px; white-space: nowrap;
+    }
+    .core-task-input {
+      flex: 1; border: 1px solid var(--border);
+      border-radius: 4px; padding: 3px 6px;
+      font-size: 11px; background: var(--white);
+      font-family: 'IBM Plex Sans KR', sans-serif;
+    }
+    .core-task-input:focus { outline: none; border-color: var(--sky); }
+    .btn-update {
+      background: #e6b800; color: #5a3e00;
+      border: none; border-radius: 4px;
+      padding: 6px 12px; font-size: 11px; font-weight: 700;
+      cursor: pointer; white-space: nowrap;
+      transition: background 0.2s;
+      align-self: center;
+    }
+    .btn-update:hover { background: #f0c800; }
+    .btn-update.saved { background: var(--green); color: #fff; }
+
+    /* ─── ROUTINE TABLE ──────────────────────── */
+    .routine-table-wrap { overflow-x: auto; }
+    .routine-table {
+      width: 100%; border-collapse: collapse;
+      table-layout: fixed;
+    }
+    .routine-table th {
+      background: var(--navy);
+      color: #fff; font-size: 11px; font-weight: 600;
+      text-align: center; padding: 5px 3px;
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+    .routine-table th.today-hdr { background: var(--sky); }
+    .routine-table th.weekend-hdr { background: var(--navy-md); }
+
+    /* section-label 컬럼 */
+    .routine-table td.section-label {
+      font-size: 10px; font-weight: 700;
+      color: var(--muted); text-align: center;
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      padding: 4px 2px;
+      border: none;
+      border-right: 1px solid var(--border);
+      width: 20px;
+    }
+    .routine-table tr.life1-row td.section-label { background: #edfaf3; color: var(--green); }
+    .routine-table tr.work-row td.section-label  { background: #eef4ff; color: var(--navy-md); }
+    .routine-table tr.life2-row td.section-label { background: #edfaf3; color: var(--green); }
+
+    /* 태스크 셀: 테두리 없애고 좌우 컬럼 경계만 가볍게 */
+    .routine-table td.task-cell {
+      vertical-align: top;
+      padding: 3px 4px;
+      border: none;
+      border-right: 1px solid rgba(200,215,230,0.5);
+    }
+    /* 그룹별 배경색 */
+    .routine-table tr.life1-row td.task-cell { background: #f4fcf7; }
+    .routine-table tr.work-row  td.task-cell { background: #f5f8ff; }
+    .routine-table tr.life2-row td.task-cell { background: #f4fcf7; }
+    /* 오늘 날짜: 왼쪽 테두리만 강조 */
+    .routine-table td.task-cell.today-col    {
+      border-left: 2px solid var(--sky) !important;
+      background: rgba(235,248,255,0.7) !important;
+    }
+    .routine-table td.section-label.today-col { border-left: 2px solid var(--sky) !important; }
+    /* 주말 */
+    .routine-table td.task-cell.weekend-col  { background: #fffbf0 !important; }
+
+    /* 그룹 간 행 경계: life1→work, work→life2 구분선 */
+    .routine-table tr.work-row td {
+      border-top: 1px solid rgba(180,200,220,0.4);
+    }
+    .routine-table tr.life2-row td {
+      border-top: 1px solid rgba(180,200,220,0.4);
+    }
+
+    /* 통합 카운터 행 */
+    .routine-table tr.counter-row td {
+      background: var(--white);
+      border: none;
+      border-top: 1px solid var(--border);
+      border-right: 1px solid rgba(200,215,230,0.5);
+      text-align: center;
+      padding: 3px 2px 4px;
+    }
+    .day-total-counter {
+      font-size: 11px; font-weight: 700;
+      color: var(--navy-md);
+    }
+    .day-total-counter.full { color: var(--green); }
+
+    /* Task items */
+    .task-item {
+      display: flex; align-items: center; gap: 3px;
+      padding: 2px 3px; border-radius: 3px;
+      cursor: pointer; transition: all 0.15s;
+      font-size: 11px; line-height: 1.3;
+      color: var(--text);
+    }
+    .task-item:hover { background: rgba(66,153,225,0.1); border-radius: 3px; }
+    .task-item.done {
+      text-decoration: line-through;
+      background: var(--done-bg);
+      color: var(--done-txt);
+      opacity: 0.75;
+    }
+    .task-num { font-size: 9px; color: var(--muted); min-width: 12px; }
+    .task-name { flex: 1; }
+    .task-time { font-size: 9px; color: var(--muted); }
+
+    /* weekly progress bar */
+    .progress-bar-wrap {
+      padding: 5px 12px;
+      background: var(--work-bg);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .progress-bar-bg {
+      flex: 1; height: 6px;
+      background: var(--border); border-radius: 3px; overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%; background: var(--green);
+      border-radius: 3px; transition: width 0.4s ease;
+    }
+    .progress-text { font-size: 10px; color: var(--muted); white-space: nowrap; }
+
+    @media (max-width: 768px) {
+      .core-task-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ============================================================
+  CONFIGURABLE SECTION  –  아래 변수들을 수정하여 내용을 변경하세요
+============================================================ -->
+<script>
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  1. ODYSSEY PLAN  (5년 계획, 2026-2030)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const ODYSSEY_PLAN = {
+  startYear: 2026,
+  work: [
+    { years: "2026",      label: "M1", title: "Digital Twin 기반 구축" },
+    { years: "2027",      label: "M2", title: "VPD 솔루션 고도화" },
+    { years: "2028",      label: "M3", title: "해외 기술 확산" },
+    { years: "2029",      label: "M4", title: "플랫폼 리더십" },
+    { years: "2030",      label: "M5", title: "기술 총괄" },
+  ],
+  personal: [
+    { years: "2026", label: "M1", title: "건강/체력 기반 확립" },
+    { years: "2027", label: "M2", title: "영어 소통 역량 완성" },
+    { years: "2028", label: "M3", title: "취미 완성도 향상" },
+    { years: "2029", label: "M4", title: "라이프스타일 완성" },
+    { years: "2030", label: "M5", title: "라이프스타일 완성" },
+  ]
+};
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  2. 2026 WORKING TARGET  (올해 목표)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const WORKING_TARGETS = [
+  "Development of Digital Twin Technologies : Simple Cycle Model (SCM), Optimal Operating Algorithm by SCM (Realtime Power/Load Estimation, +10%↑)",
+  "Research for VPD Solution : All of HEXs Optimization (APEX TDR), RAC Cycle Modeling (Accuracy 95%↑), CoilDesigner/VapCyc/DySim White Paper Publish",
+  "Lesson for abroad cycle instructors (English Materials for Lecture, Speaking/Communication Ability)",
+  "Individual Project (AX/DX/6sigma)",
+];
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  3. WEEKLY CORE TASK CATEGORIES  (4개 고정)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const CORE_TASK_CATEGORIES = [
+  { id: "apex",        label: "1.APEX" },
+  { id: "digitalTwin", label: "2.Digital Twin" },
+  { id: "vpd",         label: "3.VPD" },
+  { id: "individual",  label: "4.Individual" },
+];
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  4. WEEKLY ROUTINE TASKS  (요일별 루틴)
+//     0=일, 1=월, 2=화, 3=수, 4=목, 5=금, 6=토
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const ROUTINE = {
+  // ─── 기존 DB 호환: 각 요일 태스크 순서가 기존 앱 tasks 배열 인덱스와 일치해야 함 ───
+  // 기존 앱 tasks 순서(0~11):
+  //  0:Pills&Coffee, 1:Listening, 2:Email, 3:Followup, 4:AI-Coding,
+  //  5:Report, 6:Cycle, 7:Modelica, 8:English, 9:Workout, 10:Reading, 11:Remind
+  // ─── 새 앱 루틴은 그림의 분류(Life/Work/Life)를 따르되, 인덱스를 아래와 같이 맞춤 ───
+
+  // 그룹 0: Life (아침)
+  // 일요일: 0=7amGetup, 1=Phills&Coffee, 2=Swimming
+  // 평일:   0=6amGetup, 1=Gym or Swimming, 2=Phills&Coffee
+  life1: [
+    ["7am Getup",  "Phills&Coffee", "Swimming"],              // 일  (idx 0,1,2)
+    ["6am Getup",  "Gym",           "Phills&Coffee"],         // 월  (idx 0,1,2)
+    ["6am Getup",  "Swimming",      "Phills&Coffee"],         // 화  (idx 0,1,2)
+    ["6am Getup",  "Gym",           "Phills&Coffee"],         // 수  (idx 0,1,2)
+    ["6am Getup",  "Swimming",      "Phills&Coffee"],         // 목  (idx 0,1,2)
+    ["6am Getup",  "Gym",           "Phills&Coffee"],         // 금  (idx 0,1,2)
+    ["7am Getup",  "Phills&Coffee", "Swimming"],              // 토  (idx 0,1,2)
+  ],
+  // 그룹 1: Work
+  // 일/토: 3=Chores, 4=Vibe Coding, 5=Drawing, 6=Investment
+  // 평일:  3=Email&F/up, 4=APEX, 5=Digital Twin, 6=VPD, 7=Individual
+  work: [
+    ["Chores", "Vibe Coding", "Drawing", "Investment"],                           // 일  (idx 3,4,5,6)
+    ["Email & F/up", "APEX", "Digital Twin", "VPD", "Individual"],               // 월  (idx 3,4,5,6,7)
+    ["Email & F/up", "APEX", "Digital Twin", "VPD", "Individual"],               // 화  (idx 3,4,5,6,7)
+    ["Email & F/up", "APEX", "Digital Twin", "VPD", "Individual"],               // 수  (idx 3,4,5,6,7)
+    ["Email & F/up", "APEX", "Digital Twin", "VPD", "Individual"],               // 목  (idx 3,4,5,6,7)
+    ["Email & F/up", "APEX", "Digital Twin", "VPD", "Individual"],               // 금  (idx 3,4,5,6,7)
+    ["Chores", "Vibe Coding", "Drawing", "Investment"],                           // 토  (idx 3,4,5,6)
+  ],
+  // 그룹 2: Life (저녁)
+  // 일/토: 7=English, 8=Reading  (일은 work가 4개 → offset=7)
+  // 평일:  8=English, 9=Reading  (평일 work가 5개 → offset=8)
+  life2: [
+    ["English", "Reading"],         // 일  (idx 7,8)
+    ["English", "Reading"],         // 월  (idx 8,9)
+    ["English", "Reading"],         // 화  (idx 8,9)
+    ["English", "Reading"],         // 수  (idx 8,9)
+    ["English", "Reading"],         // 목  (idx 8,9)
+    ["English", "Reading"],         // 금  (idx 8,9)
+    ["Movie&Beer"],                 // 토  (idx 7)
+  ],
+};
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  5. 시작 날짜  (W1의 일요일 = 2026년 첫 번째 일요일)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const START_DATE = new Date(2025, 11, 28); // 2025-12-28 (일) = W01 시작 (12/29~1/3이 W01)
+</script>
+<!-- ============================================================
+  END OF CONFIGURABLE SECTION
+============================================================ -->
+
+<!-- ─── HEADER ─────────────────────────────────────────── -->
+<div class="app-header">
+  <div>
+    <div class="app-title">🧭 Odyssey Checklist</div>
+    <div class="app-date" id="dateInfo"></div>
+  </div>
+  <div class="auth-area">
+    <div id="authContainer">
+      <div class="auth-form" id="authForm">
+        <input type="email"    id="email"    placeholder="이메일">
+        <input type="password" id="password" placeholder="비밀번호">
+        <button class="btn-sm btn-login"  id="loginBtn">로그인</button>
+        <button class="btn-sm btn-signup" id="signupBtn">회원가입</button>
+        <span class="auth-msg" id="authMsg"></span>
+      </div>
+      <div class="user-info" id="userInfo">
+        <span id="userName"></span>
+        <button class="btn-sm btn-logout" id="logoutBtn">로그아웃</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── ODYSSEY PLAN ────────────────────────────────────── -->
+<div class="card">
+  <div class="card-header">🚀 ODYSSEY PLAN (2026–2030)</div>
+  <div class="card-body" id="odysseyPlan"></div>
+</div>
+
+<!-- ─── 2026 WORKING TARGET ─────────────────────────────── -->
+<div class="card">
+  <div class="card-header">🎯 2026 Working Target</div>
+  <div class="card-body">
+    <ul class="target-list" id="targetList"></ul>
+  </div>
+</div>
+
+<!-- ─── WEEKLY CHECKLIST ────────────────────────────────── -->
+<div class="card">
+  <!-- Header -->
+  <div class="checklist-header">
+    <span class="checklist-title">📋 Weekly Checklist</span>
+    <div class="week-nav">
+      <button onclick="changeWeek(-1)">◀</button>
+      <div>
+        <div class="week-label" id="weekLabel">W1</div>
+        <div class="week-dates" id="weekDates"></div>
+      </div>
+      <button onclick="changeWeek(+1)">▶</button>
+    </div>
+  </div>
+
+  <!-- Core Task Panel -->
+  <div class="core-task-wrapper">
+    <div class="core-task-label">Weekly<br>Core Task</div>
+    <div class="core-task-grid" id="coreTaskGrid"></div>
+    <button class="btn-update" id="updateBtn" onclick="saveCoreTask()">Update</button>
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+    </div>
+    <span class="progress-text" id="progressText">0주차 – 로그인하세요</span>
+  </div>
+
+  <!-- Routine Table -->
+  <div class="routine-table-wrap">
+    <table class="routine-table" id="routineTable">
+      <thead id="tableHead"></thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ─── SCRIPT ──────────────────────────────────────────── -->
+<script>
+// ─── 전역 변수 ──────────────────────────────────────────
+let currentUser = null;
+let currentWeek = 1;
+let taskProgress = {};   // { taskId: { completed, time } }
+let coreTaskData = {};   // { apex:"...", digitalTwin:"...", vpd:"...", individual:"..." }
+let unsubTasks = null;
+let unsubCore  = null;
+
+const DAY_NAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const DAY_KOR   = ["일","월","화","수","목","금","토"];
+const GROUPS    = ["life1", "work", "life2"];
+const GROUP_LABELS = { life1: "Life", work: "Work", life2: "Life" };
+
+// ─── 날짜 유틸 ─────────────────────────────────────────
+function getWeekNumber(date) {
+  const diff = date.getTime() - START_DATE.getTime();
+  const days = Math.floor(diff / 86400000);
+  return Math.max(1, Math.floor(days / 7) + 1);
+}
+function getWeekStartDate(weekNum) {
+  const d = new Date(START_DATE);
+  d.setDate(START_DATE.getDate() + (weekNum - 1) * 7);
+  return d;
+}
+function formatDate(d) {
+  return `${d.getMonth()+1}/${d.getDate()}`;
+}
+function pad2(n) { return String(n).padStart(2,'0'); }
+function nowTime() {
+  const n = new Date();
+  return `${pad2(n.getHours())}:${pad2(n.getMinutes())}`;
+}
+
+// ─── 초기화 ─────────────────────────────────────────────
+function init() {
+  // 날짜
+  document.getElementById('dateInfo').textContent =
+    new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'long'});
+
+  // Odyssey Plan 렌더
+  renderOdysseyPlan();
+  renderTargets();
+  renderCoreTaskGrid();
+
+  // 현재 주
+  currentWeek = getWeekNumber(new Date());
+  updateWeekLabel();
+  renderTableHeader();
+  renderTableBody();
+}
+
+// ─── Odyssey Plan 렌더 ───────────────────────────────────
+function renderOdysseyPlan() {
+  const el = document.getElementById('odysseyPlan');
+  const years = [2026, 2027, 2028, 2029, 2030];
+
+  // 연도 헤더 행 (라벨 열 + 5열 균등)
+  // grid-template-columns: 64px repeat(5,1fr) 과 맞추기 위해
+  // 라벨 공백 + 연도 5개
+  let yearsHtml = '<div class="od-row" style="margin-bottom:2px;">';
+  yearsHtml += '<div></div>'; // 라벨 공백
+  years.forEach((y, i) => {
+    yearsHtml += `<div class="od-cell" style="position:relative;">
+      <div style="position:absolute;top:50%;left:0;right:0;height:2px;background:var(--sky);transform:translateY(-50%);z-index:0;"></div>
+      <div style="position:relative;z-index:1;display:inline-flex;align-items:center;gap:4px;">
+        <span style="font-size:10px;font-weight:700;color:var(--navy-md);background:var(--white);padding:0 3px;">${y}</span>
+        <span style="width:7px;height:7px;border-radius:50%;background:var(--sky);display:inline-block;flex-shrink:0;"></span>
+      </div>
+    </div>`;
+  });
+  yearsHtml += '</div>';
+
+  // Work 행: 미션 5개 각 1컬럼
+  let workHtml = '<div class="od-row">';
+  workHtml += '<div class="od-row-label">Work</div>';
+  ODYSSEY_PLAN.work.forEach(m => {
+    workHtml += `<div class="od-cell">
+      <div class="mission-chip">
+        <span class="chip-label">${m.label}</span>${m.title}
+      </div>
+    </div>`;
+  });
+  workHtml += '</div>';
+
+  // Personal Life 행: Work와 동일하게 연도별 1컬럼
+  let personalHtml = '<div class="od-row">';
+  personalHtml += '<div class="od-row-label">Personal<br>Life</div>';
+  ODYSSEY_PLAN.personal.forEach(m => {
+    personalHtml += `<div class="od-cell">
+      <div class="mission-chip personal">
+        <span class="chip-label">${m.label}</span>${m.title}
+      </div>
+    </div>`;
+  });
+  personalHtml += '</div>';
+
+  el.innerHTML = yearsHtml + workHtml + personalHtml;
+}
+
+function renderTargets() {
+  const el = document.getElementById('targetList');
+  el.innerHTML = WORKING_TARGETS.map((t,i) =>
+    `<li><span class="target-num">${i+1}.</span><span class="target-text">${t}</span></li>`
+  ).join('');
+}
+
+// ─── Core Task Grid ──────────────────────────────────────
+function renderCoreTaskGrid() {
+  const el = document.getElementById('coreTaskGrid');
+  el.innerHTML = CORE_TASK_CATEGORIES.map(cat =>
+    `<div class="core-task-item">
+       <span class="core-task-name">${cat.label}</span>
+       <input class="core-task-input" id="core_${cat.id}" type="text"
+         placeholder="① 업무내용  ② 업무내용"
+         value="${(coreTaskData[cat.id] || '')}">
+     </div>`
+  ).join('');
+}
+
+function loadCoreTaskInputs() {
+  CORE_TASK_CATEGORIES.forEach(cat => {
+    const el = document.getElementById(`core_${cat.id}`);
+    if (el) el.value = coreTaskData[cat.id] || '';
+  });
+}
+
+async function saveCoreTask() {
+  if (!currentUser) { alert('로그인 후 저장 가능합니다.'); return; }
+  const data = {};
+  CORE_TASK_CATEGORIES.forEach(cat => {
+    const el = document.getElementById(`core_${cat.id}`);
+    data[cat.id] = el ? el.value.trim() : '';
+  });
+  try {
+    await db.collection('users').doc(currentUser.uid)
+      .collection('weeklyCoreTasks').doc(String(currentWeek))
+      .set(data);
+    coreTaskData = data;
+    const btn = document.getElementById('updateBtn');
+    btn.textContent = '✓ 저장됨';
+    btn.classList.add('saved');
+    setTimeout(() => { btn.textContent = 'Update'; btn.classList.remove('saved'); }, 2000);
+  } catch(e) { console.error(e); }
+}
+
+// ─── Week 변경 ──────────────────────────────────────────
+function changeWeek(delta) {
+  currentWeek = Math.max(1, currentWeek + delta);
+  updateWeekLabel();
+  renderTableHeader();
+  renderTableBody();
+  if (currentUser) loadWeekData();
+}
+
+function updateWeekLabel() {
+  document.getElementById('weekLabel').textContent = `W${currentWeek}`;
+  const ws = getWeekStartDate(currentWeek);
+  const we = new Date(ws); we.setDate(ws.getDate() + 6);
+  document.getElementById('weekDates').textContent =
+    `${formatDate(ws)} ~ ${formatDate(we)}`;
+}
+
+// ─── 테이블 렌더 ─────────────────────────────────────────
+function renderTableHeader() {
+  const today = new Date();
+  const ws = getWeekStartDate(currentWeek);
+  let html = '<tr><th style="width:22px"></th>';
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(ws); d.setDate(ws.getDate() + i);
+    const isToday = d.toDateString() === today.toDateString();
+    const isWknd  = i === 0 || i === 6;
+    const cls = isToday ? 'today-hdr' : isWknd ? 'weekend-hdr' : '';
+    html += `<th class="${cls}">${DAY_NAMES[i]}<br><span style="font-weight:400;font-size:10px">(${formatDate(d)})</span></th>`;
+  }
+  html += '</tr>';
+  document.getElementById('tableHead').innerHTML = html;
+}
+
+function renderTableBody() {
+  const today = new Date();
+  const ws = getWeekStartDate(currentWeek);
+  let html = '';
+
+  // 3개 그룹 행 (life1 / work / life2)
+  const rowClsMap = { life1: 'life1-row', work: 'work-row', life2: 'life2-row' };
+  GROUPS.forEach((grp, grpIdx) => {
+    const rowCls = rowClsMap[grp];
+    html += `<tr class="${rowCls}">`;
+    html += `<td class="section-label">${GROUP_LABELS[grp]}</td>`;
+    for (let day = 0; day < 7; day++) {
+      const d = new Date(ws); d.setDate(ws.getDate() + day);
+      const isToday = d.toDateString() === today.toDateString();
+      const isWknd  = day === 0 || day === 6;
+      let cellCls = 'task-cell';
+      if (isToday) cellCls += ' today-col';
+      if (isWknd)  cellCls += ' weekend-col';
+
+      const tasks = ROUTINE[grp][day] || [];
+      const life1Len  = (ROUTINE.life1[day]||[]).length;
+      const workLen   = (ROUTINE.work[day]||[]).length;
+      const grpOffset = grpIdx === 0 ? 0 : grpIdx === 1 ? life1Len : life1Len + workLen;
+
+      let cellHtml = '';
+      tasks.forEach((task, tIdx) => {
+        const globalIdx = grpOffset + tIdx;
+        const tid = `${currentWeek}-${day}_task${globalIdx}`;
+        const prog = taskProgress[tid] || {};
+        const done = prog.completed ? 'done' : '';
+        const tm   = prog.time || '';
+        const num  = globalIdx + 1;
+        cellHtml += `<div class="task-item ${done}" id="ti_${tid}"
+          onclick="toggleTask('${tid}',${day},${grpIdx},${tIdx})">
+          <span class="task-num">${num}.</span>
+          <span class="task-name">${task}</span>
+          <span class="task-time">${tm}</span>
+        </div>`;
+      });
+      html += `<td class="${cellCls}">${cellHtml}</td>`;
+    }
+    html += '</tr>';
+  });
+
+  // 통합 카운터 행 (맨 아래 한 줄: 날짜별 전체 완료 X/N)
+  html += '<tr class="counter-row">';
+  html += '<td class="section-label" style="border-top:1px solid var(--border);"></td>';
+  for (let day = 0; day < 7; day++) {
+    const d = new Date(ws); d.setDate(ws.getDate() + day);
+    const isToday = d.toDateString() === today.toDateString();
+    const todayCls = isToday ? ' today-col' : '';
+    let totalDay = 0, doneDay = 0;
+    GROUPS.forEach((grp, grpIdx) => {
+      const tasks = ROUTINE[grp][day] || [];
+      const life1Len  = (ROUTINE.life1[day]||[]).length;
+      const workLen   = (ROUTINE.work[day]||[]).length;
+      const grpOffset = grpIdx === 0 ? 0 : grpIdx === 1 ? life1Len : life1Len + workLen;
+      totalDay += tasks.length;
+      tasks.forEach((_, tIdx) => {
+        const tid = `${currentWeek}-${day}_task${grpOffset + tIdx}`;
+        if (taskProgress[tid] && taskProgress[tid].completed) doneDay++;
+      });
+    });
+    const fullCls = (doneDay === totalDay && totalDay > 0) ? 'full' : '';
+    html += `<td class="${todayCls}">
+      <span class="day-total-counter ${fullCls}" id="dayct_${currentWeek}-${day}">${doneDay}/${totalDay}</span>
+    </td>`;
+  }
+  html += '</tr>';
+
+  document.getElementById('tableBody').innerHTML = html;
+  updateProgress();
+}
+
+// ─── 태스크 토글 ─────────────────────────────────────────
+async function toggleTask(tid, day, grpIdx, tIdx) {
+  const el = document.getElementById(`ti_${tid}`);
+  if (!el) return;
+  const wasDone = el.classList.contains('done');
+  const now = nowTime();
+
+  if (wasDone) {
+    el.classList.remove('done');
+    el.querySelector('.task-time').textContent = '';
+    if (currentUser) {
+      await db.collection('users').doc(currentUser.uid)
+        .collection('weeklyTasks').doc(tid)
+        .set({ completed: firebase.firestore.FieldValue.delete(),
+               time: firebase.firestore.FieldValue.delete() }, { merge: true });
+    }
+    if (taskProgress[tid]) { delete taskProgress[tid].completed; delete taskProgress[tid].time; }
+  } else {
+    el.classList.add('done');
+    el.querySelector('.task-time').textContent = now;
+    if (currentUser) {
+      await db.collection('users').doc(currentUser.uid)
+        .collection('weeklyTasks').doc(tid)
+        .set({ completed: true, time: now }, { merge: true });
+    }
+    taskProgress[tid] = { completed: true, time: now };
+  }
+
+  updateDayCounter(day);
+  updateProgress();
+}
+
+function updateDayCounter(day) {
+  // 날짜별 통합 카운터 업데이트
+  let totalDay = 0, doneDay = 0;
+  GROUPS.forEach((grp, grpIdx) => {
+    const tasks = ROUTINE[grp][day] || [];
+    const life1Len  = (ROUTINE.life1[day]||[]).length;
+    const workLen   = (ROUTINE.work[day]||[]).length;
+    const grpOffset = grpIdx === 0 ? 0 : grpIdx === 1 ? life1Len : life1Len + workLen;
+    totalDay += tasks.length;
+    tasks.forEach((_, tIdx) => {
+      const tid = `${currentWeek}-${day}_task${grpOffset + tIdx}`;
+      if (taskProgress[tid] && taskProgress[tid].completed) doneDay++;
+    });
+  });
+  const el = document.getElementById(`dayct_${currentWeek}-${day}`);
+  if (el) {
+    el.textContent = `${doneDay}/${totalDay}`;
+    el.className = `day-total-counter${(doneDay === totalDay && totalDay > 0) ? ' full' : ''}`;
+  }
+}
+
+function updateProgress() {
+  let total = 0, done = 0;
+  // 평일(월~금)만 계산
+  for (let day = 1; day <= 5; day++) {
+    GROUPS.forEach((grp, grpIdx) => {
+      const tasks = ROUTINE[grp][day] || [];
+      const life1Len  = (ROUTINE.life1[day]||[]).length;
+      const workLen   = (ROUTINE.work[day]||[]).length;
+      const grpOffset = grpIdx === 0 ? 0 : grpIdx === 1 ? life1Len : life1Len + workLen;
+      total += tasks.length;
+      tasks.forEach((_,tIdx) => {
+        const tid = `${currentWeek}-${day}_task${grpOffset + tIdx}`;
+        if (taskProgress[tid] && taskProgress[tid].completed) done++;
+      });
+    });
+  }
+  const pct = total > 0 ? Math.round(done/total*100) : 0;
+  document.getElementById('progressFill').style.width = `${pct}%`;
+  document.getElementById('progressText').textContent =
+    `W${currentWeek}  진행률: ${pct}% (${done}/${total} 완료, 평일기준)`;
+}
+
+// ─── Firebase 데이터 로드 ────────────────────────────────
+function loadWeekData() {
+  if (!currentUser) return;
+  const uRef = db.collection('users').doc(currentUser.uid);
+
+  // 주간 루틴 태스크
+  if (unsubTasks) unsubTasks();
+  unsubTasks = uRef.collection('weeklyTasks').onSnapshot(snap => {
+    taskProgress = {};
+    snap.forEach(doc => { taskProgress[doc.id] = doc.data(); });
+    renderTableBody();
+  }, e => console.error(e));
+
+  // Core Task
+  if (unsubCore) unsubCore();
+  unsubCore = uRef.collection('weeklyCoreTasks').doc(String(currentWeek)).onSnapshot(doc => {
+    coreTaskData = doc.exists ? doc.data() : {};
+    loadCoreTaskInputs();
+  }, e => console.error(e));
+}
+
+function clearData() {
+  taskProgress = {};
+  coreTaskData = {};
+  renderTableBody();
+  loadCoreTaskInputs();
+}
+
+// ─── Firebase Auth ────────────────────────────────────────
+auth.onAuthStateChanged(user => {
+  if (user) {
+    currentUser = user;
+    document.getElementById('authForm').style.display = 'none';
+    const ui = document.getElementById('userInfo');
+    ui.style.display = 'flex';
+    document.getElementById('userName').textContent = user.email;
+    loadWeekData();
+  } else {
+    currentUser = null;
+    document.getElementById('authForm').style.display = 'flex';
+    document.getElementById('userInfo').style.display = 'none';
+    clearData();
+  }
+});
+
+document.getElementById('loginBtn').onclick = async () => {
+  const e = document.getElementById('email').value.trim();
+  const p = document.getElementById('password').value;
+  if (!e||!p) return;
+  try { await auth.signInWithEmailAndPassword(e,p); setMsg('로그인 성공!','green'); }
+  catch(err) { setMsg(getErrMsg(err.code)); }
+};
+document.getElementById('signupBtn').onclick = async () => {
+  const e = document.getElementById('email').value.trim();
+  const p = document.getElementById('password').value;
+  if (!e||!p) return;
+  try { await auth.createUserWithEmailAndPassword(e,p); setMsg('회원가입 성공!','green'); }
+  catch(err) { setMsg(getErrMsg(err.code)); }
+};
+document.getElementById('logoutBtn').onclick = () => auth.signOut();
+
+function setMsg(msg, color='red') {
+  const el = document.getElementById('authMsg');
+  el.textContent = msg; el.style.color = color;
+  setTimeout(() => el.textContent = '', 3000);
+}
+function getErrMsg(code) {
+  const m = {
+    'auth/user-not-found':'가입되지 않은 이메일','auth/wrong-password':'비밀번호 오류',
+    'auth/email-already-in-use':'이미 사용 중','auth/weak-password':'비밀번호 6자 이상',
+    'auth/invalid-email':'이메일 형식 오류','auth/invalid-credential':'이메일 또는 비밀번호 오류'
+  };
+  return m[code] || '오류: '+code;
+}
+
+// ─── 시작 ────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
