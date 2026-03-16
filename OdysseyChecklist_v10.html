@@ -396,7 +396,7 @@ const WORKING_TARGETS = [
 //  3. WEEKLY CORE TASK CATEGORIES  (4개 고정)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const CORE_TASK_CATEGORIES = [
-  { id: "Task",        label: "1.APEX" },
+  { id: "Task",        label: "1.Project Task" },
   { id: "digitalTwin", label: "2.Digital Twin" },
   { id: "vpd",         label: "3.VPD" },
   { id: "individual",  label: "4.Individual" },
@@ -429,25 +429,25 @@ const ROUTINE = {
   // 일/토: 3=Chores, 4=Vibe Coding, 5=Drawing, 6=Investment
   // 평일:  3=Email&F/up, 4=Task, 5=Digital Twin, 6=VPD, 7=Individual
   work: [
-    ["Chores", "Vibe Coding", "Drawing", "Investment"],                           // 일  (idx 3,4,5,6)
+    ["Chores", "Vibe Coding", "Drawing", "Investment", "Repair"],                // 일  (idx 3,4,5,6,7)
     ["Email & F/up", "APEX", "Digital Twin", "VPD", "Individual"],               // 월  (idx 3,4,5,6,7)
     ["Email & F/up", "APEX", "Digital Twin", "VPD", "Individual"],               // 화  (idx 3,4,5,6,7)
     ["Email & F/up", "APEX", "Digital Twin", "VPD", "Individual"],               // 수  (idx 3,4,5,6,7)
     ["Email & F/up", "APEX", "Digital Twin", "VPD", "Individual"],               // 목  (idx 3,4,5,6,7)
     ["Email & F/up", "APEX", "Digital Twin", "VPD", "Individual"],               // 금  (idx 3,4,5,6,7)
-    ["Chores", "Vibe Coding", "Drawing", "Investment"],                           // 토  (idx 3,4,5,6)
+    ["Chores", "Vibe Coding", "Drawing", "Investment", "Repair"],                // 토  (idx 3,4,5,6,7)
   ],
   // 그룹 2: Life (저녁)
   // 일/토: 7=English, 8=Reading  (일은 work가 4개 → offset=7)
   // 평일:  8=English, 9=Reading  (평일 work가 5개 → offset=8)
   life2: [
-    ["English", "Reading"],         // 일  (idx 7,8)
+    ["English", "Reading"],         // 일  (idx 8,9)
     ["English", "Reading"],         // 월  (idx 8,9)
     ["English", "Reading"],         // 화  (idx 8,9)
     ["English", "Reading"],         // 수  (idx 8,9)
     ["English", "Reading"],         // 목  (idx 8,9)
     ["English", "Reading"],         // 금  (idx 8,9)
-    ["Movie&Beer"],                 // 토  (idx 7)
+    ["Movie&Beer", "Shopping"],     // 토  (idx 8,9)
   ],
 };
 
