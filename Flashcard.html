@@ -3,8 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>영어 문장 학습 웹 앱 ver.07</title>
+    <title>Flashcard - 영어 학습</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+        body {
+            background: #f8fafc;
+        }
+        .modern-btn {
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+        .modern-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        .tab-btn {
+            position: relative;
+            font-weight: 500;
+            font-size: 0.875rem;
+            padding: 0.75rem 1rem;
+            color: #64748b;
+            border: none;
+            background: none;
+            cursor: pointer;
+        }
+        .tab-btn:hover {
+            color: #1e293b;
+        }
+        .tab-btn.active {
+            color: #2563eb;
+        }
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #2563eb;
+        }
+    </style>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { 
@@ -154,462 +195,232 @@
                         
                         authFrame.classList.add('hidden');
                         mainFrame.classList.remove('hidden');
-                        
-                        loadData();
-                        switch_mode('list');
+                        load_study_data();
                     } else {
-                        userId = null;
-                        study_data = [];
-                        
                         authFrame.classList.remove('hidden');
                         mainFrame.classList.add('hidden');
-                        
-                        loginEmail.value = '';
-                        loginPassword.value = '';
                     }
                 });
-
             } catch (error) {
                 console.error("Firebase 초기화 실패:", error);
-                showMessage("치명적 오류", "Firebase 초기화에 실패했습니다. " + error.message);
+                showMessage("오류", "Firebase 연결에 실패했습니다.");
             }
         }
 
         async function handle_login() {
             const email = loginEmail.value.trim();
             const password = loginPassword.value.trim();
-            
+
             if (!email || !password) {
-                showMessage("경고", "이메일과 비밀번호를 입력해주세요!");
+                showMessage("알림", "이메일과 비밀번호를 입력해주세요.");
                 return;
             }
 
             try {
-                loginBtn.disabled = true;
-                loginBtn.textContent = '로그인 중...';
-                
                 await signInWithEmailAndPassword(auth, email, password);
-                showMessage("성공", "로그인 되었습니다!");
+                loginEmail.value = '';
+                loginPassword.value = '';
             } catch (error) {
-                let message = "로그인 실패했습니다.";
-                if (error.code === 'auth/user-not-found') {
-                    message = "등록되지 않은 이메일입니다.";
-                } else if (error.code === 'auth/wrong-password') {
-                    message = "비밀번호가 틀렸습니다.";
-                }
-                showMessage("오류", message);
-            } finally {
-                loginBtn.disabled = false;
-                loginBtn.textContent = '로그인';
+                showMessage("로그인 실패", error.message || "이메일 또는 비밀번호를 확인하세요.");
             }
         }
 
         async function handle_logout() {
             try {
                 await signOut(auth);
-                showMessage("로그아웃", "로그아웃 되었습니다.");
-                stop_reading();
             } catch (error) {
-                showMessage("오류", "로그아웃 실패: " + error.message);
+                console.error("로그아웃 실패:", error);
             }
         }
 
-        function loadData() {
-            if (!sentencesCollectionRef) return;
-
-            onSnapshot(query(sentencesCollectionRef), (snapshot) => {
-                study_data = [];
-                snapshot.forEach((doc) => {
-                    study_data.push({ 
-                        id: doc.id,
-                        ...doc.data() 
-                    });
-                });
-                
-                if (mode === 'list') {
-                    render_sentence_list();
-                }
-                updateOverallStats();
-
-            }, (error) => {
-                console.error("데이터 로드 중 오류:", error);
-                showMessage("데이터 오류", "데이터를 불러올 수 없습니다. " + error.message);
-            });
-        }
-        
-        function updateOverallStats() {
-            const total_study = study_data.reduce((sum, item) => sum + (item.studyCount || 0), 0);
-            const total_correct = study_data.reduce((sum, item) => sum + (item.correctCount || 0), 0);
-            const total_sentences = study_data.length;
-            const ratio = total_study > 0 ? `${(total_correct / total_study * 100).toFixed(1)}%` : "N/A";
-            
-            if (studyStatsOverall) {
-                studyStatsOverall.textContent = `총 문장 수: ${total_sentences} | 전체 학습 횟수: ${total_study} | 전체 정답률: ${ratio}`;
-            }
-        }
-
-        function render_sentence_list() {
-            if (!sentenceListBody) return;
-            
-            sentenceListBody.innerHTML = '';
-            selectedSentenceId = null;
-            deleteBtn.disabled = true;
-
-            let sorted_data = [...study_data];
-
-            // 정렬
-            sorted_data.sort((a, b) => {
-                let aVal, bVal;
-
-                if (sortColumn === 'date') {
-                    aVal = a.date || '';
-                    bVal = b.date || '';
-                } else if (sortColumn === 'studyCount') {
-                    aVal = a.studyCount || 0;
-                    bVal = b.studyCount || 0;
-                } else if (sortColumn === 'correctCount') {
-                    aVal = a.correctCount || 0;
-                    bVal = b.correctCount || 0;
-                }
-
-                if (typeof aVal === 'string') {
-                    return sortOrder === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
-                } else {
-                    return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
-                }
-            });
-            
-            sorted_data.forEach(item => {
-                const study_count = item.studyCount || 0;
-                const correct_count = item.correctCount || 0;
-                const ratio = study_count > 0 ? `${(correct_count / study_count * 100).toFixed(1)}%` : "N/A";
-
-                const tr = document.createElement('tr');
-                tr.className = 'hover:bg-gray-100 cursor-pointer border-b border-gray-200';
-                tr.dataset.id = item.id;
-                
-                tr.innerHTML = `
-                    <td class="p-3">${item.english}</td>
-                    <td class="p-3">${item.korean}</td>
-                    <td class="p-3 text-center">${item.date}</td>
-                    <td class="p-3 text-center">${study_count}</td>
-                    <td class="p-3 text-center">${correct_count}</td>
-                    <td class="p-3 text-center">${ratio}</td>
-                `;
-
-                tr.addEventListener('click', () => {
-                    Array.from(sentenceListBody.children).forEach(row => {
-                        row.classList.remove('bg-blue-100', 'font-semibold');
-                    });
-                    tr.classList.add('bg-blue-100', 'font-semibold');
-                    selectedSentenceId = item.id;
-                    deleteBtn.disabled = false;
-                });
-
-                sentenceListBody.appendChild(tr);
-            });
-        }
-
-        async function delete_selected_sentence() {
-            if (!selectedSentenceId) {
-                showMessage("경고", "삭제할 문장을 먼저 선택해주세요.");
-                return;
-            }
-
-            if (!confirm("정말로 이 문장을 삭제하시겠습니까?")) {
-                return;
-            }
-
-            try {
-                await deleteDoc(doc(sentencesCollectionRef, selectedSentenceId));
-                selectedSentenceId = null;
-                deleteBtn.disabled = true;
-
-            } catch (error) {
-                console.error("삭제 실패:", error);
-                showMessage("오류", "삭제에 실패했습니다: " + error.message);
-            }
-        }
-
-        async function delete_all_sentences() {
-            if (study_data.length === 0) {
-                showMessage("경고", "삭제할 문장이 없습니다.");
-                return;
-            }
-
-            const message = `정말로 모든 문장 ${study_data.length}개를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`;
-            if (!confirm(message)) {
-                return;
-            }
-
-            try {
-                deleteBtn.disabled = true;
-                deleteAllBtn.disabled = true;
-                showMessage("진행 중", "모든 문장을 삭제하는 중입니다...");
-
-                for (const item of study_data) {
-                    await deleteDoc(doc(sentencesCollectionRef, item.id));
-                }
-
-                showMessage("완료", "모든 문장이 삭제되었습니다.");
-                selectedSentenceId = null;
-                deleteBtn.disabled = true;
-
-            } catch (error) {
-                console.error("일괄 삭제 실패:", error);
-                showMessage("오류", "삭제 중 오류 발생: " + error.message);
-            } finally {
-                deleteAllBtn.disabled = false;
-            }
-        }
-
-        function calculate_next_review_date(study_count, correct_rate) {
-            const base_intervals = [1, 2, 4, 7, 15, 30, 60, 90];
-            const interval_index = Math.min(study_count, base_intervals.length - 1);
-            let base_interval = base_intervals[interval_index];
-            
-            let adjusted_interval;
-            if (correct_rate >= 0.9) {
-                adjusted_interval = base_interval * 1.5;
-            } else if (correct_rate >= 0.7) {
-                adjusted_interval = base_interval;
-            } else if (correct_rate >= 0.5) {
-                adjusted_interval = base_interval * 0.7;
-            } else {
-                adjusted_interval = Math.max(1, base_interval * 0.5);
-            }
-            
-            const next_date = new Date();
-            next_date.setDate(next_date.getDate() + Math.round(adjusted_interval));
-            return next_date.toISOString().split('T')[0];
-        }
-
-        function get_priority(item) {
-            const today = new Date();
-            const todayStr = today.toISOString().split('T')[0];
-
-            const study_count = item.studyCount || 0;
-            const correct_count = item.correctCount || 0;
-            const next_review = item.nextReviewDate || todayStr;
-            const last_study = item.lastStudyDate || '2000-01-01';
-
-            const correct_rate = correct_count / Math.max(1, study_count);
-            
-            const nextReviewDate = new Date(next_review);
-            const days_overdue = Math.max(0, (today.getTime() - nextReviewDate.getTime()) / (1000 * 60 * 60 * 24));
-
-            return {
-                p1: -days_overdue,
-                p2: correct_rate,
-                p3: study_count,
-                p4: new Date(last_study).getTime()
-            };
-        }
-        
-        function get_prioritized_list() {
-            if (study_data.length === 0) return [];
-
-            return [...study_data].sort((a, b) => {
-                const prioA = get_priority(a);
-                const prioB = get_priority(b);
-
-                if (prioA.p1 !== prioB.p1) return prioA.p1 - prioB.p1;
-                if (prioA.p2 !== prioB.p2) return prioA.p2 - prioB.p2;
-                if (prioA.p3 !== prioB.p3) return prioA.p3 - prioB.p3;
-                return prioA.p4 - prioB.p4;
-            });
-        }
-
-        function switch_mode(new_mode) {
-            mode = new_mode;
-
+        function switch_mode(mode_name) {
+            mode = mode_name;
             listFrame.classList.add('hidden');
             studyFrame.classList.add('hidden');
             readingFrame.classList.add('hidden');
             
-            Object.values(modeButtons).forEach(btn => btn.disabled = false);
-            if (modeButtons[new_mode]) {
-                modeButtons[new_mode].disabled = true;
-            }
+            modeButtons.list.classList.remove('active');
+            modeButtons.study.classList.remove('active');
+            modeButtons.reading.classList.remove('active');
 
-            stop_reading();
-
-            if (new_mode === 'list') {
+            if (mode_name === 'list') {
                 listFrame.classList.remove('hidden');
+                modeButtons.list.classList.add('active');
                 render_sentence_list();
-            } else if (new_mode === 'study') {
+            } else if (mode_name === 'study') {
                 studyFrame.classList.remove('hidden');
-            } else if (new_mode === 'reading') {
+                modeButtons.study.classList.add('active');
+            } else if (mode_name === 'reading') {
                 readingFrame.classList.remove('hidden');
+                modeButtons.reading.classList.add('active');
             }
+        }
+
+        async function load_study_data() {
+            try {
+                const querySnapshot = await getDocs(sentencesCollectionRef);
+                study_data = [];
+                querySnapshot.forEach((doc) => {
+                    study_data.push({ id: doc.id, ...doc.data() });
+                });
+                render_sentence_list();
+                update_study_stats();
+            } catch (error) {
+                console.error("데이터 로드 실패:", error);
+            }
+        }
+
+        function render_sentence_list() {
+            const sorted_data = [...study_data].sort((a, b) => {
+                let compare = 0;
+                if (sortColumn === 'date') {
+                    compare = new Date(b.date) - new Date(a.date);
+                } else if (sortColumn === 'studyCount') {
+                    compare = (b.study_count || 0) - (a.study_count || 0);
+                } else if (sortColumn === 'correctCount') {
+                    compare = (b.correct_count || 0) - (a.correct_count || 0);
+                }
+                return sortOrder === 'asc' ? -compare : compare;
+            });
+
+            sentenceListBody.innerHTML = '';
+            
+            if (sorted_data.length === 0) {
+                sentenceListBody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500 text-sm">저장된 문장이 없습니다</td></tr>';
+                return;
+            }
+
+            sorted_data.forEach((item) => {
+                const ratio = item.study_count ? Math.round((item.correct_count / item.study_count) * 100) : 0;
+                const row = document.createElement('tr');
+                row.className = selectedSentenceId === item.id ? 'bg-blue-100' : 'border-b border-gray-200 hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="p-3 text-sm text-gray-900">${item.english}</td>
+                    <td class="p-3 text-sm text-gray-600">${item.korean}</td>
+                    <td class="p-3 text-center text-xs text-gray-500">${new Date(item.date).toLocaleDateString('ko-KR')}</td>
+                    <td class="p-3 text-center text-sm font-medium">${item.study_count || 0}</td>
+                    <td class="p-3 text-center text-sm font-medium">${item.correct_count || 0}</td>
+                    <td class="p-3 text-center text-sm font-medium">${ratio}%</td>
+                `;
+                row.addEventListener('click', () => {
+                    selectedSentenceId = selectedSentenceId === item.id ? null : item.id;
+                    deleteBtn.disabled = !selectedSentenceId;
+                    render_sentence_list();
+                });
+                sentenceListBody.appendChild(row);
+            });
+        }
+
+        function update_study_stats() {
+            if (study_data.length === 0) {
+                studyStatsOverall.textContent = '저장된 문장이 없습니다. 새 문장을 추가하세요.';
+                return;
+            }
+            const totalStudy = study_data.reduce((sum, item) => sum + (item.study_count || 0), 0);
+            const totalCorrect = study_data.reduce((sum, item) => sum + (item.correct_count || 0), 0);
+            const accuracy = totalStudy > 0 ? Math.round((totalCorrect / totalStudy) * 100) : 0;
+            studyStatsOverall.textContent = `문장 수: ${study_data.length} | 학습: ${totalStudy}회 | 정답: ${totalCorrect}회 | 정확도: ${accuracy}%`;
         }
 
         function start_study() {
             if (study_data.length === 0) {
-                showMessage("경고", "저장된 문장이 없습니다!");
+                showMessage("알림", "학습할 문장을 먼저 추가하세요.");
                 return;
             }
-
             switch_mode('study');
-            is_retry_mode = false;
-
-            const sorted_data = get_prioritized_list();
-            
-            const top_count = Math.max(3, Math.min(sorted_data.length, Math.ceil(sorted_data.length * 0.3)));
-            const top_items = sorted_data.slice(0, top_count);
-            
-            current_question = top_items[Math.floor(Math.random() * top_items.length)];
-            
-            if (!current_question) {
-                showMessage("오류", "학습할 문장을 선택할 수 없습니다.");
-                switch_mode('list');
-                return;
-            }
-
-            const firstWord = current_question.english.split(' ')[0];
-            questionKorean.innerHTML = `${current_question.korean || '(번역 없음)'}<br><span style="font-size: 14pt; color: #666; margin-top: 8px; display: block;">${firstWord} ... </span>`;
-            
-            userAnswerEntry.value = '';
-            userAnswerEntry.disabled = false;
-            userAnswerEntry.focus();
-
-            resultFrame.classList.add('hidden');
-            nextQuestionBtn.disabled = true;
-
-            if (autoNextTimer) {
-                clearTimeout(autoNextTimer);
-                autoNextTimer = null;
-            }
-
-            const study_count = current_question.studyCount || 0;
-            const correct_count = current_question.correctCount || 0;
-            const next_review = current_question.nextReviewDate || 'N/A';
-            studyStats.textContent = `학습 ${study_count}회 | 정답 ${correct_count}회 | 다음 복습: ${next_review}`;
+            next_question();
         }
 
-        async function check_answer() {
-            const user_answer = userAnswerEntry.value.trim();
-            if (!user_answer) return;
-            
-            const removeSpecialChars = (str) => str.replace(/[^a-zA-Z0-9\s]/g, '').trim();
-            
-            const userAnswerCleaned = removeSpecialChars(user_answer.toLowerCase());
-            const correctAnswerCleaned = removeSpecialChars(current_question.english.toLowerCase());
-            
-            const is_correct_attempt = userAnswerCleaned === correctAnswerCleaned;
+        function next_question() {
+            const rand_index = Math.floor(Math.random() * study_data.length);
+            current_question = study_data[rand_index];
+            questionKorean.textContent = current_question.korean;
+            userAnswerEntry.value = '';
+            resultFrame.classList.add('hidden');
+            userAnswerEntry.focus();
+            is_retry_mode = false;
+            update_study_stats();
+        }
 
-            if (is_retry_mode && !is_correct_attempt) {
-                next_question();
-                return;
-            }
-            
+        function check_answer() {
+            if (!current_question) return;
+            const user_answer = userAnswerEntry.value.trim().toLowerCase();
+            const correct_answer = current_question.english.toLowerCase();
+            const is_correct = user_answer === correct_answer;
+
             resultFrame.classList.remove('hidden');
-            
-            let updatedData = {};
-            
-            if (is_correct_attempt) {
-                resultLabel.textContent = "✅ 정답입니다!";
-                resultLabel.className = "text-3xl font-bold text-green-600";
-                userInputLabel.textContent = "";
-                correctAnswerLabel.textContent = `정답: ${current_question.english}`;
+            resultLabel.textContent = is_correct ? '✅ 정답!' : '❌ 오답';
+            resultLabel.className = is_correct ? 'text-2xl font-bold text-green-600 mb-4' : 'text-2xl font-bold text-red-600 mb-4';
+            correctAnswerLabel.textContent = `정답: ${current_question.english}`;
+            userInputLabel.textContent = is_correct ? '' : `입력: ${userAnswerEntry.value}`;
+            userAnswerEntry.disabled = true;
 
-                if (!is_retry_mode) {
-                    const study_count = (current_question.studyCount || 0) + 1;
-                    const correct_count = (current_question.correctCount || 0) + 1;
-                    const correct_rate = correct_count / study_count;
-                    
-                    updatedData = {
-                        studyCount: study_count,
-                        correctCount: correct_count,
-                        lastStudyDate: new Date().toISOString().split('T')[0],
-                        nextReviewDate: calculate_next_review_date(study_count, correct_rate)
-                    };
-                }
-                
-                is_retry_mode = false;
-                nextQuestionBtn.disabled = false;
-                userAnswerEntry.disabled = true;
-                
-                autoNextTimer = setTimeout(next_question, 2000);
-
-            } else {
-                resultLabel.textContent = "❌ 틀렸습니다";
-                resultLabel.className = "text-3xl font-bold text-red-600";
-                userInputLabel.textContent = `입력: ${user_answer}`;
-                correctAnswerLabel.textContent = `정답: ${current_question.english}`;
-
-                if (!is_retry_mode) {
-                    const study_count = (current_question.studyCount || 0) + 1;
-                    const correct_count = current_question.correctCount || 0;
-                    const correct_rate = correct_count / study_count;
-
-                    updatedData = {
-                        studyCount: study_count,
-                        lastStudyDate: new Date().toISOString().split('T')[0],
-                        nextReviewDate: calculate_next_review_date(study_count, correct_rate)
-                    };
-                }
-                
-                is_retry_mode = true;
-                nextQuestionBtn.disabled = false;
-                userAnswerEntry.disabled = false;
-                userAnswerEntry.focus();
+            current_question.study_count = (current_question.study_count || 0) + 1;
+            if (is_correct) {
+                current_question.correct_count = (current_question.correct_count || 0) + 1;
             }
 
-            if (Object.keys(updatedData).length > 0) {
-                try {
-                    await updateDoc(doc(sentencesCollectionRef, current_question.id), updatedData);
-                    
-                    const item = study_data.find(d => d.id === current_question.id);
-                    if(item) {
-                        Object.assign(item, updatedData);
-                        studyStats.textContent = `학습 ${item.studyCount}회 | 정답 ${item.correctCount}회 | 다음 복습: ${item.nextReviewDate}`;
-                    }
+            update_study_count(current_question);
+            is_retry_mode = true;
+        }
 
-                } catch (error) {
-                    console.error("학습 데이터 업데이트 실패:", error);
-                    showMessage("오류", "학습 상태 저장에 실패했습니다.");
-                }
+        async function update_study_count(question) {
+            try {
+                const docRef = doc(sentencesCollectionRef, question.id);
+                await updateDoc(docRef, {
+                    study_count: question.study_count,
+                    correct_count: question.correct_count
+                });
+                update_study_stats();
+            } catch (error) {
+                console.error("학습 횟수 업데이트 실패:", error);
             }
         }
 
         function next_question() {
-            if (autoNextTimer) {
-                clearTimeout(autoNextTimer);
-                autoNextTimer = null;
+            if (!is_retry_mode && current_question) {
+                userAnswerEntry.disabled = false;
+                userAnswerEntry.value = '';
+                userAnswerEntry.focus();
+                resultFrame.classList.add('hidden');
+                return;
             }
+            
+            const rand_index = Math.floor(Math.random() * study_data.length);
+            current_question = study_data[rand_index];
+            questionKorean.textContent = current_question.korean;
+            userAnswerEntry.value = '';
             userAnswerEntry.disabled = false;
-            start_study();
+            resultFrame.classList.add('hidden');
+            userAnswerEntry.focus();
+            is_retry_mode = false;
+            update_study_stats();
         }
 
         function start_reading() {
             if (study_data.length === 0) {
-                showMessage("경고", "저장된 문장이 없습니다!");
+                showMessage("알림", "읽을 문장을 먼저 추가하세요.");
                 return;
             }
-            
             switch_mode('reading');
-            reading_list = get_prioritized_list();
+            reading_list = [...study_data];
             current_read_index = 0;
-            is_playing = false;
             playBtn.disabled = false;
             stopBtn.disabled = true;
-            readingDisplay.textContent = "";
-            readingProgress.textContent = `총 ${reading_list.length}개 문장 준비 완료 (복습 우선순위 순)`;
+            readingDisplay.textContent = '▶ 시작하기';
+            readingProgress.textContent = '';
         }
-        
+
         function update_reading_speed() {
-            const speed_map = {
-                "빠르게": 0.3,
-                "중간": 0.5,
-                "느리게": 0.8
-            };
-            reading_speed = speed_map[speedSelect.value] || 0.5;
+            const speedText = speedSelect.value;
+            if (speedText === '빠르게') reading_speed = 0.3;
+            else if (speedText === '중간') reading_speed = 0.5;
+            else reading_speed = 1.0;
         }
-        
+
         function calculate_display_time(sentence) {
             const word_count = sentence.split(' ').length;
-            const display_time_sec = Math.max(2, Math.min(15, word_count * reading_speed));
+            const display_time_sec = Math.max(word_count * reading_speed + 1, 3);
             return Math.round(display_time_sec);
         }
 
@@ -672,13 +483,40 @@
             }, countdown * 1000);
         }
 
+        async function delete_selected_sentence() {
+            if (!selectedSentenceId) return;
+            if (!confirm('삭제하시겠습니까?')) return;
+
+            try {
+                await deleteDoc(doc(sentencesCollectionRef, selectedSentenceId));
+                selectedSentenceId = null;
+                deleteBtn.disabled = true;
+                load_study_data();
+            } catch (error) {
+                console.error("삭제 실패:", error);
+            }
+        }
+
+        async function delete_all_sentences() {
+            if (!confirm('모든 문장을 삭제하시겠습니까?')) return;
+
+            try {
+                const querySnapshot = await getDocs(sentencesCollectionRef);
+                for (const doc of querySnapshot.docs) {
+                    await deleteDoc(doc.ref);
+                }
+                load_study_data();
+            } catch (error) {
+                console.error("전체 삭제 실패:", error);
+            }
+        }
+
         function showMessage(title, message) {
             messageTitle.textContent = title;
             messageText.textContent = message;
             messageModal.classList.remove('hidden');
         }
 
-        // 전역 정렬 함수 (HTML onclick에서 호출 가능)
         window.setSortColumn = function(col) {
             sortColumn = col;
             render_sentence_list();
@@ -691,185 +529,180 @@
 
     </script>
 </head>
-<body class="bg-gray-100 font-sans antialiased text-gray-800">
+<body class="bg-gray-50">
 
-    <div class="container mx-auto p-4 md:p-8 max-w-6xl">
-
-        <!-- 인증 화면 -->
-        <div id="auth-frame" class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-20">
-            <div class="bg-white p-8 rounded-lg shadow-lg">
-                <h2 class="text-3xl font-bold text-center text-blue-700 mb-6">로그인</h2>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-gray-700 font-semibold mb-2">이메일:</label>
-                        <input type="email" id="login-email" class="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500" placeholder="your@email.com">
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 font-semibold mb-2">비밀번호:</label>
-                        <input type="password" id="login-password" class="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500" placeholder="비밀번호">
-                    </div>
-                    <button id="login-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition duration-300">
-                        로그인
-                    </button>
+    <!-- 로그인 화면 -->
+    <div id="auth-frame" class="min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-sm">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">Flashcard</h1>
+                <p class="text-sm text-gray-500">영어 문장 학습</p>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-2">이메일</label>
+                    <input type="email" id="login-email" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="your@email.com">
                 </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 mb-2">비밀번호</label>
+                    <input type="password" id="login-password" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="••••••••">
+                </div>
+                <button id="login-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg modern-btn text-sm">
+                    로그인
+                </button>
             </div>
         </div>
+    </div>
 
-        <!-- 메인 화면 -->
-        <div class="text-gray-600 mt-2 text-right" style="font-size:10pt; font-style: italic;">Last update 2025.12.01 ver.07</div>
-        <div id="main-frame" class="hidden">
-            <!-- 상단: 앱 타이틀 및 로그아웃 -->            
-            <header class="bg-white shadow-md rounded-lg p-6 mb-6 flex justify-between items-center">                
-                <div>
-                    <h1 class="text-3xl font-bold text-blue-700">영어 문장 학습 웹 앱</h1>
-                    <p class="text-gray-600 font-semibold mt-2">Firestore + Gemini API<br>Python에서 자동 번역 및 DB 저장</p>                    
-                </div>
-                <div class="text-right">                    
-                    <p class="text-gray-700 font-semibold mb-2">사용자: <span id="user-info" class="text-blue-600"></span></p>
-                    <button id="logout-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
+    <!-- 메인 애플리케이션 -->
+    <div id="main-frame" class="hidden flex flex-col min-h-screen">
+        <!-- 헤더 -->
+        <header class="bg-white border-b border-gray-200 sticky top-0 z-40">
+            <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+                <h1 class="text-lg font-bold text-gray-900">Flashcard</h1>
+                <div class="flex items-center gap-3">
+                    <span id="user-info" class="text-xs text-gray-600"></span>
+                    <button id="logout-btn" class="text-xs font-medium text-gray-600 hover:text-gray-900 px-3 py-1.5 rounded hover:bg-gray-100 transition-colors modern-btn">
                         로그아웃
                     </button>
                 </div>
-            </header>
+            </div>
+        </header>
 
-            <!-- 모드 전환 버튼 -->
-            <nav class="flex flex-wrap justify-center gap-4 mb-6">
-                <button id="list-mode-btn" class="flex-1 min-w-[150px] bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-300 disabled:bg-gray-400">
-                    📋 문장 목록
-                </button>
-                <button id="study-mode-btn" class="flex-1 min-w-[150px] bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-300 disabled:bg-gray-400">
-                    🧠 다시 공부하기
-                </button>
-                <button id="reading-mode-btn" class="flex-1 min-w-[150px] bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition duration-300 disabled:bg-gray-400">
-                    📖 그냥 읽기
-                </button>
-            </nav>
+        <!-- 탭 메뉴 -->
+        <nav class="bg-white border-b border-gray-200 sticky top-14 z-30">
+            <div class="max-w-6xl mx-auto px-4 flex">
+                <button id="list-mode-btn" class="tab-btn active">목록</button>
+                <button id="study-mode-btn" class="tab-btn">학습</button>
+                <button id="reading-mode-btn" class="tab-btn">읽기</button>
+            </div>
+        </nav>
 
-            <!-- 메인 콘텐츠 영역 -->
-            <main>
-                <!-- 1. 문장 목록 모드 -->
-                <div id="list-frame" class="bg-white p-6 rounded-lg shadow-lg hidden">
-                    <p id="study-stats-overall" class="text-md font-semibold text-blue-800 mb-4"></p>
+        <!-- 메인 콘텐츠 -->
+        <main class="flex-1 max-w-6xl w-full mx-auto p-4 md:p-6">
+
+            <!-- 1. 목록 모드 -->
+            <div id="list-frame" class="space-y-4">
+                <div>
+                    <p id="study-stats-overall" class="text-sm font-medium text-gray-700 mb-4"></p>
                     
-                    <!-- 정렬 및 관리 버튼 -->
-                    <div class="flex flex-wrap gap-3 mb-6">
-                        <button onclick="setSortColumn('date')" class="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg transition">
-                            📅 입력 날짜로 정렬
+                    <div class="flex flex-wrap gap-2 mb-6">
+                        <button onclick="setSortColumn('date')" class="text-xs font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded transition-colors modern-btn">
+                            날짜순
                         </button>
-                        <button onclick="setSortColumn('studyCount')" class="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg transition">
-                            📊 공부 횟수로 정렬
+                        <button onclick="setSortColumn('studyCount')" class="text-xs font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded transition-colors modern-btn">
+                            학습순
                         </button>
-                        <button onclick="setSortColumn('correctCount')" class="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg transition">
-                            ✅ 정답 횟수로 정렬
+                        <button onclick="setSortColumn('correctCount')" class="text-xs font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded transition-colors modern-btn">
+                            정답순
                         </button>
-                        <button onclick="toggleSortOrder()" class="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition">
-                            🔄 순서 뒤집기
+                        <button onclick="toggleSortOrder()" class="text-xs font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded transition-colors modern-btn">
+                            순서변경
                         </button>
-                        <button id="delete-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 disabled:bg-gray-400" disabled>
-                            🗑️ 선택 삭제
+                        <button id="delete-btn" class="text-xs font-medium bg-red-50 hover:bg-red-100 text-red-700 px-3 py-1.5 rounded transition-colors modern-btn disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            삭제
                         </button>
-                        <button id="delete-all-btn" class="bg-red-800 hover:bg-red-900 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300">
-                            💥 전체 삭제
+                        <button id="delete-all-btn" class="text-xs font-medium bg-red-50 hover:bg-red-100 text-red-700 px-3 py-1.5 rounded transition-colors modern-btn">
+                            전체삭제
                         </button>
-                    </div>
-
-                    <!-- 저장된 문장 목록 (Table) -->
-                    <div class="mt-8">
-                        <h3 class="text-2xl font-semibold mb-4 text-gray-800">저장된 문장 목록</h3>
-                        <div class="shadow-md rounded-lg border border-gray-200">
-                            <div class="overflow-y-auto h-96">
-                                <table class="w-full min-w-[900px] bg-white">
-                                    <thead class="bg-gray-200 sticky top-0">
-                                        <tr>
-                                            <th class="p-3 text-left font-semibold text-gray-700">English Sentence</th>
-                                            <th class="p-3 text-left font-semibold text-gray-700">Korean Meaning</th>
-                                            <th class="p-3 text-center font-semibold text-gray-700">Date</th>
-                                            <th class="p-3 text-center font-semibold text-gray-700">Study</th>
-                                            <th class="p-3 text-center font-semibold text-gray-700">Correct</th>
-                                            <th class="p-3 text-center font-semibold text-gray-700">Ratio</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="sentence-list-body">
-                                        <tr>
-                                            <td colspan="6" class="p-6 text-center text-gray-500">데이터를 불러오는 중...</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
-                <!-- 2. 학습 모드 -->
-                <div id="study-frame" class="bg-green-50 p-6 md:p-10 rounded-lg shadow-lg text-center hidden">
-                    <p id="study-stats-overall" class="text-md font-semibold text-green-800 mb-4"></p>
-                    <h2 class="text-2xl font-bold text-green-900 mb-6">다음 문장을 영어로 작성하세요:</h2>
-
-                    <div class="bg-white p-6 md:p-10 rounded-lg shadow-inner min-h-[150px] flex items-center justify-center">
-                        <p id="question-korean" class="text-3xl font-bold text-gray-800"></p>
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50 border-b border-gray-200">
+                                <tr>
+                                    <th class="p-3 text-left text-xs font-semibold text-gray-700">English</th>
+                                    <th class="p-3 text-left text-xs font-semibold text-gray-700">Korean</th>
+                                    <th class="p-3 text-center text-xs font-semibold text-gray-700">Date</th>
+                                    <th class="p-3 text-center text-xs font-semibold text-gray-700">Study</th>
+                                    <th class="p-3 text-center text-xs font-semibold text-gray-700">Correct</th>
+                                    <th class="p-3 text-center text-xs font-semibold text-gray-700">Ratio</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sentence-list-body">
+                                <tr>
+                                    <td colspan="6" class="p-4 text-center text-xs text-gray-500">데이터를 불러오는 중...</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
+                </div>
+            </div>
 
-                    <input type="text" id="user-answer-entry" class="w-full max-w-2xl mx-auto p-4 mt-8 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:ring-green-500 text-lg" placeholder="여기에 영어 답안 입력 후 Enter...">
-
-                    <div id="result-frame" class="bg-orange-50 p-6 rounded-lg shadow-inner mt-6 max-w-2xl mx-auto hidden">
-                        <h3 id="result-label" class="text-3xl font-bold mb-4"></h3>
-                        <p id="correct-answer-label" class="text-lg text-gray-700 mb-2"></p>
-                        <p id="user-input-label" class="text-lg text-red-600"></p>
-                        
-                        <div class="mt-6">
-                            <button id="next-question-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 disabled:bg-gray-400">
-                                ➡️ 다음 학습
-                            </button>
+            <!-- 2. 학습 모드 -->
+            <div id="study-frame" class="hidden max-w-2xl mx-auto">
+                <p id="study-stats-overall" class="text-sm font-medium text-gray-700 mb-6 text-center"></p>
+                
+                <div class="space-y-6">
+                    <div>
+                        <h2 class="text-sm font-semibold text-gray-600 mb-3 text-center">다음 문장을 영어로 입력하세요</h2>
+                        <div class="bg-white border border-gray-200 rounded-lg p-6 min-h-[120px] flex items-center justify-center">
+                            <p id="question-korean" class="text-2xl font-semibold text-gray-900 text-center"></p>
                         </div>
                     </div>
 
-                    <p id="study-stats" class="text-md text-gray-600 mt-6 font-semibold"></p>
-                </div>
+                    <input type="text" id="user-answer-entry" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="답을 입력하고 Enter를 누르세요">
 
-                <!-- 3. 읽기 모드 -->
-                <div id="reading-frame" class="bg-blue-50 p-6 md:p-10 rounded-lg shadow-lg text-center hidden">
-                    <h2 class="text-2xl font-bold text-blue-900 mb-6">📖 그냥 읽기 (복습 모드)</h2>
-                    
-                    <div class="mb-6">
-                        <label for="speed-select" class="text-lg font-semibold text-gray-700 mr-3">읽기 속도 선택:</label>
-                        <select id="speed-select" class="p-2 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500">
+                    <div id="result-frame" class="hidden bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-3">
+                        <h3 id="result-label" class="text-lg font-bold"></h3>
+                        <p id="correct-answer-label" class="text-sm text-gray-700"></p>
+                        <p id="user-input-label" class="text-sm text-red-600"></p>
+                        <button id="next-question-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg modern-btn text-sm">
+                            다음
+                        </button>
+                    </div>
+
+                    <p id="study-stats" class="text-xs text-gray-500 text-center"></p>
+                </div>
+            </div>
+
+            <!-- 3. 읽기 모드 -->
+            <div id="reading-frame" class="hidden max-w-2xl mx-auto">
+                <div class="space-y-6">
+                    <div class="flex items-center gap-3">
+                        <label for="speed-select" class="text-xs font-semibold text-gray-700">속도:</label>
+                        <select id="speed-select" class="px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                             <option value="빠르게">빠르게</option>
                             <option value="중간" selected>중간</option>
                             <option value="느리게">느리게</option>
                         </select>
                     </div>
 
-                    <div class="bg-white p-10 rounded-lg shadow-inner min-h-[250px] flex items-center justify-center relative">
-                        <p id="reading-display" class="text-4xl font-bold text-gray-800"></p>
-                        <p id="countdown-display" class="absolute top-4 right-6 text-4xl font-bold text-orange-600"></p>
+                    <div class="bg-white border border-gray-200 rounded-lg p-8 min-h-[200px] flex flex-col items-center justify-center relative">
+                        <p id="reading-display" class="text-3xl font-semibold text-gray-900 text-center"></p>
+                        <p id="countdown-display" class="text-2xl font-bold text-orange-500 mt-4"></p>
                     </div>
 
-                    <p id="reading-progress" class="text-lg text-blue-800 mt-6 font-semibold"></p>
+                    <p id="reading-progress" class="text-xs text-gray-600 text-center font-medium"></p>
                     
-                    <div class="flex justify-center gap-6 mt-6">
-                        <button id="play-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition duration-300 text-2xl">
-                            ▶ Play
+                    <div class="flex justify-center gap-4">
+                        <button id="play-btn" class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-6 rounded-lg modern-btn text-sm">
+                            ▶ 시작
                         </button>
-                        <button id="stop-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition duration-300 text-2xl disabled:bg-gray-400" disabled>
-                            ⏹ Stop
+                        <button id="stop-btn" class="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-6 rounded-lg modern-btn text-sm disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            ⏹ 중지
                         </button>
                     </div>
                 </div>
-            </main>
-        </div>
+            </div>
+
+        </main>
     </div>
 
     <!-- 메시지 모달 -->
-    <div id="message-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
-        <div class="bg-white rounded-lg shadow-xl max-w-sm w-full">
-            <div class="p-6 border-b border-gray-200">
-                <h3 id="message-title" class="text-xl font-semibold text-gray-800"></h3>
+    <div id="message-modal" class="hidden fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-lg max-w-sm w-full">
+            <div class="p-4 border-b border-gray-200">
+                <h3 id="message-title" class="text-sm font-semibold text-gray-900"></h3>
             </div>
-            <div class="p-6">
-                <p id="message-text" class="text-gray-600"></p>
+            <div class="p-4">
+                <p id="message-text" class="text-sm text-gray-600"></p>
             </div>
-            <div class="p-4 bg-gray-50 text-right rounded-b-lg">
-                <button id="message-close-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg transition duration-300">
+            <div class="p-4 bg-gray-50 rounded-b-lg text-right">
+                <button id="message-close-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1.5 px-4 rounded text-sm modern-btn">
                     확인
                 </button>
             </div>
@@ -877,15 +710,4 @@
     </div>
 
 </body>
-<script>
-    function setSortColumn(col) {
-        sortColumn = col;
-        render_sentence_list();
-    }
-
-    function toggleSortOrder() {
-        sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
-        render_sentence_list();
-    }
-</script>
 </html>
