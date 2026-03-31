@@ -386,10 +386,10 @@ const ODYSSEY_PLAN = {
 //  2. 2026 WORKING TARGET  (올해 목표)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const WORKING_TARGETS = [
-  "APEX TDR : RAC 전라인업 열교환기 최적 설계, 사양 스크리닝/확정", 
-  "Digital Twin : (AI Air) Simple Cycle Model의 구현과 이를 이용한 최적 절전로직 개발 (Realtime Power/Load Estimation, +10%↑)",
-  "VPD Solution : RAC 예측 적확도 향상(Accuracy 95%↑), CoilDesigner/VapCyc/DySim 활용 백서 작성",  
-  "해외 강사 교육 : English Speaking 역량 향상, 신입 사이클 교육 자료 작성/정리",  
+  "[APEX TDR] RAC 전라인업 열교환기 최적 설계, 사양 스크리닝/확정", 
+  "[Digital Twin] Simple Cycle Model의 구현과 이를 이용한 최적 절전로직 개발 (Realtime Power/Load Estimation, +10%↑)",
+  "[VPD Solution] RAC 예측 적확도 향상(Accuracy 95%↑), CoilDesigner/VapCyc/DySim 활용 백서 작성",  
+  "[해외 강사] English Speaking 역량 향상, 신입 사이클 교육 자료 작성/정리",  
 ];
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -431,25 +431,25 @@ const ROUTINE = {
   // 일/토: 3=Chores, 4=Vibe Coding, 5=Drawing, 6=Investment
   // 평일:  3=Email&F/up, 4=APEX, 5=Digital Twin, 6=VPD, 7=Individual
   work: [
-    ["Cleaning", "Swimming", "Reading", "Vibe-coding"],          // 일  (idx 3,4,5,6)
+    ["Chores", "Swimming", "Reading", "Investment"],          // 일  (idx 3,4,5,6)
     ["Email & F/up", "Core Task", "VPD", "Cycle"],               // 월  (idx 3,4,5,6)
     ["Email & F/up", "Core Task", "VPD", "Cycle"],               // 화  (idx 3,4,5,6)
     ["Email & F/up", "Core Task", "VPD", "Cycle"],               // 수  (idx 3,4,5,6)
     ["Email & F/up", "Core Task", "VPD", "Cycle"],               // 목  (idx 3,4,5,6)
     ["Email & F/up", "Core Task", "VPD", "Cycle"],               // 금  (idx 3,4,5,6)
-    ["Chores", "Swimming", "Reading", "Investment"],             // 토  (idx 3,4,5,6)
+    ["Cleaning", "Swimming", "Reading", "Investment"],             // 토  (idx 3,4,5,6)
   ],
   // 그룹 2: Life (저녁)
   // 일/토: 7=English, 8=Reading  (일은 work가 4개 → offset=7)
   // 평일:  8=English, 9=Reading  (평일 work가 5개 → offset=8)
   life2: [
-    ["Writing", "10pm Sleep"],           // 일  (idx 7,8)
+    ["Blogging", "10pm Sleep"],           // 일  (idx 7,8)
     ["English", "10pm Sleep"],         // 월  (idx 7,8)
     ["English", "10pm Sleep"],         // 화  (idx 7,8)
     ["English", "10pm Sleep"],         // 수  (idx 7,8)
     ["English", "10pm Sleep"],         // 목  (idx 7,8)
     ["English", "Movie"],         // 금  (idx 7,8)
-    ["Writing", "Hobby"],           // 토  (idx 7,8)
+    ["Blogging", "Hobby"],           // 토  (idx 7,8)
   ],
 };
 
