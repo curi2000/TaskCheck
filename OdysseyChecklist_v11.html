@@ -24,7 +24,7 @@
   <title>Odyssey Checklist</title>
   <style>
     /* ============================================================
-       ODYSSEY CHECKLIST  –  ver.01  2026.03.
+       ODYSSEY CHECKLIST  –  ver.01  last update 2026.03.31
     ============================================================ */
     @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap');
 
@@ -367,17 +367,17 @@
 const ODYSSEY_PLAN = {
   startYear: 2026,
   work: [
-    { years: "2026",      label: "M1", title: "Digital Twin 기반 구축" },
-    { years: "2027",      label: "M2", title: "AI Air 절전로직 고도화" },
-    { years: "2028",      label: "M3", title: "해외 기술 전파" },
-    { years: "2029",      label: "M4", title: "플랫폼 리더십" },
-    { years: "2030",      label: "M5", title: "기술 총괄" },
+    { years: "2026",      label: "M1", title: "Digital Twin 기본 로직 구현" },
+    { years: "2027",      label: "M2", title: "AI Air 절전로직 개발/고도화" },
+    { years: "2028",      label: "M3", title: "절전로직 해외 전개 및 진단로직 개발" },
+    { years: "2029",      label: "M4", title: "AI Air 진단로직 개발/고도화" },
+    { years: "2030",      label: "M5", title: "플랫폼 기술 리더십 확보" },
   ],
   personal: [
-    { years: "2026", label: "M1", title: "80kg/상급반/EF50/일본" },
-    { years: "2027", label: "M2", title: "78kg/고급반/EF60/베트남" },
-    { years: "2028", label: "M3", title: "75kg/연수반/EF70/유람선" },
-    { years: "2029", label: "M4", title: "76kg/자유연수/EF80/포르투갈" },
+    { years: "2026", label: "M1", title: "80kg/고급반/EF50/일본" },
+    { years: "2027", label: "M2", title: "78kg/마라톤10km/EF60/베트남" },
+    { years: "2028", label: "M3", title: "76kg/연수반/EF70/유람선" },
+    { years: "2029", label: "M4", title: "76kg/마라톤20km/EF80/포르투갈" },
     { years: "2030", label: "M5", title: "77kg/철인3종/EF90/호주" },
   ]
 };
@@ -386,20 +386,22 @@ const ODYSSEY_PLAN = {
 //  2. 2026 WORKING TARGET  (올해 목표)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const WORKING_TARGETS = [
-  "Development of Digital Twin Technologies : Simple Cycle Model (SCM), Optimal Operating Algorithm by SCM (Realtime Power/Load Estimation, +10%↑)",
-  "Research for VPD Solution : All of HEXs Optimization (APEX TDR), RAC Cycle Modeling (Accuracy 95%↑), CoilDesigner/VapCyc/DySim White Paper Publish",
-  "Lesson for abroad cycle instructors (English Materials for Lecture, Speaking/Communication Ability)",
-  "Individual Project (AX/DX/6sigma)",
+  "APEX TDR : RAC 전라인업 열교환기 최적 설계, 사양 스크리닝/확정", 
+  "Digital Twin : (AI Air) Simple Cycle Model의 구현과 이를 이용한 최적 절전로직 개발 (Realtime Power/Load Estimation, +10%↑)",
+  "VPD Solution : RAC 예측 적확도 향상(Accuracy 95%↑), CoilDesigner/VapCyc/DySim 활용 백서 작성",  
+  "해외 강사 교육 : English Speaking 역량 향상, 신입 사이클 교육 자료 작성/정리",  
 ];
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  3. WEEKLY CORE TASK CATEGORIES  (4개 고정)
+//  3. WEEKLY CORE TASK CATEGORIES  (주중  핵심일)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const CORE_TASK_CATEGORIES = [
-  { id: "apex",        label: "1.APEX" },
-  { id: "digitalTwin", label: "2.Digital Twin" },
-  { id: "vpd",         label: "3.VPD" },
-  { id: "individual",  label: "4.Individual" },
+  { id: "1", label: "1.Monday" },
+  { id: "2", label: "2.Tuesday" },
+  { id: "3", label: "3.Wednesday" },
+  { id: "4", label: "4.Thursday" },
+  { id: "5", label: "5.Friday" },
+  { id: "6", label: "6.Weekend" },
 ];
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -417,37 +419,37 @@ const ROUTINE = {
   // 일요일: 0=7amGetup, 1=Phills&Coffee, 2=Swimming
   // 평일:   0=6amGetup, 1=Gym or Swimming, 2=Phills&Coffee
   life1: [
-    ["7am Getup",  "Phills&Coffee", "Swimming"],              // 일  (idx 0,1,2)
+    ["7am Getup",  "Garbage",       "Phills&Coffee"],         // 일  (idx 0,1,2)
     ["6am Getup",  "Gym",           "Phills&Coffee"],         // 월  (idx 0,1,2)
     ["6am Getup",  "Swimming",      "Phills&Coffee"],         // 화  (idx 0,1,2)
     ["6am Getup",  "Gym",           "Phills&Coffee"],         // 수  (idx 0,1,2)
     ["6am Getup",  "Swimming",      "Phills&Coffee"],         // 목  (idx 0,1,2)
     ["6am Getup",  "Gym",           "Phills&Coffee"],         // 금  (idx 0,1,2)
-    ["7am Getup",  "Phills&Coffee", "Swimming"],              // 토  (idx 0,1,2)
+    ["7am Getup",  "Stretching",    "Phills&Coffee"],         // 토  (idx 0,1,2)
   ],
   // 그룹 1: Work
   // 일/토: 3=Chores, 4=Vibe Coding, 5=Drawing, 6=Investment
   // 평일:  3=Email&F/up, 4=APEX, 5=Digital Twin, 6=VPD, 7=Individual
   work: [
-    ["Chores", "Vibe Coding", "Drawing", "Investment"],                           // 일  (idx 3,4,5,6)
-    ["Email & F/up", "APEX", "Digital Twin", "VPD", "Individual"],               // 월  (idx 3,4,5,6,7)
-    ["Email & F/up", "APEX", "Digital Twin", "VPD", "Individual"],               // 화  (idx 3,4,5,6,7)
-    ["Email & F/up", "APEX", "Digital Twin", "VPD", "Individual"],               // 수  (idx 3,4,5,6,7)
-    ["Email & F/up", "APEX", "Digital Twin", "VPD", "Individual"],               // 목  (idx 3,4,5,6,7)
-    ["Email & F/up", "APEX", "Digital Twin", "VPD", "Individual"],               // 금  (idx 3,4,5,6,7)
-    ["Chores", "Vibe Coding", "Drawing", "Investment"],                           // 토  (idx 3,4,5,6)
+    ["Cleaning", "Swimming", "Reading", "Vibe-coding"],          // 일  (idx 3,4,5,6)
+    ["Email & F/up", "Core Task", "VPD", "Cycle"],               // 월  (idx 3,4,5,6)
+    ["Email & F/up", "Core Task", "VPD", "Cycle"],               // 화  (idx 3,4,5,6)
+    ["Email & F/up", "Core Task", "VPD", "Cycle"],               // 수  (idx 3,4,5,6)
+    ["Email & F/up", "Core Task", "VPD", "Cycle"],               // 목  (idx 3,4,5,6)
+    ["Email & F/up", "Core Task", "VPD", "Cycle"],               // 금  (idx 3,4,5,6)
+    ["Chores", "Swimming", "Reading", "Investment"],             // 토  (idx 3,4,5,6)
   ],
   // 그룹 2: Life (저녁)
   // 일/토: 7=English, 8=Reading  (일은 work가 4개 → offset=7)
   // 평일:  8=English, 9=Reading  (평일 work가 5개 → offset=8)
   life2: [
-    ["English", "Reading"],         // 일  (idx 7,8)
-    ["English", "Reading"],         // 월  (idx 8,9)
-    ["English", "Reading"],         // 화  (idx 8,9)
-    ["English", "Reading"],         // 수  (idx 8,9)
-    ["English", "Reading"],         // 목  (idx 8,9)
-    ["English", "Reading"],         // 금  (idx 8,9)
-    ["Movie&Beer"],                 // 토  (idx 7)
+    ["Writing", "10pm Sleep"],           // 일  (idx 7,8)
+    ["English", "10pm Sleep"],         // 월  (idx 7,8)
+    ["English", "10pm Sleep"],         // 화  (idx 7,8)
+    ["English", "10pm Sleep"],         // 수  (idx 7,8)
+    ["English", "10pm Sleep"],         // 목  (idx 7,8)
+    ["English", "Movie"],         // 금  (idx 7,8)
+    ["Writing", "Hobby"],           // 토  (idx 7,8)
   ],
 };
 
