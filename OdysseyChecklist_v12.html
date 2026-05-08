@@ -860,7 +860,7 @@ function updateDayCounter(day) {
 function updateProgress() {
   let total = 0, done = 0;
   // 평일(월~금)만 계산
-  for (let day = 1; day <= 5; day++) {
+  for (let day = 0; day <= 6; day++) {
     GROUPS.forEach((grp, grpIdx) => {
       const tasks = ROUTINE[grp][day] || [];
       const life1Len  = (ROUTINE.life1[day]||[]).length;
