@@ -24,7 +24,7 @@
   <title>Odyssey Checklist</title>
   <style>
     /* ============================================================
-       ODYSSEY CHECKLIST  –  version 1.3  last update 2026.05.07 
+       ODYSSEY CHECKLIST  –  version 1.4  last update 2026.05.15 
     ============================================================ */
     @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap');
 
@@ -419,35 +419,35 @@ const ROUTINE = {
   // 일요일: 0=7amGetup, 1=Phills&Coffee, 2=Swimming
   // 평일:   0=6amGetup, 1=Gym or Swimming, 2=Phills&Coffee
   life1: [
-    ["7am Getup",  "Jog or Walk",      "Phills&Coffee"],         // 일  (idx 0,1,2)
+    ["7am Getup",  "Swimming",      "Phills&Coffee"],         // 일  (idx 0,1,2)
     ["6am Getup",  "Gym",           "Phills&Coffee"],        // 월  (idx 0,1,2)
-    ["6am Getup",  "Investment",    "Phills&Coffee"],        // 화  (idx 0,1,2)
+    ["6am Getup",  "Swimming",    "Phills&Coffee"],        // 화  (idx 0,1,2)
     ["6am Getup",  "Gym",           "Phills&Coffee"],        // 수  (idx 0,1,2)
-    ["6am Getup",  "Investment",    "Phills&Coffee"],        // 목  (idx 0,1,2)
+    ["6am Getup",  "Swimming",    "Phills&Coffee"],        // 목  (idx 0,1,2)
     ["6am Getup",  "Gym",           "Phills&Coffee"],        // 금  (idx 0,1,2)
-    ["7am Getup",  "Jog or Walk",      "Phills&Coffee"],         // 토  (idx 0,1,2)
+    ["7am Getup",  "Swimming",      "Phills&Coffee"],         // 토  (idx 0,1,2)
   ],
   // 그룹 1: Work
   // 일/토: 3=Chores, 4=Vibe Coding, 5=Drawing, 6=Investment
   // 평일:  3=Email&F/up, 4=APEX, 5=Digital Twin, 6=VPD, 7=Individual
   work: [
-    ["Garbage", "Swimming", "Reading"],                    // 일  (idx 3,4,5)
-    ["Email & F/up", "Core Task", "Secondary Work"],       // 월  (idx 3,4,5)
-    ["Email & F/up", "Core Task", "Secondary Work"],       // 화  (idx 3,4,5)
-    ["Email & F/up", "Core Task", "Secondary Work"],       // 수  (idx 3,4,5)
-    ["Email & F/up", "Core Task", "Secondary Work"],       // 목  (idx 3,4,5)
-    ["Email & F/up", "Core Task", "Secondary Work"],       // 금  (idx 3,4,5)
-    ["Cleaning", "Swimming", "Reading"],                   // 토  (idx 3,4,5)
+    ["Garbage", "Library", "Hobby"],                    // 일  (idx 3,4,5)
+    ["Email & F/up", "Library", "Core Work"],       // 월  (idx 3,4,5)
+    ["Email & F/up", "Library", "Core Work"],       // 화  (idx 3,4,5)
+    ["Email & F/up", "Library", "Core Work"],       // 수  (idx 3,4,5)
+    ["Email & F/up", "Library", "Core Work"],       // 목  (idx 3,4,5)
+    ["Email & F/up", "Library", "Core Work"],       // 금  (idx 3,4,5)
+    ["Cleaning", "Library", "Hobby"],                   // 토  (idx 3,4,5)
   ],
   // 그룹 2: Life (저녁)
   // 일/토: 7=English, 8=Reading  (일은 work가 4개 → offset=7)
   // 평일:  8=English, 9=Reading  (평일 work가 5개 → offset=8)
   life2: [
     ["Digital Detox", "Blogging", "11pm Sleep"],         // 일  (idx 6,7,8)
-    ["Transcription", "Band Training", "11pm Sleep"],    // 월  (idx 6,7,8)
-    ["English", "Swimming", "11pm Sleep"],         // 화  (idx 6,7,8)
-    ["Transcription", "Band Training", "11pm Sleep"],    // 수  (idx 6,7,8)
-    ["English", "Swimming", "11pm Sleep"],         // 목  (idx 6,7,8)
+    ["Transcription", "Using AI", "11pm Sleep"],    // 월  (idx 6,7,8)
+    ["English", "Investment", "11pm Sleep"],         // 화  (idx 6,7,8)
+    ["Transcription", "Using AI", "11pm Sleep"],    // 수  (idx 6,7,8)
+    ["English", "Investment", "11pm Sleep"],         // 목  (idx 6,7,8)
     ["Update Playlist", "Blogging", "11pm Sleep"],    // 금  (idx 6,7,8)
     ["Digital Detox", "Blogging", "11pm Sleep"],         // 토  (idx 6,7,8)
   ],
@@ -485,7 +485,7 @@ const START_DATE = new Date(2025, 11, 28); // 2025-12-28 (일) = W01 시작 (12/
 <!-- ─── HEADER ─────────────────────────────────────────── -->
 <div class="app-header">
   <div>
-    <div class="app-title">🧭 Odyssey Checklist version 1.3 (updated 260507)</div>
+    <div class="app-title">🧭 Odyssey Checklist version 1.4 (updated 260515)</div>
     <div class="app-date" id="dateInfo"></div>
   </div>
   <div class="auth-area">
