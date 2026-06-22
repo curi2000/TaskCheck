@@ -1,4 +1,5 @@
-<script type://text/javascript">
+<script type="text/autotext/javascript">
+        // ... (기존 스크립트 내용 동일) ...
         var gk_isXlsx = false;
         var gk_xlsxFileLookup = {};
         var gk_fileData = {};
@@ -11,23 +12,15 @@
                 var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
                 var firstSheetName = workbook.SheetNames[0];
                 var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
                 var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
                 var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
+                var headerRowIndex = filteredlyData.findIndex((row, index) =>
                   row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
                 );
-                // Fallback
                 if (headerRowIndex === -1 || headerRowIndex > 25) {
                   headerRowIndex = 0;
                 }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
                 csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
                 return csv;
             } catch (e) {
@@ -45,59 +38,75 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Main Page</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 폰트 적용을 위한 스타일 추가 -->
+  <style>
+    @font-face {
+      font-family: 'Arial Narrow';
+      /* 시스템에 설치된 Arial Narrow를 우선적으로 사용합니다 */
+    }
+    body {
+      font-family: 'Arial Narrow', 'Arial', sans-serif;
+    }
+    /* 링크 텍스트의 크기를 일괄적으로 아주 작게 조정하기 위한 커스텀 클래스 (필요시) */
+    .link-text-small {
+      font-size: 0.75rem; /* text-xs와 동일 */
+      line-height: 1.4;
+    }
+  </style>
 </head>
-<!-- h-screen 대신 min-h-screen을 사용하여 내용이 많아지면 스크롤 가능하게 설정 -->
 <body class="bg-gray-100 flex items-center justify-center min-h-screen py-12 px-4">
   <div class="w-full max-w-4xl">
     
-    <!-- 상단 메인 액션 버튼 섹션 -->
+    <!-- 1. 상단 메인 액션 버튼 섹션 -->
     <div class="text-center mb-16">
       <h1 class="text-4xl font-bold mb-10 text-gray-800">My Daily Routine</h1>
       <div class="flex flex-col sm:flex-row justify-center items-center gap-8">
         <a href="OdysseyChecklist_v14.html" class="w-full sm:w-64 flex flex-col items-center p-6 bg-white rounded-xl shadow-md hover:shadow-lg hover:bg-gray-50 transition transform hover:-translate-y-1">
-          <svg class="w-12 h-12 mb-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          <svg class="w-1=\"text-blue-500\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\">
+            <path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z\"></path>
           </svg>
           <span class="text-lg font-semibold text-gray-700">일일 루틴 관리</span>
         </a>
         <a href="Flashcard_v9_modern and fixed.html" class="w-full sm:w-64 flex flex-col items-center p-6 bg-white rounded-xl shadow-md hover:shadow-lg hover:bg-gray-50 transition transform hover:-translate-y-1">
-          <svg class="w-12 h-12 mb-3 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0-1.1.9-2 2-2s2 .9 2 2-2 4-2 4m-4-2H6m10 0h4M8 7h8m-8 8h8m-9 4h10"></path>
+          <svg class=\"w-12 h-12 mb-3 text-green-500\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\">
+            <path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M12 11c0-1.1.9-2 2-2s2 .9 2 2-2 4-2 4m-can-4-2H6m10 0h4M8 7h8m-8 8h8m-9 4h10\"></path>
           </svg>
-          <span class="text-lg font-semibold text-gray-700">영어 문장 학습</span>
+          <span class=\"text-lg font-semibold text-gray-700\">영어 문장 학습</span>
         </a>
       </div>
     </div>
 
-    <!-- 하단 자주 가는 페이지 섹션 -->
-    <div class="bg-white/50 rounded-2xl p-8 shadow-sm border border-gray-200">
+    <!-- 2. 하단 자주 가는 페이지 섹션 -->
+    <div class="bg-white/50 rounded-2xl p-8 shadow-sm border border-gray-200 mb-12">
       <h2 class="text-xl font-bold mb-6 text-gray-700 flex items-center">
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
         Quick Links
       </h2>
       
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cap-3 gap-8">        
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+        <!-- 카테고리 제목은 text-sm (약 14px) / 링크는 text-xs (약 12px)로 조정 -->
+        
         <!-- 1. 구글 캘린더 -->
         <div>
           <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">Calendar</h3>
-          <a href="https://calendar.google.com" class="text-blue-600 hover:underline font-medium block">Google Calendar</a>
+          <a href="https://calendar.google.com" target="_blank" class="text-xs text-blue-600 hover:underline font-normal block">Google Calendar</a>
         </div>
 
         <!-- 2. 회사 업무용 페이지 -->
         <div>
           <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">Work</h3>
           <div class="flex flex-col space-y-1">
-            <a href="https://vpc.lge.com" target="_blank" class="text-gray-700 hover:text-blue-600 transition">Cloud PC</a>
-            <a href="https://sso.lge.com" class="text-gray-700 hover:text-blue-600 transition">EP</a>
+            <a href="https://vpc.lge.com" target="_blank" class="text-xs text-gray-700 hover:text-blue-600 transition">Cloud PC</a>
+            <a href="https://sso.lge.com" target="_blank" class="text-xs text-gray-700 hover:text-blue-600 transition">EP</a>
           </div>
         </div>
 
         <!-- 3. 포털 사이트 -->
         <div>
-          <h3 class="text-sm font-bold text-gray-400 uppercase tracking				wider mb-3">Portals</h3>
+          <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">Portals</h3>
           <div class="flex flex-col space-y-1">
-            <a href="https://www.google.com" class="text-gray-700 hover:text-blue-600 transition">Google</a>
-            <a href="https://www.naver.com" class="text-gray-700 hover:text-green-600 transition">Naver</a>            
+            <a href="https://www.naver.com" target="_blank" class="text-xs text-gray-700 hover:text-green-600 transition">Naver</a>
+            <a href="https://www.google.com" target="_blank" class="text-xs text-gray-700 hover:text-blue-600 transition">Google</a>
           </div>
         </div>
 
@@ -105,9 +114,9 @@
         <div>
           <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">Useful</h3>
           <div class="flex flex-col space-y-1">
-            <a href="https://map.naver.com" class="text-gray-700 hover:text-green-600 transition">Naver Map</a>
-            <a href="https://dict.naver.com" class="text-gray-700 hover:text-green-600 transition">Naver Dictionary</a>
-            <a href="https://translate.google.com" class="text-gray-700 hover:text-blue-600 transition">Google Translate</a>
+            <a href="https://map.naver.com" target="_blank" class="text-xs text-gray-700 hover:text-green-600 transition">Naver Map</a>
+            <a href="https://dict.naver.com" target="_blank" class="text-xs text-gray-700 hover:text-green-600 transition">Naver Dictionary</a>
+            <a href="https://translate.google.com" target="_blank" class="text-xs text-gray-700 hover:text-blue-600 transition">Google Translate</a>
           </div>
         </div>
 
@@ -115,30 +124,39 @@
         <div>
           <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">Others</h3>
           <div class="flex flex-col space-y-1">
-            <a href="https://www.youtube.com" class="text-gray-700 hover:text-red-600 transition">YouTube</a>
-            <a href="https://www.podbbang.com" class="text-gray-700 hover:text-orange-500 transition">Podbbang</a>
+            <a href="https://www.youtube.com" target="_blank" class="text-xs text-gray-700 hover:text-red-600 transition">YouTube</a>
+            <a href="https://www.podbbang.com" target="_blank" class="text-xs text-gray-700 hover:text-orange-500 transition">Podbbang</a>
           </div>
         </div>
       </div>
-        <!-- 6. 업데이트 정보 섹션 -->
+    </div>
+
+    <!-- 3. 업데이트 정보 섹션 -->
     <div class="border-t border-gray-300 pt-8 text-gray-500">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <!-- 메타데이터 정보 -->
-        <div>
-          <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Version Info</h4>
-          <dl class="text-sm space-y-1">
+        <div class="text-xs"> <!-- 폰트 크기 축소 -->
+          <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Version Info</h4>
+          <dl class="space-y-1">
             <div class="flex justify-between border-b border-gray-200 pb-1">
               <dt class="font-medium text-gray-600">Creator</dt>
               <dd class="text-gray-500">Soonchul Hwang</dd>
-            </div>            
-            </div>
+            </div>        
             <div class="flex justify-between border-b border-gray-200 pb-1">
-              <dt class="font-medium text-gray-600">Last update</dt>
+              <dt class="font-medium text-gray-600">Last Updated</dt>
               <dd class="text-gray-500">2026. 06. 22</dd>
             </div>
           </dl>
         </div>
-      </div>    
+
+        <div class="text-xs"> <!-- 폰트 크기 축소 -->
+          <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Maintenance Log</h4>
+          <ul class="space-y-2 list-disc list-inside">
+            <li>클라우드 게이트 접속 주소 업데이트</li>
+            <li>폰트 스타일 및 링크 크기 조정 (Arial Narrow 적용)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
 
   </div>
 </body>
