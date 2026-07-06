@@ -876,7 +876,7 @@ function updateProgress() {
   const pct = total > 0 ? Math.round(done/total*100) : 0;
   document.getElementById('progressFill').style.width = `${pct}%`;
   document.getElementById('progressText').textContent =
-    `W${currentWeek}  진행률: ${pct}% (${done}/${total} 완료, 평일기준)`;
+    `W${currentWeek}  진행률: ${pct}% (${done}/${total} 완료)`;
 }
 
 // ─── Firebase 데이터 로드 ────────────────────────────────
