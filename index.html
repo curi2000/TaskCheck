@@ -1,41 +1,8 @@
-<script type="text/autotext/javascript">
-        // ... (기존 스크립트 내용 동일) ...
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-                var headerRowIndex = filteredlyData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-</script>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Main Page</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- 폰트 적용을 위한 스타일 추가 -->
@@ -44,8 +11,10 @@
       font-family: 'Arial Narrow';
       /* 시스템에 설치된 Arial Narrow를 우선적으로 사용합니다 */
     }
-    body {
+    html, body {
       font-family: 'Arial Narrow', 'Arial', sans-serif;
+      overflow-y: auto;
+      -webkit-text-size-adjust: 100%;
     }
     /* 링크 텍스트의 크기를 일괄적으로 아주 작게 조정하기 위한 커스텀 클래스 (필요시) */
     .link-text-small {
@@ -67,7 +36,7 @@
           </svg>
           <span class="text-lg font-semibold text-gray-700">일일 루틴 관리</span>
         </a>
-        <a href="Flashcard_v9_modern and fixed.html" class="w-full sm:w-64 flex flex-col items-center p-6 bg-white rounded-xl shadow-md hover:shadow-lg hover:bg-gray-50 transition transform hover:-ument-y-1">
+        <a href="Flashcard_v9_modern and fixed.html" class="w-full sm:w-64 flex flex-col items-center p-6 bg-white rounded-xl shadow-md hover:shadow-lg hover:bg-gray-50 transition transform hover:-translate-y-1">
           <svg class="w-12 h-12 mb-3 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0-1.1.9-2 2-2s2 .9 2 2-2 4-2 4m-4-2H6m10 0h4M8 7h8m-8 8h8m-9 4h10"></path>
           </svg>
@@ -153,7 +122,7 @@
             </div>        
             <div class="flex justify-between border-b border-gray-200 pb-1">
               <dt class="font-medium text-gray-600">Last Updated</dt>
-              <dd class="text-gray-500">2026. 06. 22</dd>
+              <dd class="text-gray-500">2026. 07. 08</dd>
             </div>
           </dl>
         </div>
@@ -163,6 +132,8 @@
           <ul class="space-y-2 list-disc list-inside">
             <li>클라우드 게이트 접속 주소 업데이트</li>
             <li>폰트 스타일 및 링크 크기 조정 (Arial Narrow 적용)</li>
+            <li>모바일 상단 미노출 오류 수정 (DOCTYPE 앞 스크립트 제거, Quirks 모드 해결)</li>
+            <li>깨진 hover 클래스(hover:-ument-y-1 → hover:-translate-y-1) 수정</li>
           </ul>
         </div>
       </div>
