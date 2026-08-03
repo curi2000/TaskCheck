@@ -753,7 +753,7 @@ function renderCoreTaskGrid() {
     `<div class="core-task-item">
        <span class="core-task-name">${cat.label}</span>
        <input class="core-task-input" id="core_${cat.id}" type="text" 
-       placeholder="① 업무내용 ② 업무내용" value="${(coreTaskData[cat.id] || '○')}">
+       placeholder="① 업무내용 ② 업무내용" value="${(coreTaskData[cat.id] || '')}">
      </div>`
   ).join('');
 }
