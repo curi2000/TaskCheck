@@ -34,32 +34,22 @@ button,input,select{font-family:inherit;font-size:inherit}
 #loginMsg{color:#e53e3e;font-size:11px;margin-top:8px;min-height:14px}
 #app{display:none}
 .wrap{overflow-x:auto;background:#fff;border:1.5px solid var(--border);border-radius:8px}
-table{border-collapse:collapse;width:100%;min-width:1500px;table-layout:fixed}
-th{background:var(--navy);color:#fff;font-size:11px;padding:6px 2px;border:1px solid rgba(255,255,255,.15)}
-th.now{background:var(--sky)}
-th.corner{width:130px;padding:4px 6px}
-th.corner input{width:100%;padding:3px;border:0;border-radius:4px;color:var(--navy)}
-td{border:1px solid var(--border);vertical-align:top;height:96px;padding:3px;cursor:pointer}
+table{border-collapse:collapse;width:100%;table-layout:fixed}
+th{background:var(--navy);color:#fff;font-size:13px;padding:7px 2px;border:1px solid rgba(255,255,255,.15)}
+th.today{background:var(--sky)}
+th small{display:block;font-weight:400;font-size:11px;opacity:.85}
+th.sun small{color:#fed7d7}th.sat small{color:#bee3f8}
+th.corner{width:58px;font-size:11px;font-weight:400}
+td{border:1px solid var(--border);vertical-align:top;min-height:48px;height:48px;padding:3px;cursor:pointer}
 td:hover{background:#f4f9ff}
-td.now{background:var(--now)}
-td.daylabel{background:#f7faff;cursor:default;font-weight:700;color:var(--navy);text-align:center;vertical-align:middle}
-td.daylabel small{display:block;font-weight:400;color:var(--muted)}
-td.daylabel.sun,.sun .dname{color:#e53e3e}td.daylabel.sat,.sat .dname{color:#2b6cb0}
+td.now,td.hourlabel.now{background:var(--now)}
+td.hourlabel{background:#f7faff;cursor:default;color:var(--muted);text-align:right;padding:4px 6px;font-size:11px;font-family:monospace;white-space:nowrap}
+td.hourlabel:hover{background:#f7faff}
 .t{display:flex;align-items:flex-start;gap:3px;padding:3px 4px;margin-bottom:3px;border-radius:4px;background:#ebf4ff;border-left:3px solid var(--sky);font-size:11px;line-height:1.3;word-break:break-all}
 .t.rep{border-left-color:var(--green);background:#edfaf3}
 .t.done{background:var(--done-bg);color:var(--done-txt);text-decoration:line-through;opacity:.8}
 .t input{margin-top:1px;flex-shrink:0}
 .t .tx{flex:1}
-#cards{display:none}
-.card{background:#fff;border:1.5px solid var(--border);border-radius:8px;margin-bottom:10px;overflow:hidden}
-.card h3{background:var(--navy);color:#fff;padding:8px 12px;font-size:14px;display:flex;justify-content:space-between}
-.card.today h3{background:var(--sky)}
-.row{display:flex;gap:8px;padding:6px 10px;border-bottom:1px solid var(--border);min-height:40px;cursor:pointer}
-.row:last-child{border-bottom:0}
-.row.now{background:var(--now)}
-.hr{width:34px;font-size:11px;color:var(--muted);padding-top:5px;font-family:monospace}
-.row .list{flex:1}
-.row .t{font-size:14px;padding:5px 6px}
 #modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:10;align-items:center;justify-content:center;padding:16px}
 #modal.on{display:flex}
 .box{background:#fff;border-radius:10px;padding:18px;width:100%;max-width:340px}
@@ -74,7 +64,7 @@ td.daylabel.sun,.sun .dname{color:#e53e3e}td.daylabel.sat,.sat .dname{color:#2b6
 .btns{display:flex;gap:6px;margin-top:14px}
 .btns button{flex:1;padding:9px;border:0;border-radius:6px;font-weight:700;cursor:pointer}
 #bSave{background:var(--navy);color:#fff}#bDel{background:#e53e3e;color:#fff;display:none}#bCancel{background:#e2e8f0;color:var(--text)}
-@media(max-width:768px){body{padding:8px 8px 30px}.wrap{display:none}#cards{display:block}.bar h1{font-size:16px}}
+@media(max-width:768px){body{padding:8px 8px 30px}.bar h1{font-size:16px}.t{font-size:12px}td{height:52px}}
 </style>
 </head>
 <body>
@@ -96,7 +86,6 @@ td.daylabel.sun,.sun .dname{color:#e53e3e}td.daylabel.sat,.sat .dname{color:#2b6
     </div>
   </div>
   <div class="wrap"><table id="tbl"></table></div>
-  <div id="cards"></div>
 </div>
 
 <div id="modal">
@@ -159,37 +148,26 @@ function taskHtml(t, ds){
     <span class="tx">${rep?'🔁 ':''}${esc(t.text)}</span></div>`;
 }
 
-// ── 렌더 ──
+// ── 렌더 (세로: 시간 / 가로: 오늘·다음날) ──
 function render(){
   if (!user) return;
   const days = [base, addDays(base,1)].map(d => ({ d, ds: ymd(d) }));
   const todayS = ymd(new Date()), nowH = new Date().getHours();
-  const hours = []; for (let h=H0; h<=H1; h++) hours.push(h);
 
-  let t = `<tr><th class="corner"><input type="date" value="${ymd(base)}" onchange="if(this.value)setDate(parse(this.value))"></th>`;
-  hours.forEach(h => t += `<th class="${h===nowH&&days.some(x=>x.ds===todayS)?'now':''}">${h}~${h+1}시</th>`);
-  t += '</tr>';
+  let t = '<colgroup><col style="width:58px"><col><col></colgroup><tr><th class="corner">시간</th>';
   days.forEach(({d,ds}) => {
     const wd = d.getDay();
-    t += `<tr><td class="daylabel ${wd===0?'sun':wd===6?'sat':''}">${d.getMonth()+1}/${d.getDate()}<small class="dname">${DK[wd]}요일${ds===todayS?' · 오늘':''}</small></td>`;
-    hours.forEach(h => {
-      const isNow = ds===todayS && h===nowH;
-      t += `<td class="${isNow?'now':''}" onclick="openModal('${ds}',${h})">${tasksFor(ds,h).map(x=>taskHtml(x,ds)).join('')}</td>`;
+    t += `<th class="${ds===todayS?'today':''} ${wd===0?'sun':wd===6?'sat':''}">${d.getMonth()+1}/${d.getDate()} (${DK[wd]})<small>${ds===todayS?'오늘':DK[wd]+'요일'}</small></th>`;
+  });
+  t += '</tr>';
+  for (let h=H0; h<=H1; h++) {
+    t += `<tr><td class="hourlabel ${h===nowH&&days.some(x=>x.ds===todayS)?'now':''}">${String(h).padStart(2,'0')}:00</td>`;
+    days.forEach(({ds}) => {
+      t += `<td class="${ds===todayS&&h===nowH?'now':''}" onclick="openModal('${ds}',${h})">${tasksFor(ds,h).map(x=>taskHtml(x,ds)).join('')}</td>`;
     });
     t += '</tr>';
-  });
+  }
   tbl.innerHTML = t;
-
-  let c = '';
-  days.forEach(({d,ds}) => {
-    const wd = d.getDay();
-    c += `<div class="card ${ds===todayS?'today':''}"><h3><span>${d.getMonth()+1}/${d.getDate()} (${DK[wd]})</span><span>${ds===todayS?'오늘':''}</span></h3>`;
-    hours.forEach(h => {
-      c += `<div class="row ${ds===todayS&&h===nowH?'now':''}" onclick="openModal('${ds}',${h})"><div class="hr">${String(h).padStart(2,'0')}:00</div><div class="list">${tasksFor(ds,h).map(x=>taskHtml(x,ds)).join('')}</div></div>`;
-    });
-    c += '</div>';
-  });
-  cards.innerHTML = c;
 }
 
 // ── 완료 체크 ──
