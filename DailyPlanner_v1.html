@@ -50,6 +50,7 @@ td.hourlabel:hover{background:#f7faff}
 .t.done{background:var(--done-bg);color:var(--done-txt);text-decoration:line-through;opacity:.8}
 .t input{margin-top:1px;flex-shrink:0}
 .t .tx{flex:1}
+.t .tm{font-size:10px;color:var(--done-txt);white-space:nowrap;text-decoration:none;font-family:monospace;margin-top:1px}
 #modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:10;align-items:center;justify-content:center;padding:16px}
 #modal.on{display:flex}
 .box{background:#fff;border-radius:10px;padding:18px;width:100%;max-width:340px}
@@ -108,6 +109,7 @@ let ctx = { id: null, date: '', repDays: new Set() };
 const ymd = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const parse = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
 const addDays = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
+const nowTime = () => { const n = new Date(); return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0'); };
 const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
 // ── 인증 ──
@@ -142,10 +144,11 @@ function tasksFor(ds, hour){
 }
 function taskHtml(t, ds){
   const done = t.done && t.done[ds];
+  const tm = typeof done === 'string' ? done : '';
   const rep = t.repeat && t.repeat.length;
   return `<div class="t ${rep?'rep':''} ${done?'done':''}" onclick="event.stopPropagation();openModal('${ds}',${t.hour},'${t.id}')">
     <input type="checkbox" ${done?'checked':''} onclick="event.stopPropagation()" onchange="toggleDone('${t.id}','${ds}',this.checked)">
-    <span class="tx">${rep?'🔁 ':''}${esc(t.text)}</span></div>`;
+    <span class="tx">${rep?'🔁 ':''}${esc(t.text)}</span>${tm?`<span class="tm">${tm}</span>`:''}</div>`;
 }
 
 // ── 렌더 (세로: 시간 / 가로: 오늘·다음날) ──
@@ -173,7 +176,7 @@ function render(){
 // ── 완료 체크 ──
 function toggleDone(id, ds, on){
   db.collection('users').doc(user.uid).collection('dailyTasks').doc(id)
-    .set({ done: { [ds]: on ? true : firebase.firestore.FieldValue.delete() } }, { merge: true })
+    .set({ done: { [ds]: on ? nowTime() : firebase.firestore.FieldValue.delete() } }, { merge: true })
     .catch(e => alert('저장 실패: ' + e.message));
 }
 
