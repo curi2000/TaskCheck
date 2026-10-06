@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>일일 일과표</title>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyCv9qO_dTwSXTACNjrjQ5H13h09JzJwN9A",
+  authDomain: "dailyroutine-ea1a1.firebaseapp.com",
+  projectId: "dailyroutine-ea1a1",
+  storageBucket: "dailyroutine-ea1a1.firebasestorage.app",
+  messagingSenderId: "389292492309",
+  appId: "1:389292492309:web:77dea07659d73391f3b01c"
+});
+const auth = firebase.auth(), db = firebase.firestore();
+</script>
+<style>
+:root{--navy:#1a365d;--navy-md:#2a4a7f;--sky:#4299e1;--green:#38a169;--border:#d6e4f0;--text:#2d3748;--muted:#718096;--done-bg:#d4edda;--done-txt:#276749;--bg:#eef2f7;--now:#fff6e0}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Arial Narrow',Arial,sans-serif;background:var(--bg);color:var(--text);font-size:13px;padding:12px 12px 30px;-webkit-text-size-adjust:100%}
+button,input,select{font-family:inherit;font-size:inherit}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.bar h1{font-size:20px;color:var(--navy)}
+.bar a,.bar button{font-size:11px;color:var(--navy-md);text-decoration:none;background:#fff;border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer}
+.bar .right{display:flex;gap:6px;align-items:center}
+#login{max-width:320px;margin:60px auto;background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:24px;text-align:center}
+#login h2{color:var(--navy);margin-bottom:14px;font-size:17px}
+#login input{width:100%;padding:9px;margin-bottom:8px;border:1.5px solid var(--border);border-radius:6px}
+#login button{width:100%;padding:9px;border:0;border-radius:6px;background:var(--navy);color:#fff;font-weight:700;cursor:pointer}
+#loginMsg{color:#e53e3e;font-size:11px;margin-top:8px;min-height:14px}
+#app{display:none}
+.wrap{overflow-x:auto;background:#fff;border:1.5px solid var(--border);border-radius:8px}
+table{border-collapse:collapse;width:100%;min-width:1500px;table-layout:fixed}
+th{background:var(--navy);color:#fff;font-size:11px;padding:6px 2px;border:1px solid rgba(255,255,255,.15)}
+th.now{background:var(--sky)}
+th.corner{width:130px;padding:4px 6px}
+th.corner input{width:100%;padding:3px;border:0;border-radius:4px;color:var(--navy)}
+td{border:1px solid var(--border);vertical-align:top;height:96px;padding:3px;cursor:pointer}
+td:hover{background:#f4f9ff}
+td.now{background:var(--now)}
+td.daylabel{background:#f7faff;cursor:default;font-weight:700;color:var(--navy);text-align:center;vertical-align:middle}
+td.daylabel small{display:block;font-weight:400;color:var(--muted)}
+td.daylabel.sun,.sun .dname{color:#e53e3e}td.daylabel.sat,.sat .dname{color:#2b6cb0}
+.t{display:flex;align-items:flex-start;gap:3px;padding:3px 4px;margin-bottom:3px;border-radius:4px;background:#ebf4ff;border-left:3px solid var(--sky);font-size:11px;line-height:1.3;word-break:break-all}
+.t.rep{border-left-color:var(--green);background:#edfaf3}
+.t.done{background:var(--done-bg);color:var(--done-txt);text-decoration:line-through;opacity:.8}
+.t input{margin-top:1px;flex-shrink:0}
+.t .tx{flex:1}
+#cards{display:none}
+.card{background:#fff;border:1.5px solid var(--border);border-radius:8px;margin-bottom:10px;overflow:hidden}
+.card h3{background:var(--navy);color:#fff;padding:8px 12px;font-size:14px;display:flex;justify-content:space-between}
+.card.today h3{background:var(--sky)}
+.row{display:flex;gap:8px;padding:6px 10px;border-bottom:1px solid var(--border);min-height:40px;cursor:pointer}
+.row:last-child{border-bottom:0}
+.row.now{background:var(--now)}
+.hr{width:34px;font-size:11px;color:var(--muted);padding-top:5px;font-family:monospace}
+.row .list{flex:1}
+.row .t{font-size:14px;padding:5px 6px}
+#modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:10;align-items:center;justify-content:center;padding:16px}
+#modal.on{display:flex}
+.box{background:#fff;border-radius:10px;padding:18px;width:100%;max-width:340px}
+.box h4{color:var(--navy);margin-bottom:10px;font-size:14px}
+.box label{display:block;font-size:11px;color:var(--muted);margin:8px 0 3px}
+.box input[type=text],.box select{width:100%;padding:8px;border:1.5px solid var(--border);border-radius:6px}
+.chk{display:flex;align-items:center;gap:6px;margin-top:10px;font-size:13px}
+#days{display:none;gap:4px;margin-top:8px}
+#days.on{display:flex}
+#days span{flex:1;text-align:center;padding:6px 0;border:1.5px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px;user-select:none}
+#days span.sel{background:var(--green);color:#fff;border-color:var(--green)}
+.btns{display:flex;gap:6px;margin-top:14px}
+.btns button{flex:1;padding:9px;border:0;border-radius:6px;font-weight:700;cursor:pointer}
+#bSave{background:var(--navy);color:#fff}#bDel{background:#e53e3e;color:#fff;display:none}#bCancel{background:#e2e8f0;color:var(--text)}
+@media(max-width:768px){body{padding:8px 8px 30px}.wrap{display:none}#cards{display:block}.bar h1{font-size:16px}}
+</style>
+</head>
+<body>
+<div id="login">
+  <h2>🗓 일일 일과표</h2>
+  <input type="email" id="email" placeholder="이메일 주소">
+  <input type="password" id="pw" placeholder="비밀번호" onkeydown="if(event.key==='Enter')doLogin()">
+  <button onclick="doLogin()">로그인</button>
+  <div id="loginMsg"></div>
+</div>
+
+<div id="app">
+  <div class="bar">
+    <h1>🗓 일일 일과표</h1>
+    <div class="right">
+      <input type="date" id="dateIn" style="font-size:11px;padding:4px;border:1px solid var(--border);border-radius:6px">
+      <button onclick="shift(-1)">◀</button><button onclick="setDate(new Date())">오늘</button><button onclick="shift(1)">▶</button>
+      <a href="index.html">홈</a><button onclick="auth.signOut()">로그아웃</button>
+    </div>
+  </div>
+  <div class="wrap"><table id="tbl"></table></div>
+  <div id="cards"></div>
+</div>
+
+<div id="modal">
+  <div class="box">
+    <h4 id="mTitle">할일 추가</h4>
+    <label>내용</label><input type="text" id="mText" placeholder="할일을 입력하세요">
+    <label>시간</label><select id="mHour"></select>
+    <div class="chk"><input type="checkbox" id="mRep"><label for="mRep" style="margin:0;font-size:13px;color:var(--text)">반복</label></div>
+    <div id="days"></div>
+    <div class="btns"><button id="bDel">삭제</button><button id="bCancel">취소</button><button id="bSave">저장</button></div>
+  </div>
+</div>
+
+<script>
+const H0 = 6, H1 = 23;                         // 06:00 ~ 24:00 (마지막 칸 23시)
+const DK = ['일','월','화','수','목','금','토'];
+let user = null, tasks = [], base = new Date(), unsub = null;
+let ctx = { id: null, date: '', repDays: new Set() };
+
+const ymd = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const parse = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
+const addDays = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+// ── 인증 ──
+async function doLogin(){
+  try { await auth.signInWithEmailAndPassword(email.value.trim(), pw.value); }
+  catch(e){ loginMsg.textContent = '이메일 또는 비밀번호를 확인하세요.'; }
+}
+auth.onAuthStateChanged(u => {
+  user = u;
+  login.style.display = u ? 'none' : 'block';
+  app.style.display = u ? 'block' : 'none';
+  if (unsub) unsub();
+  if (u) {
+    unsub = db.collection('users').doc(u.uid).collection('dailyTasks').onSnapshot(s => {
+      tasks = s.docs.map(d => ({ id: d.id, ...d.data() }));
+      render();
+    }, e => console.error(e));
+  } else { tasks = []; }
+});
+
+// ── 날짜 선택 ──
+function setDate(d){ base = d; dateIn.value = ymd(d); render(); }
+function shift(n){ setDate(addDays(base, n)); }
+dateIn.onchange = () => { if (dateIn.value) setDate(parse(dateIn.value)); };
+
+// ── 해당 날짜/시간의 할일 (일회성 + 반복 요일 자동 반영) ──
+function tasksFor(ds, hour){
+  const wd = parse(ds).getDay();
+  return tasks.filter(t => t.hour === hour && (
+    t.repeat && t.repeat.length ? (ds >= t.date && t.repeat.includes(wd)) : t.date === ds
+  ));
+}
+function taskHtml(t, ds){
+  const done = t.done && t.done[ds];
+  const rep = t.repeat && t.repeat.length;
+  return `<div class="t ${rep?'rep':''} ${done?'done':''}" onclick="event.stopPropagation();openModal('${ds}',${t.hour},'${t.id}')">
+    <input type="checkbox" ${done?'checked':''} onclick="event.stopPropagation()" onchange="toggleDone('${t.id}','${ds}',this.checked)">
+    <span class="tx">${rep?'🔁 ':''}${esc(t.text)}</span></div>`;
+}
+
+// ── 렌더 ──
+function render(){
+  if (!user) return;
+  const days = [base, addDays(base,1)].map(d => ({ d, ds: ymd(d) }));
+  const todayS = ymd(new Date()), nowH = new Date().getHours();
+  const hours = []; for (let h=H0; h<=H1; h++) hours.push(h);
+
+  let t = `<tr><th class="corner"><input type="date" value="${ymd(base)}" onchange="if(this.value)setDate(parse(this.value))"></th>`;
+  hours.forEach(h => t += `<th class="${h===nowH&&days.some(x=>x.ds===todayS)?'now':''}">${h}~${h+1}시</th>`);
+  t += '</tr>';
+  days.forEach(({d,ds}) => {
+    const wd = d.getDay();
+    t += `<tr><td class="daylabel ${wd===0?'sun':wd===6?'sat':''}">${d.getMonth()+1}/${d.getDate()}<small class="dname">${DK[wd]}요일${ds===todayS?' · 오늘':''}</small></td>`;
+    hours.forEach(h => {
+      const isNow = ds===todayS && h===nowH;
+      t += `<td class="${isNow?'now':''}" onclick="openModal('${ds}',${h})">${tasksFor(ds,h).map(x=>taskHtml(x,ds)).join('')}</td>`;
+    });
+    t += '</tr>';
+  });
+  tbl.innerHTML = t;
+
+  let c = '';
+  days.forEach(({d,ds}) => {
+    const wd = d.getDay();
+    c += `<div class="card ${ds===todayS?'today':''}"><h3><span>${d.getMonth()+1}/${d.getDate()} (${DK[wd]})</span><span>${ds===todayS?'오늘':''}</span></h3>`;
+    hours.forEach(h => {
+      c += `<div class="row ${ds===todayS&&h===nowH?'now':''}" onclick="openModal('${ds}',${h})"><div class="hr">${String(h).padStart(2,'0')}:00</div><div class="list">${tasksFor(ds,h).map(x=>taskHtml(x,ds)).join('')}</div></div>`;
+    });
+    c += '</div>';
+  });
+  cards.innerHTML = c;
+}
+
+// ── 완료 체크 ──
+function toggleDone(id, ds, on){
+  db.collection('users').doc(user.uid).collection('dailyTasks').doc(id)
+    .set({ done: { [ds]: on ? true : firebase.firestore.FieldValue.delete() } }, { merge: true })
+    .catch(e => alert('저장 실패: ' + e.message));
+}
+
+// ── 입력 모달 ──
+mHour.innerHTML = Array.from({length:H1-H0+1}, (_,i) => `<option value="${H0+i}">${H0+i}:00 ~ ${H0+i+1}:00</option>`).join('');
+days.innerHTML = DK.map((k,i) => `<span data-d="${i}">${k}</span>`).join('');
+days.onclick = e => {
+  const i = e.target.dataset.d; if (i === undefined) return;
+  ctx.repDays.has(+i) ? ctx.repDays.delete(+i) : ctx.repDays.add(+i);
+  e.target.classList.toggle('sel');
+};
+function paintDays(){ [...days.children].forEach(s => s.classList.toggle('sel', ctx.repDays.has(+s.dataset.d))); }
+mRep.onchange = () => {
+  days.classList.toggle('on', mRep.checked);
+  if (mRep.checked && !ctx.repDays.size) { ctx.repDays = new Set([0,1,2,3,4,5,6]); paintDays(); }
+};
+
+function openModal(ds, hour, id){
+  const t = id ? tasks.find(x => x.id === id) : null;
+  ctx = { id: id || null, date: t ? t.date : ds, repDays: new Set(t && t.repeat ? t.repeat : []) };
+  mTitle.textContent = t ? '할일 수정' : `${ds.slice(5).replace('-','/')} 할일 추가`;
+  mText.value = t ? t.text : '';
+  mHour.value = hour;
+  mRep.checked = ctx.repDays.size > 0;
+  days.classList.toggle('on', mRep.checked);
+  paintDays();
+  bDel.style.display = t ? 'block' : 'none';
+  modal.classList.add('on');
+  setTimeout(() => mText.focus(), 50);
+}
+const closeModal = () => modal.classList.remove('on');
+bCancel.onclick = closeModal;
+modal.onclick = e => { if (e.target === modal) closeModal(); };
+
+bSave.onclick = async () => {
+  const text = mText.value.trim();
+  if (!text) { mText.focus(); return; }
+  if (mRep.checked && !ctx.repDays.size) { alert('반복할 요일을 선택하세요.'); return; }
+  const data = { text, hour: +mHour.value, date: ctx.date, repeat: mRep.checked ? [...ctx.repDays].sort() : [] };
+  const col = db.collection('users').doc(user.uid).collection('dailyTasks');
+  try {
+    if (ctx.id) await col.doc(ctx.id).set(data, { merge: true });
+    else await col.add({ ...data, done: {}, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    closeModal();
+  } catch(e){ alert('저장 실패: ' + e.message); }
+};
+bDel.onclick = async () => {
+  const t = tasks.find(x => x.id === ctx.id);
+  const msg = t && t.repeat && t.repeat.length ? '반복 할일입니다. 모든 날짜에서 삭제할까요?' : '삭제할까요?';
+  if (!confirm(msg)) return;
+  try { await db.collection('users').doc(user.uid).collection('dailyTasks').doc(ctx.id).delete(); closeModal(); }
+  catch(e){ alert('삭제 실패: ' + e.message); }
+};
+
+setDate(new Date());
+setInterval(() => { if (user) render(); }, 600000);   // 현재 시간 강조 갱신
+</script>
+</body>
+</html>
