@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1a365d">
 <title>일일 일과표</title>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
@@ -19,20 +20,36 @@ firebase.initializeApp({
 const auth = firebase.auth(), db = firebase.firestore();
 </script>
 <style>
-:root{--navy:#1a365d;--navy-md:#2a4a7f;--sky:#4299e1;--green:#38a169;--border:#d6e4f0;--text:#2d3748;--muted:#718096;--done-bg:#d4edda;--done-txt:#276749;--bg:#eef2f7;--now:#fff6e0}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Arial Narrow',Arial,sans-serif;background:var(--bg);color:var(--text);font-size:13px;padding:12px 12px 30px;-webkit-text-size-adjust:100%}
-button,input,select{font-family:inherit;font-size:inherit}
+:root{
+  --navy:#1a365d;--navy-md:#2a4a7f;--sky:#4299e1;--green:#38a169;
+  --border:#d6e4f0;--text:#2d3748;--muted:#718096;
+  --done-bg:#e3f4e8;--done-txt:#276749;--bg:#eef2f7;--now:#fff6e0;--orange:#ed8936;
+  --safe-t:env(safe-area-inset-top,0px);--safe-b:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',Arial,sans-serif;
+  background:var(--bg);color:var(--text);font-size:13px;padding:12px 12px 30px;touch-action:manipulation}
+body.lock{overflow:hidden}
+button,input,select{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+
+/* ───── 로그인 ───── */
+#login{max-width:340px;margin:70px auto;background:#fff;border-radius:18px;padding:28px 24px;text-align:center;
+  box-shadow:0 10px 30px rgba(26,54,93,.12)}
+#login h2{color:var(--navy);margin-bottom:18px;font-size:20px}
+#login input{width:100%;padding:13px 14px;margin-bottom:10px;border:1.5px solid var(--border);border-radius:12px;font-size:16px;outline:none}
+#login input:focus{border-color:var(--sky)}
+#login button{width:100%;padding:14px;border-radius:12px;background:linear-gradient(135deg,var(--navy-md),var(--navy));
+  color:#fff;font-weight:700;font-size:16px}
+#loginMsg{color:#e53e3e;font-size:12px;margin-top:10px;min-height:16px}
+#app{display:none}
+
+/* ───── PC 화면 (기존 2열 표) ───── */
 .bar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;flex-wrap:wrap}
 .bar h1{font-size:20px;color:var(--navy)}
-.bar a,.bar button{font-size:11px;color:var(--navy-md);text-decoration:none;background:#fff;border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer}
+.bar a,.bar button{font-size:11px;color:var(--navy-md);text-decoration:none;background:#fff;border:1px solid var(--border);border-radius:6px;padding:5px 10px}
 .bar .right{display:flex;gap:6px;align-items:center}
-#login{max-width:320px;margin:60px auto;background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:24px;text-align:center}
-#login h2{color:var(--navy);margin-bottom:14px;font-size:17px}
-#login input{width:100%;padding:9px;margin-bottom:8px;border:1.5px solid var(--border);border-radius:6px}
-#login button{width:100%;padding:9px;border:0;border-radius:6px;background:var(--navy);color:#fff;font-weight:700;cursor:pointer}
-#loginMsg{color:#e53e3e;font-size:11px;margin-top:8px;min-height:14px}
-#app{display:none}
 .wrap{overflow-x:auto;background:#fff;border:1.5px solid var(--border);border-radius:8px}
 table{border-collapse:collapse;width:100%;table-layout:fixed}
 th{background:var(--navy);color:#fff;font-size:13px;padding:7px 2px;border:1px solid rgba(255,255,255,.15)}
@@ -40,62 +57,195 @@ th.today{background:var(--sky)}
 th small{display:block;font-weight:400;font-size:11px;opacity:.85}
 th.sun small{color:#fed7d7}th.sat small{color:#bee3f8}
 th.corner{width:58px;font-size:11px;font-weight:400}
-td{border:1px solid var(--border);vertical-align:top;min-height:48px;height:48px;padding:3px;cursor:pointer}
+td{border:1px solid var(--border);vertical-align:top;height:48px;padding:3px;cursor:pointer}
 td:hover{background:#f4f9ff}
 td.now,td.hourlabel.now{background:var(--now)}
 td.hourlabel{background:#f7faff;cursor:default;color:var(--muted);text-align:right;padding:4px 6px;font-size:11px;font-family:monospace;white-space:nowrap}
 td.hourlabel:hover{background:#f7faff}
 .t{display:flex;align-items:flex-start;gap:3px;padding:3px 4px;margin-bottom:3px;border-radius:4px;background:#ebf4ff;border-left:3px solid var(--sky);font-size:11px;line-height:1.3;word-break:break-all}
 .t.rep{border-left-color:var(--green);background:#edfaf3}
-.t.done{background:var(--done-bg);color:var(--done-txt);text-decoration:line-through;opacity:.8}
+.t.done{background:#d4edda;color:var(--done-txt);text-decoration:line-through;opacity:.8}
 .t input{margin-top:1px;flex-shrink:0}
 .t .tx{flex:1}
 .t .tm{font-size:10px;color:var(--done-txt);white-space:nowrap;text-decoration:none;font-family:monospace;margin-top:1px}
-#modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:10;align-items:center;justify-content:center;padding:16px}
+
+/* ───── 모바일 전용 요소 (PC에서는 숨김) ───── */
+.monly{display:none}
+
+/* ───── 입력 모달 (PC: 가운데 팝업 / 모바일: 하단 시트) ───── */
+#modal{display:none;position:fixed;inset:0;background:rgba(15,30,55,.5);z-index:50;align-items:center;justify-content:center;padding:16px}
 #modal.on{display:flex}
-.box{background:#fff;border-radius:10px;padding:18px;width:100%;max-width:340px}
-.box h4{color:var(--navy);margin-bottom:10px;font-size:14px}
-.box label{display:block;font-size:11px;color:var(--muted);margin:8px 0 3px}
-.box input[type=text],.box select{width:100%;padding:8px;border:1.5px solid var(--border);border-radius:6px}
-.chk{display:flex;align-items:center;gap:6px;margin-top:10px;font-size:13px}
-#days{display:none;gap:4px;margin-top:8px}
-#days.on{display:flex}
-#days span{flex:1;text-align:center;padding:6px 0;border:1.5px solid var(--border);border-radius:6px;cursor:pointer;font-size:12px;user-select:none}
-#days span.sel{background:var(--green);color:#fff;border-color:var(--green)}
-.btns{display:flex;gap:6px;margin-top:14px}
-.btns button{flex:1;padding:9px;border:0;border-radius:6px;font-weight:700;cursor:pointer}
-#bSave{background:var(--navy);color:#fff}#bDel{background:#e53e3e;color:#fff;display:none}#bCancel{background:#e2e8f0;color:var(--text)}
-@media(max-width:768px){body{padding:8px 8px 30px}.bar h1{font-size:16px}.t{font-size:12px}td{height:52px}}
+.box{background:#fff;border-radius:18px;padding:20px;width:100%;max-width:380px;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.grip{display:none;width:44px;height:5px;border-radius:3px;background:#cbd5e0;margin:0 auto 14px}
+.box h4{color:var(--navy);margin-bottom:6px;font-size:18px}
+.box label.lb{display:block;font-size:12px;color:var(--muted);margin:14px 0 6px;font-weight:600}
+.box input[type=text]{width:100%;padding:14px;border:1.5px solid var(--border);border-radius:12px;font-size:16px;outline:none}
+.box input[type=text]:focus{border-color:var(--sky);box-shadow:0 0 0 3px rgba(66,153,225,.18)}
+.stepper{display:flex;align-items:center;gap:8px}
+.stepper button{width:52px;height:52px;border-radius:14px;background:#edf2f7;font-size:26px;color:var(--navy);line-height:1}
+.stepper button:active{background:#dbe5f1}
+#mHourTxt{flex:1;height:52px;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--border);
+  border-radius:14px;font-size:18px;font-weight:700;color:var(--navy);font-variant-numeric:tabular-nums}
+.reprow{display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding:12px 14px;background:#f7faff;border-radius:12px}
+.reprow span{font-size:15px;font-weight:600;color:var(--text)}
+.switch{position:relative;width:52px;height:30px;flex-shrink:0}
+.switch input{opacity:0;width:0;height:0;position:absolute}
+.switch i{position:absolute;inset:0;background:#cbd5e0;border-radius:15px;transition:.2s}
+.switch i::after{content:'';position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:.2s}
+.switch input:checked+i{background:var(--green)}
+.switch input:checked+i::after{transform:translateX(22px)}
+#dayPick{display:none;gap:6px;margin-top:10px}
+#dayPick.on{display:flex}
+#dayPick span{flex:1;text-align:center;padding:12px 0;border:1.5px solid var(--border);border-radius:12px;cursor:pointer;font-size:15px;font-weight:600;user-select:none;color:var(--muted)}
+#dayPick span.sel{background:var(--green);color:#fff;border-color:var(--green)}
+.btns{display:flex;gap:8px;margin-top:18px}
+.btns button{flex:1;height:50px;border-radius:14px;font-weight:700;font-size:16px}
+#bSave{flex:2;background:linear-gradient(135deg,var(--navy-md),var(--navy));color:#fff}
+#bDel{background:#fff0f0;color:#e53e3e;display:none}
+#bCancel{background:#edf2f7;color:var(--text)}
+.btns button:active{transform:scale(.97)}
+
+/* ───── 모바일 레이아웃 ───── */
+@media(max-width:768px){
+  body{padding:0 0 calc(100px + var(--safe-b))}
+  .donly{display:none!important}
+  .monly{display:block}
+
+  /* 상단 고정 헤더 */
+  .mbar{position:sticky;top:0;z-index:20;background:#fff;padding:calc(10px + var(--safe-t)) 14px 12px;
+    box-shadow:0 2px 12px rgba(26,54,93,.1);border-radius:0 0 20px 20px}
+  .m-top{display:flex;align-items:center;gap:8px}
+  .nav{width:46px;height:46px;border-radius:14px;background:#edf2f7;color:var(--navy);font-size:26px;line-height:1;flex-shrink:0}
+  .nav:active{background:#dbe5f1}
+  .m-date{position:relative;flex:1;height:46px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+  .m-date b{font-size:20px;color:var(--navy);line-height:1.15}
+  .m-date small{font-size:12px;color:var(--muted)}
+  .m-date input{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px}
+  .m-sub{display:flex;align-items:center;gap:8px;margin-top:10px}
+  .chip{height:34px;padding:0 14px;border-radius:17px;background:var(--navy);color:#fff;font-weight:700;font-size:13px;flex-shrink:0}
+  .chip.dim{background:#edf2f7;color:var(--navy-md)}
+  .prog{flex:1;height:8px;border-radius:4px;background:#e2e8f0;overflow:hidden}
+  #progFill{height:100%;width:0;background:linear-gradient(90deg,#68d391,var(--green));border-radius:4px;transition:width .3s}
+  #progTxt{font-size:13px;font-weight:700;color:var(--green);min-width:36px;text-align:right;font-variant-numeric:tabular-nums}
+  .ico{height:34px;padding:0 10px;border-radius:10px;background:#edf2f7;color:var(--navy-md);font-size:12px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;flex-shrink:0}
+
+  /* 시간대 목록 */
+  #mList{padding:8px 12px 0}
+  .hr{display:grid;grid-template-columns:54px 1fr;gap:6px;padding:8px 0;border-bottom:1px dashed #cbd8e6}
+  .hr:last-child{border-bottom:0}
+  .hl{padding-top:14px;font-size:14px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums;line-height:1.2}
+  .hl em{display:block;margin-top:4px;font-style:normal;font-size:10px;font-weight:700;color:#fff;background:var(--orange);border-radius:8px;padding:2px 0;text-align:center;width:36px}
+  .hr.now{background:var(--now);margin:0 -12px;padding:8px 12px;border-radius:14px;border-bottom-color:transparent}
+  .hr.now .hl{color:var(--orange)}
+  .hc{display:flex;flex-direction:column;gap:8px;min-width:0}
+
+  /* 카드 */
+  .card{display:flex;align-items:stretch;background:#fff;border-radius:14px;border-left:5px solid var(--sky);
+    box-shadow:0 2px 8px rgba(26,54,93,.08);min-height:58px;overflow:hidden}
+  .card.rep{border-left-color:var(--green)}
+  .ck{width:56px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+  .ck span{width:28px;height:28px;border-radius:50%;border:2.5px solid #b8c7d9;display:flex;align-items:center;justify-content:center;transition:.15s}
+  .ck svg{width:16px;height:16px;opacity:0;transition:.15s}
+  .card.done .ck span{background:var(--green);border-color:var(--green)}
+  .card.done .ck svg{opacity:1}
+  .ck:active span{transform:scale(.88)}
+  .ct{flex:1;min-width:0;padding:12px 14px 12px 0;display:flex;flex-direction:column;justify-content:center;gap:3px}
+  .ct .tx{font-size:16px;line-height:1.4;word-break:keep-all;overflow-wrap:anywhere;font-weight:500}
+  .ct .meta{font-size:12px;color:var(--muted)}
+  .card.done{background:var(--done-bg)}
+  .card.done .tx{text-decoration:line-through;color:var(--done-txt);opacity:.75}
+  .card.done .meta{color:var(--done-txt)}
+
+  /* 추가 버튼 */
+  .add{display:flex;align-items:center;justify-content:center;gap:6px;color:var(--sky);font-weight:600}
+  .add svg{width:18px;height:18px;flex-shrink:0}
+  .add.em{height:48px;border:1.5px dashed #b6cde6;border-radius:14px;font-size:14px;color:#7aa2cc;background:rgba(255,255,255,.6)}
+  .add.em:active{background:#e8f2fc}
+  .add.sm{height:40px;align-self:flex-start;padding:0 14px;border-radius:20px;font-size:13px;background:#e8f2fc}
+  .add.sm:active{background:#d4e7f9}
+
+  /* 플로팅 + 버튼 */
+  .fab{position:fixed;right:18px;bottom:calc(20px + var(--safe-b));width:62px;height:62px;border-radius:50%;z-index:30;
+    display:flex;align-items:center;justify-content:center;color:#fff;
+    background:linear-gradient(135deg,#4299e1,#2a4a7f);box-shadow:0 8px 20px rgba(42,74,127,.45),0 2px 6px rgba(0,0,0,.15)}
+  .fab svg{width:30px;height:30px}
+  .fab:active{transform:scale(.92)}
+
+  /* 하단 시트 */
+  #modal{align-items:flex-end;padding:0}
+  .box{max-width:none;border-radius:24px 24px 0 0;padding:12px 18px calc(18px + var(--safe-b));animation:up .25s ease-out;max-height:92vh;overflow-y:auto}
+  .grip{display:block}
+  @keyframes up{from{transform:translateY(100%)}to{transform:none}}
+}
 </style>
 </head>
 <body>
+
 <div id="login">
   <h2>🗓 일일 일과표</h2>
-  <input type="email" id="email" placeholder="이메일 주소">
-  <input type="password" id="pw" placeholder="비밀번호" onkeydown="if(event.key==='Enter')doLogin()">
+  <input type="email" id="email" placeholder="이메일 주소" autocomplete="username">
+  <input type="password" id="pw" placeholder="비밀번호" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
   <button onclick="doLogin()">로그인</button>
   <div id="loginMsg"></div>
 </div>
 
 <div id="app">
-  <div class="bar">
-    <h1>🗓 일일 일과표</h1>
-    <div class="right">
-      <input type="date" id="dateIn" style="font-size:11px;padding:4px;border:1px solid var(--border);border-radius:6px">
-      <button onclick="shift(-1)">◀</button><button onclick="setDate(new Date())">오늘</button><button onclick="shift(1)">▶</button>
-      <a href="index.html">홈</a><button onclick="auth.signOut()">로그아웃</button>
+  <!-- PC 화면 -->
+  <div class="donly">
+    <div class="bar">
+      <h1>🗓 일일 일과표</h1>
+      <div class="right">
+        <input type="date" id="dateIn" style="font-size:11px;padding:4px;border:1px solid var(--border);border-radius:6px">
+        <button onclick="shift(-1)">◀</button><button onclick="setDate(new Date())">오늘</button><button onclick="shift(1)">▶</button>
+        <a href="index.html">홈</a><button onclick="auth.signOut()">로그아웃</button>
+      </div>
     </div>
+    <div class="wrap"><table id="tbl"></table></div>
   </div>
-  <div class="wrap"><table id="tbl"></table></div>
+
+  <!-- 모바일 화면 -->
+  <div class="monly">
+    <div class="mbar">
+      <div class="m-top">
+        <button class="nav" onclick="shift(-1)" aria-label="이전 날">‹</button>
+        <label class="m-date">
+          <b id="mDate"></b><small id="mSub"></small>
+          <input type="date" id="mDateIn">
+        </label>
+        <button class="nav" onclick="shift(1)" aria-label="다음 날">›</button>
+      </div>
+      <div class="m-sub">
+        <button class="chip" id="chipToday" onclick="setDate(new Date())">오늘</button>
+        <div class="prog"><div id="progFill"></div></div>
+        <span id="progTxt">0/0</span>
+        <a class="ico" href="index.html">홈</a>
+        <button class="ico" onclick="auth.signOut()">로그아웃</button>
+      </div>
+    </div>
+    <div id="mList"></div>
+    <button class="fab" onclick="fabAdd()" aria-label="일정 추가">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+    </button>
+  </div>
 </div>
 
 <div id="modal">
   <div class="box">
+    <div class="grip"></div>
     <h4 id="mTitle">할일 추가</h4>
-    <label>내용</label><input type="text" id="mText" placeholder="할일을 입력하세요">
-    <label>시간</label><select id="mHour"></select>
-    <div class="chk"><input type="checkbox" id="mRep"><label for="mRep" style="margin:0;font-size:13px;color:var(--text)">반복</label></div>
-    <div id="days"></div>
+    <label class="lb">내용</label>
+    <input type="text" id="mText" placeholder="할일을 입력하세요" autocomplete="off">
+    <label class="lb">시간</label>
+    <div class="stepper">
+      <button type="button" onclick="stepHour(-1)" aria-label="이전 시간">‹</button>
+      <div id="mHourTxt"></div>
+      <button type="button" onclick="stepHour(1)" aria-label="다음 시간">›</button>
+    </div>
+    <div class="reprow">
+      <span>🔁 반복</span>
+      <label class="switch"><input type="checkbox" id="mRep"><i></i></label>
+    </div>
+    <div id="dayPick"></div>
     <div class="btns"><button id="bDel">삭제</button><button id="bCancel">취소</button><button id="bSave">저장</button></div>
   </div>
 </div>
@@ -103,14 +253,18 @@ td.hourlabel:hover{background:#f7faff}
 <script>
 const H0 = 5, H1 = 23;                         // 05:00 ~ 24:00 (마지막 칸 23시)
 const DK = ['일','월','화','수','목','금','토'];
-let user = null, tasks = [], base = new Date(), unsub = null;
+const PLUS  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
+const CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+let user = null, tasks = [], base = new Date(), unsub = null, loaded = false, scrollPending = true;
 let ctx = { id: null, date: '', repDays: new Set() };
 
-const ymd = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const pad = n => String(n).padStart(2,'0');
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const parse = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
 const addDays = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
-const nowTime = () => { const n = new Date(); return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0'); };
+const nowTime = () => { const n = new Date(); return pad(n.getHours())+':'+pad(n.getMinutes()); };
 const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const isMobile = () => window.matchMedia('(max-width:768px)').matches;
 
 // ── 인증 ──
 async function doLogin(){
@@ -125,15 +279,17 @@ auth.onAuthStateChanged(u => {
   if (u) {
     unsub = db.collection('users').doc(u.uid).collection('dailyTasks').onSnapshot(s => {
       tasks = s.docs.map(d => ({ id: d.id, ...d.data() }));
+      loaded = true;
       render();
     }, e => console.error(e));
-  } else { tasks = []; }
+  } else { tasks = []; loaded = false; scrollPending = true; }
 });
 
 // ── 날짜 선택 ──
-function setDate(d){ base = d; dateIn.value = ymd(d); render(); }
+function setDate(d){ base = d; dateIn.value = ymd(d); mDateIn.value = ymd(d); scrollPending = true; render(); if (isMobile()) window.scrollTo(0,0); }
 function shift(n){ setDate(addDays(base, n)); }
 dateIn.onchange = () => { if (dateIn.value) setDate(parse(dateIn.value)); };
+mDateIn.onchange = () => { if (mDateIn.value) setDate(parse(mDateIn.value)); };
 
 // ── 해당 날짜/시간의 할일 (일회성 + 반복 요일 자동 반영) ──
 function tasksFor(ds, hour){
@@ -142,6 +298,8 @@ function tasksFor(ds, hour){
     t.repeat && t.repeat.length ? (ds >= t.date && t.repeat.includes(wd)) : t.date === ds
   ));
 }
+
+// ── PC 렌더 (세로: 시간 / 가로: 오늘·다음날) ──
 function taskHtml(t, ds){
   const done = t.done && t.done[ds];
   const tm = typeof done === 'string' ? done : '';
@@ -150,13 +308,9 @@ function taskHtml(t, ds){
     <input type="checkbox" ${done?'checked':''} onclick="event.stopPropagation()" onchange="toggleDone('${t.id}','${ds}',this.checked)">
     <span class="tx">${rep?'🔁 ':''}${esc(t.text)}</span>${tm?`<span class="tm">${tm}</span>`:''}</div>`;
 }
-
-// ── 렌더 (세로: 시간 / 가로: 오늘·다음날) ──
-function render(){
-  if (!user) return;
+function renderDesktop(){
   const days = [base, addDays(base,1)].map(d => ({ d, ds: ymd(d) }));
   const todayS = ymd(new Date()), nowH = new Date().getHours();
-
   let t = '<colgroup><col style="width:58px"><col><col></colgroup><tr><th class="corner">시간</th>';
   days.forEach(({d,ds}) => {
     const wd = d.getDay();
@@ -164,13 +318,64 @@ function render(){
   });
   t += '</tr>';
   for (let h=H0; h<=H1; h++) {
-    t += `<tr><td class="hourlabel ${h===nowH&&days.some(x=>x.ds===todayS)?'now':''}">${String(h).padStart(2,'0')}:00</td>`;
+    t += `<tr><td class="hourlabel ${h===nowH&&days.some(x=>x.ds===todayS)?'now':''}">${pad(h)}:00</td>`;
     days.forEach(({ds}) => {
       t += `<td class="${ds===todayS&&h===nowH?'now':''}" onclick="openModal('${ds}',${h})">${tasksFor(ds,h).map(x=>taskHtml(x,ds)).join('')}</td>`;
     });
     t += '</tr>';
   }
   tbl.innerHTML = t;
+}
+
+// ── 모바일 렌더 (하루 1열 타임라인) ──
+function cardHtml(t, ds){
+  const d = t.done && t.done[ds];
+  const tm = typeof d === 'string' ? d : '';
+  const rep = t.repeat && t.repeat.length;
+  const meta = [rep ? '🔁 반복' : '', tm ? `✓ ${tm} 완료` : ''].filter(Boolean).join('  ·  ');
+  return `<div class="card ${rep?'rep':''} ${d?'done':''}">
+    <button class="ck" aria-label="완료 체크" onclick="toggleDone('${t.id}','${ds}',${!d})"><span>${CHECK}</span></button>
+    <div class="ct" onclick="openModal('${ds}',${t.hour},'${t.id}')">
+      <div class="tx">${esc(t.text)}</div>${meta?`<div class="meta">${meta}</div>`:''}
+    </div></div>`;
+}
+function renderMobile(){
+  const ds = ymd(base), todayS = ymd(new Date()), nowH = new Date().getHours();
+  const isToday = ds === todayS;
+  let total = 0, doneN = 0, html = '';
+  for (let h=H0; h<=H1; h++) {
+    const list = tasksFor(ds, h);
+    total += list.length;
+    doneN += list.filter(t => t.done && t.done[ds]).length;
+    const now = isToday && h === nowH;
+    html += `<section class="hr ${now?'now':''}" id="hr${h}">
+      <div class="hl">${pad(h)}:00${now?'<em>지금</em>':''}</div>
+      <div class="hc">${list.map(t => cardHtml(t, ds)).join('')}
+        <button class="add ${list.length?'sm':'em'}" onclick="openModal('${ds}',${h})">${PLUS}<span>${list.length?'추가':'일정 추가'}</span></button>
+      </div></section>`;
+  }
+  mList.innerHTML = html;
+
+  mDate.textContent = `${base.getMonth()+1}월 ${base.getDate()}일 (${DK[base.getDay()]})`;
+  mSub.textContent = isToday ? '오늘' : `${base.getFullYear()}년 · 날짜를 눌러 달력 열기`;
+  chipToday.classList.toggle('dim', isToday);
+  progFill.style.width = total ? (doneN/total*100)+'%' : '0%';
+  progTxt.textContent = `${doneN}/${total}`;
+}
+
+function render(){
+  if (!user) return;
+  renderDesktop();
+  renderMobile();
+  // 모바일: 처음 열거나 날짜를 바꾸면 현재 시간대로 자동 스크롤
+  if (scrollPending && loaded && isMobile()) {
+    scrollPending = false;
+    const ds = ymd(base);
+    if (ds === ymd(new Date())) {
+      const target = document.getElementById('hr' + Math.max(H0, new Date().getHours() - 1));
+      if (target) window.scrollTo(0, target.getBoundingClientRect().top + window.scrollY - document.querySelector('.mbar').offsetHeight - 4);
+    } else window.scrollTo(0, 0);
+  }
 }
 
 // ── 완료 체크 ──
@@ -180,17 +385,20 @@ function toggleDone(id, ds, on){
     .catch(e => alert('저장 실패: ' + e.message));
 }
 
-// ── 입력 모달 ──
-mHour.innerHTML = Array.from({length:H1-H0+1}, (_,i) => `<option value="${H0+i}">${H0+i}:00 ~ ${H0+i+1}:00</option>`).join('');
-days.innerHTML = DK.map((k,i) => `<span data-d="${i}">${k}</span>`).join('');
-days.onclick = e => {
+// ── 입력 모달 / 하단 시트 ──
+let curHour = 9;
+function setHour(h){ curHour = Math.min(H1, Math.max(H0, h)); mHourTxt.textContent = `${pad(curHour)}:00 ~ ${pad(curHour+1)}:00`; }
+function stepHour(n){ setHour(curHour + n); }
+
+dayPick.innerHTML = DK.map((k,i) => `<span data-d="${i}">${k}</span>`).join('');
+dayPick.onclick = e => {
   const i = e.target.dataset.d; if (i === undefined) return;
   ctx.repDays.has(+i) ? ctx.repDays.delete(+i) : ctx.repDays.add(+i);
   e.target.classList.toggle('sel');
 };
-function paintDays(){ [...days.children].forEach(s => s.classList.toggle('sel', ctx.repDays.has(+s.dataset.d))); }
+function paintDays(){ [...dayPick.children].forEach(s => s.classList.toggle('sel', ctx.repDays.has(+s.dataset.d))); }
 mRep.onchange = () => {
-  days.classList.toggle('on', mRep.checked);
+  dayPick.classList.toggle('on', mRep.checked);
   if (mRep.checked && !ctx.repDays.size) { ctx.repDays = new Set([0,1,2,3,4,5,6]); paintDays(); }
 };
 
@@ -199,23 +407,31 @@ function openModal(ds, hour, id){
   ctx = { id: id || null, date: t ? t.date : ds, repDays: new Set(t && t.repeat ? t.repeat : []) };
   mTitle.textContent = t ? '할일 수정' : `${ds.slice(5).replace('-','/')} 할일 추가`;
   mText.value = t ? t.text : '';
-  mHour.value = hour;
+  setHour(hour);
   mRep.checked = ctx.repDays.size > 0;
-  days.classList.toggle('on', mRep.checked);
+  dayPick.classList.toggle('on', mRep.checked);
   paintDays();
   bDel.style.display = t ? 'block' : 'none';
   modal.classList.add('on');
-  setTimeout(() => mText.focus(), 50);
+  document.body.classList.add('lock');
+  setTimeout(() => mText.focus(), 120);
 }
-const closeModal = () => modal.classList.remove('on');
+function closeModal(){ modal.classList.remove('on'); document.body.classList.remove('lock'); }
 bCancel.onclick = closeModal;
 modal.onclick = e => { if (e.target === modal) closeModal(); };
+
+// 우하단 + 버튼: 오늘이면 현재 시간대, 다른 날이면 09시로
+function fabAdd(){
+  const ds = ymd(base);
+  const h = ds === ymd(new Date()) ? Math.min(H1, Math.max(H0, new Date().getHours())) : 9;
+  openModal(ds, h);
+}
 
 bSave.onclick = async () => {
   const text = mText.value.trim();
   if (!text) { mText.focus(); return; }
   if (mRep.checked && !ctx.repDays.size) { alert('반복할 요일을 선택하세요.'); return; }
-  const data = { text, hour: +mHour.value, date: ctx.date, repeat: mRep.checked ? [...ctx.repDays].sort() : [] };
+  const data = { text, hour: curHour, date: ctx.date, repeat: mRep.checked ? [...ctx.repDays].sort() : [] };
   const col = db.collection('users').doc(user.uid).collection('dailyTasks');
   try {
     if (ctx.id) await col.doc(ctx.id).set(data, { merge: true });
@@ -230,6 +446,16 @@ bDel.onclick = async () => {
   try { await db.collection('users').doc(user.uid).collection('dailyTasks').doc(ctx.id).delete(); closeModal(); }
   catch(e){ alert('삭제 실패: ' + e.message); }
 };
+
+// ── 좌우 스와이프로 어제/내일 이동 (모바일) ──
+let sx = 0, sy = 0;
+mList.addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+mList.addEventListener('touchend', e => {
+  const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
+  if (Math.abs(dx) > 80 && Math.abs(dy) < 45 && Math.abs(dx) > Math.abs(dy) * 2) shift(dx < 0 ? 1 : -1);
+}, { passive: true });
+
+window.matchMedia('(max-width:768px)').addEventListener('change', () => { scrollPending = true; render(); });
 
 setDate(new Date());
 setInterval(() => { if (user) render(); }, 600000);   // 현재 시간 강조 갱신
