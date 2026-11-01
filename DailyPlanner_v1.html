@@ -156,13 +156,11 @@ td.hourlabel:hover{background:#f7faff}
   .card.done .tx{text-decoration:line-through;color:var(--done-txt);opacity:.75}
   .card.done .meta{color:var(--done-txt)}
 
-  /* 추가 버튼 */
-  .add{display:flex;align-items:center;justify-content:center;font-weight:600}
-  .add svg{width:20px;height:20px;flex-shrink:0;stroke-width:2.2}
-  .add.em{height:44px;border:1.5px dashed #dbe5f0;border-radius:14px;color:#c3d2e2;background:transparent}
-  .add.em:active{background:#f1f6fb}
-  .add.sm{height:36px;width:44px;align-self:flex-start;border-radius:18px;color:#b4c6da;background:#f3f7fb}
-  .add.sm:active{background:#e6eef7}
+  /* 시간 행 전체가 추가 버튼 */
+  .hr{cursor:pointer}
+  .hr:active{background:rgba(66,153,225,.07)}
+  .hc{min-height:48px}
+  .hr.has .hc{padding-bottom:14px}
 
   /* 플로팅 + 버튼 */
   .fab{position:fixed;right:18px;bottom:calc(20px + var(--safe-b));width:62px;height:62px;border-radius:50%;z-index:30;
@@ -333,7 +331,7 @@ function cardHtml(t, ds){
   const tm = typeof d === 'string' ? d : '';
   const rep = t.repeat && t.repeat.length;
   const meta = [rep ? '🔁 반복' : '', tm ? `✓ ${tm} 완료` : ''].filter(Boolean).join('  ·  ');
-  return `<div class="card ${rep?'rep':''} ${d?'done':''}">
+  return `<div class="card ${rep?'rep':''} ${d?'done':''}" onclick="event.stopPropagation()">
     <button class="ck" aria-label="완료 체크" onclick="toggleDone('${t.id}','${ds}',${!d})"><span>${CHECK}</span></button>
     <div class="ct" onclick="openModal('${ds}',${t.hour},'${t.id}')">
       <div class="tx">${esc(t.text)}</div>${meta?`<div class="meta">${meta}</div>`:''}
@@ -348,11 +346,9 @@ function renderMobile(){
     total += list.length;
     doneN += list.filter(t => t.done && t.done[ds]).length;
     const now = isToday && h === nowH;
-    html += `<section class="hr ${now?'now':''}" id="hr${h}">
+    html += `<section class="hr ${now?'now':''} ${list.length?'has':''}" id="hr${h}" onclick="openModal('${ds}',${h})">
       <div class="hl">${pad(h)}:00${now?'<em>지금</em>':''}</div>
-      <div class="hc">${list.map(t => cardHtml(t, ds)).join('')}
-        <button class="add ${list.length?'sm':'em'}" onclick="openModal('${ds}',${h})" aria-label="일정 추가">${PLUS}</button>
-      </div></section>`;
+      <div class="hc">${list.map(t => cardHtml(t, ds)).join('')}</div></section>`;
   }
   mList.innerHTML = html;
 
