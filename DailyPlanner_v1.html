@@ -157,12 +157,12 @@ td.hourlabel:hover{background:#f7faff}
   .card.done .meta{color:var(--done-txt)}
 
   /* 추가 버튼 */
-  .add{display:flex;align-items:center;justify-content:center;gap:6px;color:var(--sky);font-weight:600}
-  .add svg{width:18px;height:18px;flex-shrink:0}
-  .add.em{height:48px;border:1.5px dashed #b6cde6;border-radius:14px;font-size:14px;color:#7aa2cc;background:rgba(255,255,255,.6)}
-  .add.em:active{background:#e8f2fc}
-  .add.sm{height:40px;align-self:flex-start;padding:0 14px;border-radius:20px;font-size:13px;background:#e8f2fc}
-  .add.sm:active{background:#d4e7f9}
+  .add{display:flex;align-items:center;justify-content:center;font-weight:600}
+  .add svg{width:20px;height:20px;flex-shrink:0;stroke-width:2.2}
+  .add.em{height:44px;border:1.5px dashed #dbe5f0;border-radius:14px;color:#c3d2e2;background:transparent}
+  .add.em:active{background:#f1f6fb}
+  .add.sm{height:36px;width:44px;align-self:flex-start;border-radius:18px;color:#b4c6da;background:#f3f7fb}
+  .add.sm:active{background:#e6eef7}
 
   /* 플로팅 + 버튼 */
   .fab{position:fixed;right:18px;bottom:calc(20px + var(--safe-b));width:62px;height:62px;border-radius:50%;z-index:30;
@@ -351,7 +351,7 @@ function renderMobile(){
     html += `<section class="hr ${now?'now':''}" id="hr${h}">
       <div class="hl">${pad(h)}:00${now?'<em>지금</em>':''}</div>
       <div class="hc">${list.map(t => cardHtml(t, ds)).join('')}
-        <button class="add ${list.length?'sm':'em'}" onclick="openModal('${ds}',${h})">${PLUS}<span>${list.length?'추가':'일정 추가'}</span></button>
+        <button class="add ${list.length?'sm':'em'}" onclick="openModal('${ds}',${h})" aria-label="일정 추가">${PLUS}</button>
       </div></section>`;
   }
   mList.innerHTML = html;
