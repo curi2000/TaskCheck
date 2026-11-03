@@ -75,12 +75,14 @@ td.hourlabel:hover{background:#f7faff}
 /* ───── 입력 모달 (PC: 가운데 팝업 / 모바일: 하단 시트) ───── */
 #modal{display:none;position:fixed;inset:0;background:rgba(15,30,55,.5);z-index:50;align-items:center;justify-content:center;padding:16px}
 #modal.on{display:flex}
-.box{background:#fff;border-radius:18px;padding:20px;width:100%;max-width:380px;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.box{background:#fff;border-radius:18px;padding:20px;width:100%;max-width:380px;box-shadow:0 20px 50px rgba(0,0,0,.25);max-height:92vh;overflow-y:auto}
 .grip{display:none;width:44px;height:5px;border-radius:3px;background:#cbd5e0;margin:0 auto 14px}
 .box h4{color:var(--navy);margin-bottom:6px;font-size:18px}
 .box label.lb{display:block;font-size:12px;color:var(--muted);margin:14px 0 6px;font-weight:600}
 .box input[type=text]{width:100%;padding:14px;border:1.5px solid var(--border);border-radius:12px;font-size:16px;outline:none}
 .box input[type=text]:focus{border-color:var(--sky);box-shadow:0 0 0 3px rgba(66,153,225,.18)}
+.box input[type=date]{display:block;width:100%;min-height:52px;padding:12px 14px;border:1.5px solid var(--border);border-radius:12px;font-size:16px;background:#fff;outline:none}
+.box input[type=date]:focus{border-color:var(--sky);box-shadow:0 0 0 3px rgba(66,153,225,.18)}
 .stepper{display:flex;align-items:center;gap:8px}
 .stepper button{width:52px;height:52px;border-radius:14px;background:#edf2f7;font-size:26px;color:var(--navy);line-height:1}
 .stepper button:active{background:#dbe5f1}
@@ -129,19 +131,21 @@ td.hourlabel:hover{background:#f7faff}
   #progTxt{font-size:13px;font-weight:700;color:var(--green);min-width:36px;text-align:right;font-variant-numeric:tabular-nums}
   .ico{height:34px;padding:0 10px;border-radius:10px;background:#edf2f7;color:var(--navy-md);font-size:12px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;flex-shrink:0}
 
-  /* 시간대 목록 */
+  /* 시간대 목록 (시간 행 전체를 누르면 일정 추가) */
   #mList{padding:8px 12px 0}
-  .hr{display:grid;grid-template-columns:54px 1fr;gap:6px;padding:8px 0;border-bottom:1px dashed #cbd8e6}
+  .hr{display:grid;grid-template-columns:54px 1fr;gap:6px;padding:8px 0;border-bottom:1px dashed #cbd8e6;cursor:pointer}
   .hr:last-child{border-bottom:0}
+  .hr:active{background:rgba(66,153,225,.07)}
   .hl{padding-top:14px;font-size:14px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums;line-height:1.2}
   .hl em{display:block;margin-top:4px;font-style:normal;font-size:10px;font-weight:700;color:#fff;background:var(--orange);border-radius:8px;padding:2px 0;text-align:center;width:36px}
   .hr.now{background:var(--now);margin:0 -12px;padding:8px 12px;border-radius:14px;border-bottom-color:transparent}
   .hr.now .hl{color:var(--orange)}
-  .hc{display:flex;flex-direction:column;gap:8px;min-width:0}
+  .hc{display:flex;flex-direction:column;gap:8px;min-width:0;min-height:48px}
+  .hr.has .hc{padding-bottom:14px}
 
   /* 카드 */
   .card{display:flex;align-items:stretch;background:#fff;border-radius:14px;border-left:5px solid var(--sky);
-    box-shadow:0 2px 8px rgba(26,54,93,.08);min-height:58px;overflow:hidden}
+    box-shadow:0 2px 8px rgba(26,54,93,.08);min-height:58px;overflow:hidden;cursor:default}
   .card.rep{border-left-color:var(--green)}
   .ck{width:56px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
   .ck span{width:28px;height:28px;border-radius:50%;border:2.5px solid #b8c7d9;display:flex;align-items:center;justify-content:center;transition:.15s}
@@ -149,18 +153,12 @@ td.hourlabel:hover{background:#f7faff}
   .card.done .ck span{background:var(--green);border-color:var(--green)}
   .card.done .ck svg{opacity:1}
   .ck:active span{transform:scale(.88)}
-  .ct{flex:1;min-width:0;padding:12px 14px 12px 0;display:flex;flex-direction:column;justify-content:center;gap:3px}
+  .ct{flex:1;min-width:0;padding:12px 14px 12px 0;display:flex;flex-direction:column;justify-content:center;gap:3px;cursor:pointer}
   .ct .tx{font-size:16px;line-height:1.4;word-break:keep-all;overflow-wrap:anywhere;font-weight:500}
   .ct .meta{font-size:12px;color:var(--muted)}
   .card.done{background:var(--done-bg)}
   .card.done .tx{text-decoration:line-through;color:var(--done-txt);opacity:.75}
   .card.done .meta{color:var(--done-txt)}
-
-  /* 시간 행 전체가 추가 버튼 */
-  .hr{cursor:pointer}
-  .hr:active{background:rgba(66,153,225,.07)}
-  .hc{min-height:48px}
-  .hr.has .hc{padding-bottom:14px}
 
   /* 플로팅 + 버튼 */
   .fab{position:fixed;right:18px;bottom:calc(20px + var(--safe-b));width:62px;height:62px;border-radius:50%;z-index:30;
@@ -171,7 +169,7 @@ td.hourlabel:hover{background:#f7faff}
 
   /* 하단 시트 */
   #modal{align-items:flex-end;padding:0}
-  .box{max-width:none;border-radius:24px 24px 0 0;padding:12px 18px calc(18px + var(--safe-b));animation:up .25s ease-out;max-height:92vh;overflow-y:auto}
+  .box{max-width:none;border-radius:24px 24px 0 0;padding:12px 18px calc(18px + var(--safe-b));animation:up .25s ease-out}
   .grip{display:block}
   @keyframes up{from{transform:translateY(100%)}to{transform:none}}
 }
@@ -233,6 +231,8 @@ td.hourlabel:hover{background:#f7faff}
     <h4 id="mTitle">할일 추가</h4>
     <label class="lb">내용</label>
     <input type="text" id="mText" placeholder="할일을 입력하세요" autocomplete="off">
+    <label class="lb" id="mDateLb">날짜</label>
+    <input type="date" id="mDateVal">
     <label class="lb">시간</label>
     <div class="stepper">
       <button type="button" onclick="stepHour(-1)" aria-label="이전 시간">‹</button>
@@ -251,7 +251,6 @@ td.hourlabel:hover{background:#f7faff}
 <script>
 const H0 = 5, H1 = 23;                         // 05:00 ~ 24:00 (마지막 칸 23시)
 const DK = ['일','월','화','수','목','금','토'];
-const PLUS  = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
 const CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 let user = null, tasks = [], base = new Date(), unsub = null, loaded = false, scrollPending = true;
 let ctx = { id: null, date: '', repDays: new Set() };
@@ -393,8 +392,10 @@ dayPick.onclick = e => {
   e.target.classList.toggle('sel');
 };
 function paintDays(){ [...dayPick.children].forEach(s => s.classList.toggle('sel', ctx.repDays.has(+s.dataset.d))); }
+function updDateLb(){ mDateLb.textContent = mRep.checked ? '시작 날짜' : '날짜'; }
 mRep.onchange = () => {
   dayPick.classList.toggle('on', mRep.checked);
+  updDateLb();
   if (mRep.checked && !ctx.repDays.size) { ctx.repDays = new Set([0,1,2,3,4,5,6]); paintDays(); }
 };
 
@@ -403,8 +404,10 @@ function openModal(ds, hour, id){
   ctx = { id: id || null, date: t ? t.date : ds, repDays: new Set(t && t.repeat ? t.repeat : []) };
   mTitle.textContent = t ? '할일 수정' : `${ds.slice(5).replace('-','/')} 할일 추가`;
   mText.value = t ? t.text : '';
+  mDateVal.value = ctx.date;
   setHour(hour);
   mRep.checked = ctx.repDays.size > 0;
+  updDateLb();
   dayPick.classList.toggle('on', mRep.checked);
   paintDays();
   bDel.style.display = t ? 'block' : 'none';
@@ -426,8 +429,9 @@ function fabAdd(){
 bSave.onclick = async () => {
   const text = mText.value.trim();
   if (!text) { mText.focus(); return; }
+  if (!mDateVal.value) { alert('날짜를 선택하세요.'); return; }
   if (mRep.checked && !ctx.repDays.size) { alert('반복할 요일을 선택하세요.'); return; }
-  const data = { text, hour: curHour, date: ctx.date, repeat: mRep.checked ? [...ctx.repDays].sort() : [] };
+  const data = { text, hour: curHour, date: mDateVal.value, repeat: mRep.checked ? [...ctx.repDays].sort() : [] };
   const col = db.collection('users').doc(user.uid).collection('dailyTasks');
   try {
     if (ctx.id) await col.doc(ctx.id).set(data, { merge: true });
