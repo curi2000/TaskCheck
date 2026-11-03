@@ -81,13 +81,11 @@ td.hourlabel:hover{background:#f7faff}
 .box label.lb{display:block;font-size:12px;color:var(--muted);margin:14px 0 6px;font-weight:600}
 .box input[type=text]{width:100%;padding:14px;border:1.5px solid var(--border);border-radius:12px;font-size:16px;outline:none}
 .box input[type=text]:focus{border-color:var(--sky);box-shadow:0 0 0 3px rgba(66,153,225,.18)}
-.box input[type=date]{display:block;width:100%;min-height:52px;padding:12px 14px;border:1.5px solid var(--border);border-radius:12px;font-size:16px;background:#fff;outline:none}
-.box input[type=date]:focus{border-color:var(--sky);box-shadow:0 0 0 3px rgba(66,153,225,.18)}
 .stepper{display:flex;align-items:center;gap:8px}
-.stepper button{width:52px;height:52px;border-radius:14px;background:#edf2f7;font-size:26px;color:var(--navy);line-height:1}
+.stepper button{width:52px;height:52px;border-radius:14px;background:#edf2f7;font-size:26px;color:var(--navy);line-height:1;flex-shrink:0}
 .stepper button:active{background:#dbe5f1}
-#mHourTxt{flex:1;height:52px;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--border);
-  border-radius:14px;font-size:18px;font-weight:700;color:var(--navy);font-variant-numeric:tabular-nums}
+.sv{flex:1;min-width:0;height:52px;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--border);
+  border-radius:14px;font-size:18px;font-weight:700;color:var(--navy);font-variant-numeric:tabular-nums;white-space:nowrap}
 .reprow{display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding:12px 14px;background:#f7faff;border-radius:12px}
 .reprow span{font-size:15px;font-weight:600;color:var(--text)}
 .switch{position:relative;width:52px;height:30px;flex-shrink:0}
@@ -232,11 +230,15 @@ td.hourlabel:hover{background:#f7faff}
     <label class="lb">내용</label>
     <input type="text" id="mText" placeholder="할일을 입력하세요" autocomplete="off">
     <label class="lb" id="mDateLb">날짜</label>
-    <input type="date" id="mDateVal">
+    <div class="stepper">
+      <button type="button" onclick="stepDate(-1)" aria-label="하루 전">‹</button>
+      <div class="sv" id="mDateTxt"></div>
+      <button type="button" onclick="stepDate(1)" aria-label="하루 후">›</button>
+    </div>
     <label class="lb">시간</label>
     <div class="stepper">
       <button type="button" onclick="stepHour(-1)" aria-label="이전 시간">‹</button>
-      <div id="mHourTxt"></div>
+      <div class="sv" id="mHourTxt"></div>
       <button type="button" onclick="stepHour(1)" aria-label="다음 시간">›</button>
     </div>
     <div class="reprow">
@@ -381,9 +383,16 @@ function toggleDone(id, ds, on){
 }
 
 // ── 입력 모달 / 하단 시트 ──
-let curHour = 9;
+let curHour = 9, curDate = '';
 function setHour(h){ curHour = Math.min(H1, Math.max(H0, h)); mHourTxt.textContent = `${pad(curHour)}:00 ~ ${pad(curHour+1)}:00`; }
 function stepHour(n){ setHour(curHour + n); }
+function setModalDate(ds){
+  curDate = ds;
+  const d = parse(ds);
+  const yr = d.getFullYear() !== new Date().getFullYear() ? `${d.getFullYear()}년 ` : '';
+  mDateTxt.textContent = `${yr}${d.getMonth()+1}월 ${d.getDate()}일 (${DK[d.getDay()]})`;
+}
+function stepDate(n){ setModalDate(ymd(addDays(parse(curDate), n))); }
 
 dayPick.innerHTML = DK.map((k,i) => `<span data-d="${i}">${k}</span>`).join('');
 dayPick.onclick = e => {
@@ -404,7 +413,7 @@ function openModal(ds, hour, id){
   ctx = { id: id || null, date: t ? t.date : ds, repDays: new Set(t && t.repeat ? t.repeat : []) };
   mTitle.textContent = t ? '할일 수정' : `${ds.slice(5).replace('-','/')} 할일 추가`;
   mText.value = t ? t.text : '';
-  mDateVal.value = ctx.date;
+  setModalDate(ctx.date);
   setHour(hour);
   mRep.checked = ctx.repDays.size > 0;
   updDateLb();
@@ -429,9 +438,8 @@ function fabAdd(){
 bSave.onclick = async () => {
   const text = mText.value.trim();
   if (!text) { mText.focus(); return; }
-  if (!mDateVal.value) { alert('날짜를 선택하세요.'); return; }
   if (mRep.checked && !ctx.repDays.size) { alert('반복할 요일을 선택하세요.'); return; }
-  const data = { text, hour: curHour, date: mDateVal.value, repeat: mRep.checked ? [...ctx.repDays].sort() : [] };
+  const data = { text, hour: curHour, date: curDate, repeat: mRep.checked ? [...ctx.repDays].sort() : [] };
   const col = db.collection('users').doc(user.uid).collection('dailyTasks');
   try {
     if (ctx.id) await col.doc(ctx.id).set(data, { merge: true });
