@@ -1,152 +1,1088 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Main Page</title>
+  <title>My Daily Routine</title>
+
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- 폰트 적용을 위한 스타일 추가 -->
+
   <style>
-    @font-face {
-      font-family: 'Arial Narrow';
-      /* 시스템에 설치된 Arial Narrow를 우선적으로 사용합니다 */
-    }
     html, body {
-      font-family: 'Arial Narrow', 'Arial', sans-serif;
+      font-family: Arial, sans-serif;
       overflow-y: auto;
       -webkit-text-size-adjust: 100%;
     }
-    /* 링크 텍스트의 크기를 일괄적으로 아주 작게 조정하기 위한 커스텀 클래스 (필요시) */
-    .link-text-small {
-      font-size: 0.75rem; /* text-xs와 동일 */
-      line-height: 1.4;
+
+    /* ==============================
+       Quick Links
+    ============================== */
+
+    .quick-card {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 22px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+      transition: all 0.25s ease;
+    }
+
+    .quick-card:hover {
+      box-shadow: 0 8px 18px rgba(0,0,0,0.09);
+      transform: translateY(-3px);
+    }
+
+    .quick-link {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 12px 14px;
+      margin-top: 8px;
+      border-radius: 10px;
+      background: #f9fafb;
+      color: #374151;
+      font-size: 16px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+    }
+
+    .quick-link:hover {
+      background: #eff6ff;
+      color: #2563eb;
+      border-color: #bfdbfe;
+      transform: translateX(3px);
+    }
+
+    .link-arrow {
+      color: #9ca3af;
+      font-size: 16px;
+    }
+
+    .category-icon {
+      width: 42px;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      flex-shrink: 0;
+    }
+
+    /* ==============================
+       Dashboard
+    ============================== */
+
+    .dashboard-card {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 22px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    }
+
+    .weather-item {
+      background: #f9fafb;
+      border: 1px solid #f0f0f0;
+      border-radius: 12px;
+      padding: 18px;
+      min-width: 0;
+    }
+
+    .weather-temperature {
+      font-size: 34px;
+      font-weight: 700;
+      color: #1f2937;
+      letter-spacing: -1px;
+    }
+
+    .weather-detail {
+      font-size: 13px;
+      color: #6b7280;
+    }
+
+    .weather-icon {
+      font-size: 32px;
+      line-height: 1.2;
+    }
+
+    .dashboard-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #9ca3af;
+      letter-spacing: 1.2px;
+    }
+
+    /* TradingView Widget */
+
+    .tradingview-widget-container {
+      width: 100%;
+      min-height: 65px;
+      overflow: hidden;
+    }
+
+    .tradingview-widget-container__widget {
+      width: 100%;
+    }
+
+    /* Mobile */
+
+    @media (max-width: 640px) {
+      .quick-card {
+        padding: 18px;
+      }
+
+      .quick-link {
+        padding: 14px;
+        font-size: 16px;
+      }
+
+      .dashboard-card {
+        padding: 17px;
+      }
+
+      .weather-item {
+        padding: 14px;
+      }
+
+      .weather-temperature {
+        font-size: 29px;
+      }
     }
   </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen py-12 px-4">
-  <div class="w-full max-w-4xl">
-    
-    <!-- 1. 상단 메인 액션 버튼 섹션 -->
-    <div class="text-center mb-16">
-      <h1 class="text-4xl font-bold mb-10 text-gray-800">My Daily Routine</h1>
+
+<body class="bg-gray-100 flex items-center justify-center min-h-screen py-10 px-4">
+
+  <div class="w-full max-w-5xl">
+
+    <!-- ===================================
+         1. Main Action Buttons
+    ==================================== -->
+
+    <div class="text-center mb-14">
+
+      <h1 class="text-4xl font-bold mb-10 text-gray-800">
+        My Daily Routine
+      </h1>
+
       <div class="flex flex-col sm:flex-row justify-center items-center gap-8">
-        <a href="OdysseyChecklist_v15.html" class="w-full sm:w-64 flex flex-col items-center p-6 bg-white rounded-xl shadow-md hover:shadow-lg hover:bg-gray-50 transition transform hover:-translate-y-1">
-          <svg class="w-12 h-12 mb-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+
+        <!-- Daily Routine -->
+
+        <a href="OdysseyChecklist_v15.html"
+           class="w-full sm:w-64 flex flex-col items-center p-6 bg-white rounded-xl shadow-md hover:shadow-lg hover:bg-gray-50 transition transform hover:-translate-y-1">
+
+          <svg class="w-12 h-12 mb-3 text-blue-500"
+               fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+            </path>
           </svg>
-          <span class="text-lg font-semibold text-gray-700">일일 루틴 관리</span>
+
+          <span class="text-lg font-semibold text-gray-700">
+            일일 루틴 관리
+          </span>
         </a>
-        <!-- 신규: 일일 일과표 -->
-        <a href="DailyPlanner_v1.html" class="w-full sm:w-64 flex flex-col items-center p-6 bg-white rounded-xl shadow-md hover:shadow-lg hover:bg-gray-50 transition transform hover:-translate-y-1">
-          <svg class="w-12 h-12 mb-3 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+
+
+        <!-- Daily Planner -->
+
+        <a href="DailyPlanner_v1.html"
+           class="w-full sm:w-64 flex flex-col items-center p-6 bg-white rounded-xl shadow-md hover:shadow-lg hover:bg-gray-50 transition transform hover:-translate-y-1">
+
+          <svg class="w-12 h-12 mb-3 text-orange-500"
+               fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z">
+            </path>
           </svg>
-          <span class="text-lg font-semibold text-gray-700">일일 일과표</span>
+
+          <span class="text-lg font-semibold text-gray-700">
+            일일 일과표
+          </span>
         </a>
-        <a href="Flashcard_v9_modern and fixed.html" class="w-full sm:w-64 flex flex-col items-center p-6 bg-white rounded-xl shadow-md hover:shadow-lg hover:bg-gray-50 transition transform hover:-translate-y-1">
-          <svg class="w-12 h-12 mb-3 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0-1.1.9-2 2-2s2 .9 2 2-2 4-2 4m-4-2H6m10 0h4M8 7h8m-8 8h8m-9 4h10"></path>
+
+
+        <!-- English Flashcards -->
+
+        <a href="Flashcard_v9_modern and fixed.html"
+           class="w-full sm:w-64 flex flex-col items-center p-6 bg-white rounded-xl shadow-md hover:shadow-lg hover:bg-gray-50 transition transform hover:-translate-y-1">
+
+          <svg class="w-12 h-12 mb-3 text-green-500"
+               fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 11c0-1.1.9-2 2-2s2 .9 2 2-2 4-2 4m-4-2H6m10 0h4M8 7h8m-8 8h8m-9 4h10">
+            </path>
           </svg>
-          <span class="text-lg font-semibold text-gray-700">영어 문장 학습</span>
+
+          <span class="text-lg font-semibold text-gray-700">
+            영어 문장 학습
+          </span>
         </a>
+
       </div>
     </div>
 
-    <!-- 2. 하단 자주 가는 페이지 섹션 -->
-    <div class="bg-white/50 rounded-2xl p-8 shadow-sm border border-gray-200 mb-12">
-      <h2 class="text-xl font-bold mb-6 text-gray-700 flex items-center">
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+
+    <!-- ===================================
+         2. TODAY DASHBOARD
+    ==================================== -->
+
+    <div class="mb-10">
+
+      <!-- Dashboard Header -->
+
+      <div class="flex flex-wrap items-center justify-between mb-5 gap-2">
+
+        <div>
+          <h2 class="text-2xl font-bold text-gray-800">
+            Today
+          </h2>
+
+          <p id="todayDate" class="text-sm text-gray-500 mt-1">
+            날짜 정보를 불러오는 중...
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2 text-xs text-gray-500">
+          <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+          Live Dashboard
+        </div>
+
+      </div>
+
+
+      <!-- Weather Dashboard -->
+
+      <div class="dashboard-card mb-5">
+
+        <div class="flex items-center justify-between mb-5">
+
+          <div class="flex items-center gap-2">
+
+            <svg class="w-6 h-6 text-amber-500"
+                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 3v2m7.07.93l-1.41 1.41M21 12h-2m-14 0H3m3.34-5.66L4.93 4.93M12 19v2m7-9a7 7 0 11-14 0 7 7 0 0114 0z">
+              </path>
+            </svg>
+
+            <h3 class="text-lg font-bold text-gray-800">
+              Weather
+            </h3>
+
+          </div>
+
+          <span class="dashboard-label">
+            LOCAL WEATHER
+          </span>
+
+        </div>
+
+
+        <!-- Two Locations -->
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+          <!-- Mullae -->
+
+          <div class="weather-item">
+
+            <div class="flex justify-between items-start">
+
+              <div>
+                <div class="text-sm font-bold text-gray-700 mb-2">
+                  문래동
+                </div>
+
+                <div id="weatherIcon1" class="weather-icon mb-1">
+                  ⏳
+                </div>
+              </div>
+
+              <div class="text-right">
+
+                <div id="temp1" class="weather-temperature">
+                  --°C
+                </div>
+
+                <div id="weatherDesc1"
+                     class="text-sm text-gray-500">
+                  조회 중...
+                </div>
+
+              </div>
+
+            </div>
+
+            <div class="border-t border-gray-200 mt-3 pt-3">
+
+              <div class="flex justify-between weather-detail">
+                <span>체감 온도</span>
+                <strong id="feels1">--°C</strong>
+              </div>
+
+              <div class="flex justify-between weather-detail mt-2">
+                <span>최고 / 최저</span>
+                <strong id="highlow1">-- / --°C</strong>
+              </div>
+
+              <div class="flex justify-between weather-detail mt-2">
+                <span>습도</span>
+                <strong id="humidity1">--%</strong>
+              </div>
+
+              <div class="flex justify-between weather-detail mt-2">
+                <span>강수 확률</span>
+                <strong id="rain1">--%</strong>
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <!-- Gasan -->
+
+          <div class="weather-item">
+
+            <div class="flex justify-between items-start">
+
+              <div>
+                <div class="text-sm font-bold text-gray-700 mb-2">
+                  가산동
+                </div>
+
+                <div id="weatherIcon2" class="weather-icon mb-1">
+                  ⏳
+                </div>
+              </div>
+
+              <div class="text-right">
+
+                <div id="temp2" class="weather-temperature">
+                  --°C
+                </div>
+
+                <div id="weatherDesc2"
+                     class="text-sm text-gray-500">
+                  조회 중...
+                </div>
+
+              </div>
+
+            </div>
+
+            <div class="border-t border-gray-200 mt-3 pt-3">
+
+              <div class="flex justify-between weather-detail">
+                <span>체감 온도</span>
+                <strong id="feels2">--°C</strong>
+              </div>
+
+              <div class="flex justify-between weather-detail mt-2">
+                <span>최고 / 최저</span>
+                <strong id="highlow2">-- / --°C</strong>
+              </div>
+
+              <div class="flex justify-between weather-detail mt-2">
+                <span>습도</span>
+                <strong id="humidity2">--%</strong>
+              </div>
+
+              <div class="flex justify-between weather-detail mt-2">
+                <span>강수 확률</span>
+                <strong id="rain2">--%</strong>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- Weather Update Info -->
+
+        <div class="flex justify-between items-center mt-4">
+
+          <a href="https://open-meteo.com/"
+             target="_blank"
+             rel="noopener noreferrer"
+             class="text-xs text-blue-500 hover:underline">
+            Weather data by Open-Meteo.com
+          </a>
+
+          <span id="weatherUpdated"
+                class="text-xs text-gray-400">
+            업데이트 대기
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <!-- Stock Market Dashboard -->
+
+      <div class="dashboard-card">
+
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+
+          <div class="flex items-center gap-2">
+
+            <svg class="w-6 h-6 text-blue-600"
+                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M3 3v18h18M18 9l-5 5-4-4-6 6">
+              </path>
+            </svg>
+
+            <h3 class="text-lg font-bold text-gray-800">
+              Market Watch
+            </h3>
+
+          </div>
+
+          <span class="dashboard-label">
+            STOCK & INDEX
+          </span>
+
+        </div>
+
+
+        <!-- TradingView Ticker Tape -->
+
+        <div class="tradingview-widget-container">
+
+          <div class="tradingview-widget-container__widget"></div>
+
+          <div class="tradingview-widget-copyright text-xs text-gray-400 mt-2">
+
+            <a href="https://www.tradingview.com/markets/"
+               target="_blank"
+               rel="noopener noreferrer"
+               class="hover:underline">
+              Market data by TradingView
+            </a>
+
+          </div>
+
+          <script type="text/javascript"
+                  src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js"
+                  async>
+          {
+            "symbols": [
+              {
+                "proName": "KRX:005930",
+                "title": "Samsung Electronics"
+              },
+              {
+                "proName": "KRX:005380",
+                "title": "Hyundai Motor"
+              },
+              {
+                "proName": "KRX:KOSPI",
+                "title": "KOSPI"
+              },
+              {
+                "proName": "SP:SPX",
+                "title": "S&P 500"
+              }
+            ],
+            "colorTheme": "light",
+            "locale": "kr",
+            "largeChartUrl": "",
+            "isTransparent": true,
+            "showSymbolLogo": true,
+            "displayMode": "adaptive"
+          }
+          </script>
+
+        </div>
+
+        <p class="text-xs text-gray-400 mt-3">
+          시세 및 등락률은 TradingView 제공 데이터를 사용합니다.
+          거래소별 데이터는 지연될 수 있습니다.
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <!-- ===================================
+         3. QUICK LINKS
+    ==================================== -->
+
+    <div class="bg-white/50 rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-200 mb-12">
+
+      <h2 class="text-2xl font-bold mb-7 text-gray-800 flex items-center">
+
+        <svg class="w-7 h-7 mr-3 text-blue-500"
+             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+                stroke-width="2"
+                d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1">
+          </path>
+        </svg>
+
         Quick Links
+
       </h2>
-      
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-        <!-- 카테고리 제목은 text-sm (약 14px) / 링크는 text-xs (약 12px)로 조정 -->
-        
-        <!-- 1. 구글 캘린더 -->
-        <div>
-          <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">Calendar</h3>
-          <a href="https://calendar.google.com" target="_blank" class="text-xs text-blue-600 hover:underline font-normal block">Google Calendar</a>
+
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+
+
+        <!-- Calendar -->
+
+        <div class="quick-card">
+
+          <div class="flex items-center gap-3 mb-4">
+
+            <div class="category-icon bg-blue-100 text-blue-600">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor"
+                   viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M8 7V3m8 4V3M5 11h14M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                </path>
+              </svg>
+            </div>
+
+            <h3 class="text-xl font-bold text-gray-800">Calendar</h3>
+
+          </div>
+
+          <a href="https://calendar.google.com"
+             target="_blank" rel="noopener noreferrer"
+             class="quick-link">
+            <span>Google Calendar</span>
+            <span class="link-arrow">↗</span>
+          </a>
+
         </div>
 
-        <!-- 2. 회사 업무용 페이지 -->
-        <div>
-          <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">Work</h3>
-          <div class="flex flex-col space-y-1">
-            <a href="https://vpc.lge.com" target="_blank" class="text-xs text-gray-700 hover:text-blue-600 transition">Cloud PC</a>
-            <a href="https://sso.lge.com" target="_blank" class="text-xs text-gray-700 hover:text-blue-600 transition">EP</a>
+
+        <!-- Work -->
+
+        <div class="quick-card">
+
+          <div class="flex items-center gap-3 mb-4">
+
+            <div class="category-icon bg-orange-100 text-orange-600">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor"
+                   viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M3 7h18M5 7V5a2 2 0 012-2h10a2 2 0 012 2v2M5 7v13h14V7">
+                </path>
+              </svg>
+            </div>
+
+            <h3 class="text-xl font-bold text-gray-800">Work</h3>
+
           </div>
+
+          <a href="https://vpc.lge.com"
+             target="_blank" rel="noopener noreferrer"
+             class="quick-link">
+            <span>Cloud PC</span>
+            <span class="link-arrow">↗</span>
+          </a>
+
+          <a href="https://sso.lge.com"
+             target="_blank" rel="noopener noreferrer"
+             class="quick-link">
+            <span>EP</span>
+            <span class="link-arrow">↗</span>
+          </a>
+
         </div>
 
-        <!-- 3. 포털 사이트 -->
-        <div>
-          <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">Portals</h3>
-          <div class="flex flex-col space-y-1">
-            <a href="https://www.naver.com" target="_blank" class="text-xs text-gray-700 hover:text-green-600 transition">Naver</a>
-            <a href="https://www.google.com" target="_blank" class="text-xs text-gray-700 hover:text-blue-600 transition">Google</a>
+
+        <!-- Portals -->
+
+        <div class="quick-card">
+
+          <div class="flex items-center gap-3 mb-4">
+
+            <div class="category-icon bg-green-100 text-green-600">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor"
+                   viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" stroke-width="2"></circle>
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M2 12h20M12 2a15 15 0 010 20M12 2a15 15 0 000 20">
+                </path>
+              </svg>
+            </div>
+
+            <h3 class="text-xl font-bold text-gray-800">Portals</h3>
+
           </div>
+
+          <a href="https://www.naver.com"
+             target="_blank" rel="noopener noreferrer"
+             class="quick-link">
+            <span>Naver</span>
+            <span class="link-arrow">↗</span>
+          </a>
+
+          <a href="https://www.google.com"
+             target="_blank" rel="noopener noreferrer"
+             class="quick-link">
+            <span>Google</span>
+            <span class="link-arrow">↗</span>
+          </a>
+
         </div>
 
-        <!-- 4. 유용한 페이지 -->
-        <div>
-          <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">Useful</h3>
-          <div class="flex flex-col space-y-1">
-            <a href="https://map.naver.com" target="_blank" class="text-xs text-gray-700 hover:text-green-600 transition">Naver Map</a>
-            <a href="https://dict.naver.com" target="_blank" class="text-xs text-gray-700 hover:text-green-600 transition">Naver Dictionary</a>
-            <a href="https://translate.google.com" target="_blank" class="text-xs text-gray-700 hover:text-blue-600 transition">Google Translate</a>
+
+        <!-- Useful -->
+
+        <div class="quick-card">
+
+          <div class="flex items-center gap-3 mb-4">
+
+            <div class="category-icon bg-purple-100 text-purple-600">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor"
+                   viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 6v12m-6-6h12M4 4h16v16H4z">
+                </path>
+              </svg>
+            </div>
+
+            <h3 class="text-xl font-bold text-gray-800">Useful</h3>
+
           </div>
+
+          <a href="https://map.naver.com"
+             target="_blank" rel="noopener noreferrer"
+             class="quick-link">
+            <span>Naver Map</span>
+            <span class="link-arrow">↗</span>
+          </a>
+
+          <a href="https://dict.naver.com"
+             target="_blank" rel="noopener noreferrer"
+             class="quick-link">
+            <span>Naver Dictionary</span>
+            <span class="link-arrow">↗</span>
+          </a>
+
+          <a href="https://translate.google.com"
+             target="_blank" rel="noopener noreferrer"
+             class="quick-link">
+            <span>Google Translate</span>
+            <span class="link-arrow">↗</span>
+          </a>
+
         </div>
 
-        <!-- 5. 기타 -->
-        <div>
-          <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">Others</h3>
-          <div class="flex flex-col space-y-1">
-            <a href="https://www.youtube.com" target="_blank" class="text-xs text-gray-700 hover:text-red-600 transition">YouTube</a>
-            <a href="https://www.podbbang.com" target="_blank" class="text-xs text-gray-700 hover:text-orange-500 transition">Podbbang</a>
+
+        <!-- Others -->
+
+        <div class="quick-card">
+
+          <div class="flex items-center gap-3 mb-4">
+
+            <div class="category-icon bg-red-100 text-red-600">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor"
+                   viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M15 10l4.5-3v10L15 14M3 8h12v8H3z">
+                </path>
+              </svg>
+            </div>
+
+            <h3 class="text-xl font-bold text-gray-800">Others</h3>
+
           </div>
+
+          <a href="https://www.youtube.com"
+             target="_blank" rel="noopener noreferrer"
+             class="quick-link">
+            <span>YouTube</span>
+            <span class="link-arrow">↗</span>
+          </a>
+
+          <a href="https://www.podbbang.com"
+             target="_blank" rel="noopener noreferrer"
+             class="quick-link">
+            <span>Podbbang</span>
+            <span class="link-arrow">↗</span>
+          </a>
+
         </div>
 
-        <!-- 6. 오늘의 정보 -->
-        <div>
-          <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">Today</h3>
-          <div class="flex flex-col space-y-1">
-            <a href="https://search.naver.com/search.naver?sm=tab_hty.top&where=nexearch&ssc=tab.nx.all&query=오늘+날씨+문래동" target="_blank" class="text-xs text-gray-700 hover:text-green-600 transition">Naver weather: 문래동</a>
-            <a href="https://search.naver.com/search.naver?sm=tab_hty.top&where=nexearch&ssc=tab.nx.all&query=오늘+날씨+가산동" target="_blank" class="text-xs text-gray-700 hover:text-green-600 transition">Naver weather: 가산동</a>
-            <a href="https://finance.naver.com/item/main.naver?code=005930" target="_blank" class="text-xs text-gray-700 hover:text-blue-600 transition">Naver Stock: Samsung</a>
-          </div>
-        </div>
       </div>
     </div>
 
-    <!-- 3. 업데이트 정보 섹션 -->
+
+    <!-- ===================================
+         4. VERSION & MAINTENANCE
+    ==================================== -->
+
     <div class="border-t border-gray-300 pt-8 text-gray-500">
+
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div class="text-xs"> <!-- 폰트 크기 축소 -->
-          <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Version Info</h4>
+
+
+        <!-- Version Info -->
+
+        <div class="text-xs">
+
+          <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
+            Version Info
+          </h4>
+
           <dl class="space-y-1">
+
             <div class="flex justify-between border-b border-gray-200 pb-1">
               <dt class="font-medium text-gray-600">Creator</dt>
               <dd class="text-gray-500">Soonchul Hwang</dd>
-            </div>        
+            </div>
+
             <div class="flex justify-between border-b border-gray-200 pb-1">
               <dt class="font-medium text-gray-600">Last Updated</dt>
-              <dd class="text-gray-500">2026. 10. 06</dd>
+              <dd class="text-gray-500">2026. 11. 08</dd>
             </div>
+
           </dl>
+
         </div>
 
-        <div class="text-xs"> <!-- 폰트 크기 축소 -->
-          <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Maintenance Log</h4>
+
+        <!-- Maintenance Log -->
+
+        <div class="text-xs">
+
+          <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
+            Maintenance Log
+          </h4>
+
           <ul class="space-y-2 list-disc list-inside">
-            <li>'일일 일과표' 버튼 추가 (DailyPlanner_v1.html)</li>
-            <li>클라우드 게이트 접속 주소 업데이트</li>
-            <li>폰트 스타일 및 링크 크기 조정 (Arial Narrow 적용)</li>
-            <li>모바일 상단 미노출 수정 (DOCTYPE 앞 스크립트 제거, Quirks 모드 해결)</li>
-            <li>깨진 hover 클래스(hover:-ument-y-1 → hover:-translate-y-1) 수정</li>
+
+            <li>Today Weather Dashboard 추가</li>
+            <li>Open-Meteo API 연동 및 자동 업데이트</li>
+            <li>TradingView 주식 시세 위젯 추가</li>
+            <li>삼성전자, 현대차, KOSPI, S&P 500 표시</li>
+            <li>날짜 및 요일 자동 표시</li>
+            <li>Quick Links 카드형 UI 개선</li>
+            <li>모바일 반응형 레이아웃 개선</li>
+
           </ul>
+
         </div>
+
       </div>
     </div>
 
   </div>
+
+
+  <!-- ===================================
+       5. JAVASCRIPT
+  ==================================== -->
+
+  <script>
+
+    /* ----------------------------------
+       A. Date & Time
+    ---------------------------------- */
+
+    function updateDate() {
+
+      const now = new Date();
+
+      const dateText = now.toLocaleDateString(
+        'ko-KR',
+        {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          weekday: 'long'
+        }
+      );
+
+      document.getElementById('todayDate').textContent =
+        dateText;
+
+    }
+
+    updateDate();
+
+    setInterval(updateDate, 60000);
+
+
+    /* ----------------------------------
+       B. Weather Dashboard
+       Open-Meteo API
+    ---------------------------------- */
+
+    const weatherLocations = [
+
+      {
+        name: '문래동',
+        latitude: 37.5172,
+        longitude: 126.8955,
+        suffix: '1'
+      },
+
+      {
+        name: '가산동',
+        latitude: 37.4816,
+        longitude: 126.8826,
+        suffix: '2'
+      }
+
+    ];
+
+
+    // WMO Weather Code Translation
+
+    function getWeatherInfo(code) {
+
+      const weatherMap = {
+
+        0:  ['☀️', '맑음'],
+        1:  ['🌤️', '대체로 맑음'],
+        2:  ['⛅', '구름 조금'],
+        3:  ['☁️', '흐림'],
+
+        45: ['🌫️', '안개'],
+        48: ['🌫️', '안개'],
+
+        51: ['🌦️', '약한 이슬비'],
+        53: ['🌦️', '이슬비'],
+        55: ['🌧️', '강한 이슬비'],
+
+        56: ['🌧️', '어는 이슬비'],
+        57: ['🌧️', '강한 어는 이슬비'],
+
+        61: ['🌧️', '약한 비'],
+        63: ['🌧️', '비'],
+        65: ['🌧️', '강한 비'],
+
+        66: ['🌧️', '어는 비'],
+        67: ['🌧️', '강한 어는 비'],
+
+        71: ['🌨️', '약한 눈'],
+        73: ['❄️', '눈'],
+        75: ['❄️', '강한 눈'],
+        77: ['❄️', '싸락눈'],
+
+        80: ['🌦️', '소나기'],
+        81: ['🌧️', '강한 소나기'],
+        82: ['🌧️', '매우 강한 소나기'],
+
+        85: ['🌨️', '눈 소나기'],
+        86: ['❄️', '강한 눈 소나기'],
+
+        95: ['⛈️', '뇌우'],
+        96: ['⛈️', '우박 동반 뇌우'],
+        99: ['⛈️', '강한 뇌우']
+
+      };
+
+      return weatherMap[code] || ['🌡️', '날씨 정보'];
+
+    }
+
+
+    // Fetch Weather Data
+
+    async function fetchWeather(location) {
+
+      const params = new URLSearchParams({
+
+        latitude: location.latitude,
+        longitude: location.longitude,
+
+        current:
+          'temperature_2m,' +
+          'relative_humidity_2m,' +
+          'apparent_temperature,' +
+          'weather_code,' +
+          'wind_speed_10m',
+
+        daily:
+          'temperature_2m_max,' +
+          'temperature_2m_min,' +
+          'precipitation_probability_max',
+
+        timezone: 'Asia/Seoul',
+
+        forecast_days: '1'
+
+      });
+
+
+      const url =
+        'https://api.open-meteo.com/v1/forecast?' +
+        params.toString();
+
+
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error('Weather API Error');
+      }
+
+      const data = await response.json();
+
+      return data;
+
+    }
+
+
+    // Display Weather Data
+
+    function displayWeather(data, suffix) {
+
+      const current = data.current;
+      const daily = data.daily;
+
+      const weather =
+        getWeatherInfo(current.weather_code);
+
+
+      document.getElementById('weatherIcon' + suffix)
+        .textContent = weather[0];
+
+
+      document.getElementById('weatherDesc' + suffix)
+        .textContent = weather[1];
+
+
+      document.getElementById('temp' + suffix)
+        .textContent =
+          Math.round(current.temperature_2m) + '°C';
+
+
+      document.getElementById('feels' + suffix)
+        .textContent =
+          Math.round(current.apparent_temperature) + '°C';
+
+
+      document.getElementById('highlow' + suffix)
+        .textContent =
+          Math.round(daily.temperature_2m_max[0]) +
+          ' / ' +
+          Math.round(daily.temperature_2m_min[0]) +
+          '°C';
+
+
+      document.getElementById('humidity' + suffix)
+        .textContent =
+          current.relative_humidity_2m + '%';
+
+
+      const rain =
+        daily.precipitation_probability_max[0];
+
+      document.getElementById('rain' + suffix)
+        .textContent =
+          rain == null ? '정보 없음' : rain + '%';
+
+    }
+
+
+    // Update All Weather Locations
+
+    async function updateWeather() {
+
+      const updateLabel =
+        document.getElementById('weatherUpdated');
+
+      updateLabel.textContent = '업데이트 중...';
+
+      try {
+
+        const results = await Promise.all(
+
+          weatherLocations.map(async location => {
+
+            const data = await fetchWeather(location);
+
+            return {
+              data: data,
+              suffix: location.suffix
+            };
+
+          })
+
+        );
+
+
+        results.forEach(result => {
+
+          displayWeather(
+            result.data,
+            result.suffix
+          );
+
+        });
+
+
+        const now = new Date();
+
+        updateLabel.textContent =
+          '업데이트: ' +
+          now.toLocaleTimeString(
+            'ko-KR',
+            {
+              hour: '2-digit',
+              minute: '2-digit'
+            }
+          );
+
+      }
+
+      catch (error) {
+
+        console.error('Weather Error:', error);
+
+        updateLabel.textContent = '날씨 조회 실패';
+
+        weatherLocations.forEach(location => {
+
+          document.getElementById(
+            'weatherDesc' + location.suffix
+          ).textContent = '조회할 수 없습니다.';
+
+        });
+
+      }
+
+    }
+
+
+    // Initial Weather Load
+
+    updateWeather();
+
+
+    // Automatic Update Every 30 Minutes
+
+    setInterval(updateWeather, 30 * 60 * 1000);
+
+
+  </script>
+
 </body>
 </html>
