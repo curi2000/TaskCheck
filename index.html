@@ -232,10 +232,223 @@
 
 
     <!-- ===================================
-         2. TODAY DASHBOARD
+         2. QUICK LINKS
     ==================================== -->
 
-    <div class="mb-10">
+    <div class="bg-white/50 rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-200 mb-12">
+
+      <h2 class="text-2xl font-bold mb-7 text-gray-800 flex items-center">
+
+        <svg class="w-7 h-7 mr-3 text-blue-500"
+             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+                stroke-width="2"
+                d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1">
+          </path>
+        </svg>
+
+        Quick Links
+
+      </h2>
+
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+
+
+        <!-- Calendar -->
+
+        <div class="quick-card">
+
+          <div class="flex items-center gap-3 mb-4">
+
+            <div class="category-icon bg-blue-100 text-blue-600">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor"
+                   viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M8 7V3m8 4V3M5 11h14M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                </path>
+              </svg>
+            </div>
+
+            <h3 class="text-xl font-bold text-gray-800">Calendar</h3>
+
+          </div>
+
+          <a href="https://calendar.google.com"
+             target="_blank" rel="noopener noreferrer"
+             class="quick-link">
+            <span>Google Calendar</span>
+            <span class="link-arrow">↗</span>
+          </a>
+
+        </div>
+
+
+        <!-- Work -->
+
+        <div class="quick-card">
+
+          <div class="flex items-center gap-3 mb-4">
+
+            <div class="category-icon bg-orange-100 text-orange-600">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor"
+                   viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M3 7h18M5 7V5a2 2 0 012-2h10a2 2 0 012 2v2M5 7v13h14V7">
+                </path>
+              </svg>
+            </div>
+
+            <h3 class="text-xl font-bold text-gray-800">Work</h3>
+
+          </div>
+
+          <a href="https://vpc.lge.com"
+             target="_blank" rel="noopener noreferrer"
+             class="quick-link">
+            <span>Cloud PC</span>
+            <span class="link-arrow">↗</span>
+          </a>
+
+          <a href="https://sso.lge.com"
+             target="_blank" rel="noopener noreferrer"
+             class="quick-link">
+            <span>EP</span>
+            <span class="link-arrow">↗</span>
+          </a>
+
+        </div>
+
+
+        <!-- Portals -->
+
+        <div class="quick-card">
+
+          <div class="flex items-center gap-3 mb-4">
+
+            <div class="category-icon bg-green-100 text-green-600">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor"
+                   viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" stroke-width="2"></circle>
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M2 12h20M12 2a15 15 0 010 20M12 2a15 15 0 000 20">
+                </path>
+              </svg>
+            </div>
+
+            <h3 class="text-xl font-bold text-gray-800">Portals</h3>
+
+          </div>
+
+          <a href="https://www.naver.com"
+             target="_blank" rel="noopener noreferrer"
+             class="quick-link">
+            <span>Naver</span>
+            <span class="link-arrow">↗</span>
+          </a>
+
+          <a href="https://www.google.com"
+             target="_blank" rel="noopener noreferrer"
+             class="quick-link">
+            <span>Google</span>
+            <span class="link-arrow">↗</span>
+          </a>
+
+        </div>
+
+
+        <!-- Useful -->
+
+        <div class="quick-card">
+
+          <div class="flex items-center gap-3 mb-4">
+
+            <div class="category-icon bg-purple-100 text-purple-600">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor"
+                   viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 6v12m-6-6h12M4 4h16v16H4z">
+                </path>
+              </svg>
+            </div>
+
+            <h3 class="text-xl font-bold text-gray-800">Useful</h3>
+
+          </div>
+
+          <a href="https://map.naver.com"
+             target="_blank" rel="noopener noreferrer"
+             class="quick-link">
+            <span>Naver Map</span>
+            <span class="link-arrow">↗</span>
+          </a>
+
+          <a href="https://dict.naver.com"
+             target="_blank" rel="noopener noreferrer"
+             class="quick-link">
+            <span>Naver Dictionary</span>
+            <span class="link-arrow">↗</span>
+          </a>
+
+          <a href="https://translate.google.com"
+             target="_blank" rel="noopener noreferrer"
+             class="quick-link">
+            <span>Google Translate</span>
+            <span class="link-arrow">↗</span>
+          </a>
+
+        </div>
+
+
+        <!-- Others -->
+
+        <div class="quick-card">
+
+          <div class="flex items-center gap-3 mb-4">
+
+            <div class="category-icon bg-red-100 text-red-600">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor"
+                   viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M15 10l4.5-3v10L15 14M3 8h12v8H3z">
+                </path>
+              </svg>
+            </div>
+
+            <h3 class="text-xl font-bold text-gray-800">Others</h3>
+
+          </div>
+
+          <a href="https://www.youtube.com"
+             target="_blank" rel="noopener noreferrer"
+             class="quick-link">
+            <span>YouTube</span>
+            <span class="link-arrow">↗</span>
+          </a>
+
+          <a href="https://www.podbbang.com"
+             target="_blank" rel="noopener noreferrer"
+             class="quick-link">
+            <span>Podbbang</span>
+            <span class="link-arrow">↗</span>
+          </a>
+
+        </div>
+
+      </div>
+    </div>
+
+
+    <!-- ===================================
+         3. TODAY DASHBOARD
+    ==================================== -->
+
+    <div class="bg-white/50 rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-200 mb-12">
 
       <!-- Dashboard Header -->
 
@@ -521,219 +734,6 @@
 
 
     <!-- ===================================
-         3. QUICK LINKS
-    ==================================== -->
-
-    <div class="bg-white/50 rounded-2xl p-6 sm:p-8 shadow-sm border border-gray-200 mb-12">
-
-      <h2 class="text-2xl font-bold mb-7 text-gray-800 flex items-center">
-
-        <svg class="w-7 h-7 mr-3 text-blue-500"
-             fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round"
-                stroke-width="2"
-                d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1">
-          </path>
-        </svg>
-
-        Quick Links
-
-      </h2>
-
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-
-
-        <!-- Calendar -->
-
-        <div class="quick-card">
-
-          <div class="flex items-center gap-3 mb-4">
-
-            <div class="category-icon bg-blue-100 text-blue-600">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor"
-                   viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M8 7V3m8 4V3M5 11h14M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
-                </path>
-              </svg>
-            </div>
-
-            <h3 class="text-xl font-bold text-gray-800">Calendar</h3>
-
-          </div>
-
-          <a href="https://calendar.google.com"
-             target="_blank" rel="noopener noreferrer"
-             class="quick-link">
-            <span>Google Calendar</span>
-            <span class="link-arrow">↗</span>
-          </a>
-
-        </div>
-
-
-        <!-- Work -->
-
-        <div class="quick-card">
-
-          <div class="flex items-center gap-3 mb-4">
-
-            <div class="category-icon bg-orange-100 text-orange-600">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor"
-                   viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M3 7h18M5 7V5a2 2 0 012-2h10a2 2 0 012 2v2M5 7v13h14V7">
-                </path>
-              </svg>
-            </div>
-
-            <h3 class="text-xl font-bold text-gray-800">Work</h3>
-
-          </div>
-
-          <a href="https://vpc.lge.com"
-             target="_blank" rel="noopener noreferrer"
-             class="quick-link">
-            <span>Cloud PC</span>
-            <span class="link-arrow">↗</span>
-          </a>
-
-          <a href="https://sso.lge.com"
-             target="_blank" rel="noopener noreferrer"
-             class="quick-link">
-            <span>EP</span>
-            <span class="link-arrow">↗</span>
-          </a>
-
-        </div>
-
-
-        <!-- Portals -->
-
-        <div class="quick-card">
-
-          <div class="flex items-center gap-3 mb-4">
-
-            <div class="category-icon bg-green-100 text-green-600">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor"
-                   viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="10" stroke-width="2"></circle>
-                <path stroke-linecap="round" stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M2 12h20M12 2a15 15 0 010 20M12 2a15 15 0 000 20">
-                </path>
-              </svg>
-            </div>
-
-            <h3 class="text-xl font-bold text-gray-800">Portals</h3>
-
-          </div>
-
-          <a href="https://www.naver.com"
-             target="_blank" rel="noopener noreferrer"
-             class="quick-link">
-            <span>Naver</span>
-            <span class="link-arrow">↗</span>
-          </a>
-
-          <a href="https://www.google.com"
-             target="_blank" rel="noopener noreferrer"
-             class="quick-link">
-            <span>Google</span>
-            <span class="link-arrow">↗</span>
-          </a>
-
-        </div>
-
-
-        <!-- Useful -->
-
-        <div class="quick-card">
-
-          <div class="flex items-center gap-3 mb-4">
-
-            <div class="category-icon bg-purple-100 text-purple-600">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor"
-                   viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M12 6v12m-6-6h12M4 4h16v16H4z">
-                </path>
-              </svg>
-            </div>
-
-            <h3 class="text-xl font-bold text-gray-800">Useful</h3>
-
-          </div>
-
-          <a href="https://map.naver.com"
-             target="_blank" rel="noopener noreferrer"
-             class="quick-link">
-            <span>Naver Map</span>
-            <span class="link-arrow">↗</span>
-          </a>
-
-          <a href="https://dict.naver.com"
-             target="_blank" rel="noopener noreferrer"
-             class="quick-link">
-            <span>Naver Dictionary</span>
-            <span class="link-arrow">↗</span>
-          </a>
-
-          <a href="https://translate.google.com"
-             target="_blank" rel="noopener noreferrer"
-             class="quick-link">
-            <span>Google Translate</span>
-            <span class="link-arrow">↗</span>
-          </a>
-
-        </div>
-
-
-        <!-- Others -->
-
-        <div class="quick-card">
-
-          <div class="flex items-center gap-3 mb-4">
-
-            <div class="category-icon bg-red-100 text-red-600">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor"
-                   viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M15 10l4.5-3v10L15 14M3 8h12v8H3z">
-                </path>
-              </svg>
-            </div>
-
-            <h3 class="text-xl font-bold text-gray-800">Others</h3>
-
-          </div>
-
-          <a href="https://www.youtube.com"
-             target="_blank" rel="noopener noreferrer"
-             class="quick-link">
-            <span>YouTube</span>
-            <span class="link-arrow">↗</span>
-          </a>
-
-          <a href="https://www.podbbang.com"
-             target="_blank" rel="noopener noreferrer"
-             class="quick-link">
-            <span>Podbbang</span>
-            <span class="link-arrow">↗</span>
-          </a>
-
-        </div>
-
-      </div>
-    </div>
-
-
-    <!-- ===================================
          4. VERSION & MAINTENANCE
     ==================================== -->
 
@@ -782,7 +782,7 @@
             <li>TradingView 주식 시세 위젯 추가</li>
             <li>삼성전자, 현대차, KOSPI, S&P 500 표시</li>
             <li>날짜 및 요일 자동 표시</li>
-            <li>Quick Links 카드형 UI 개선</li>
+            <li>Quick Links와 Today 섹션 순서 및 그룹형 레이아웃 개선</li>
             <li>모바일 반응형 레이아웃 개선</li>
 
           </ul>
