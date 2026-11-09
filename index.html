@@ -813,7 +813,7 @@
         <div class="flex justify-between items-center mt-4">
 
           <span class="text-xs text-gray-400">
-            시세는 Yahoo Finance 기준이며 거래소별로 지연될 수 있습니다.
+            시세는 Yahoo Finance 기준이며 약 15분 간격으로 갱신됩니다.
           </span>
 
           <span class="flex items-center gap-3">
@@ -877,8 +877,9 @@
 
             <li>Today Weather Dashboard 추가</li>
             <li>Open-Meteo API 연동 및 자동 업데이트</li>
-            <li>Market Watch를 직접 시세 조회 방식으로 변경 (현재가·등락률 바로 표시)</li>
-            <li>삼성전자, 현대차, KOSPI, S&P 500 표시 (3분마다 자동 갱신)</li>
+            <li>Market Watch를 직접 표시 방식으로 변경 (현재가·등락률 바로 표시)</li>
+            <li>GitHub Actions가 15분마다 stocks.json 갱신, 홈페이지는 해당 파일을 읽음</li>
+            <li>삼성전자, 현대차, KOSPI, S&P 500 표시</li>
             <li>날짜 및 요일 자동 표시</li>
             <li>Quick Links와 Today 섹션 순서 및 그룹형 레이아웃 개선</li>
             <li>모바일 반응형 레이아웃 개선</li>
@@ -1210,8 +1211,10 @@
 
 
     /* ----------------------------------
-       C. Market Watch (직접 시세 조회)
-       종목을 추가하려면 stockList에 한 줄만 더하면 됩니다.
+       C. Market Watch
+       GitHub Actions가 15분마다 stocks.json을 갱신하고,
+       이 페이지는 같은 사이트의 stocks.json만 읽습니다.
+       (종목 추가: stockList + scripts/fetch-stocks.mjs 의 SYMBOLS 양쪽에 같은 Yahoo 코드 추가)
        Yahoo 코드: 한국 종목은 6자리 + .KS (코스닥은 .KQ)
     ---------------------------------- */
 
@@ -1220,13 +1223,6 @@
       { name: '현대차',   symbol: '005380.KS', type: 'kr',  url: 'https://m.stock.naver.com/domestic/stock/005380' },
       { name: 'KOSPI',    symbol: '^KS11',     type: 'idx', url: 'https://m.stock.naver.com/domestic/index/KOSPI' },
       { name: 'S&P 500',  symbol: '^GSPC',     type: 'idx', url: 'https://www.tradingview.com/symbols/SPX/' }
-    ];
-
-    // 브라우저에서 직접 호출이 막히면 중계 주소로 순서대로 재시도
-    const PROXIES = [
-      u => u,
-      u => 'https://corsproxy.io/?' + encodeURIComponent(u),
-      u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u)
     ];
 
     // 카드 뼈대 그리기
@@ -1239,27 +1235,18 @@
       </a>
     `).join('');
 
+    let stockData = null;
+
+    async function loadStockData() {
+      const res = await fetch('stocks.json?t=' + Date.now(), { cache: 'no-store' });
+      if (!res.ok) throw new Error('stocks.json ' + res.status);
+      stockData = await res.json();
+    }
+
     async function fetchQuote(s) {
-      const url = 'https://query1.finance.yahoo.com/v8/finance/chart/' +
-                  encodeURIComponent(s.symbol) + '?range=1d&interval=1d';
-
-      for (const makeUrl of PROXIES) {
-        try {
-          const ctrl = new AbortController();
-          const timer = setTimeout(() => ctrl.abort(), 8000);
-          const res = await fetch(makeUrl(url), { signal: ctrl.signal });
-          clearTimeout(timer);
-          if (!res.ok) continue;
-
-          const meta = (await res.json()).chart.result[0].meta;
-          const price = meta.regularMarketPrice;
-          const prev = meta.chartPreviousClose ?? meta.previousClose;
-          if (typeof price !== 'number') continue;
-
-          return { price: price, prev: prev, time: meta.regularMarketTime };
-        } catch (e) { /* 다음 방법으로 재시도 */ }
-      }
-      throw new Error('Quote failed: ' + s.symbol);
+      const q = stockData && stockData.quotes && stockData.quotes[s.symbol];
+      if (!q) throw new Error('No data: ' + s.symbol);
+      return q;
     }
 
     function fmtNum(v, type) {
@@ -1302,6 +1289,8 @@
       let cache = {};
       try { cache = JSON.parse(localStorage.getItem('stockCache') || '{}'); } catch (e) {}
 
+      try { await loadStockData(); } catch (e) { stockData = null; console.error(e); }
+
       const results = await Promise.allSettled(stockList.map(fetchQuote));
       let failed = 0;
 
@@ -1329,7 +1318,7 @@
     }
 
     updateStocks();
-    setInterval(updateStocks, 3 * 60 * 1000);   // 3분마다 자동 갱신
+    setInterval(updateStocks, 5 * 60 * 1000);   // 5분마다 stocks.json 다시 읽기
 
   </script>
 
