@@ -115,16 +115,68 @@
       letter-spacing: 1.2px;
     }
 
-    /* TradingView Widget */
+    /* Stock Cards */
 
-    .tradingview-widget-container {
-      width: 100%;
-      min-height: 65px;
-      overflow: hidden;
+    .stock-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
     }
 
-    .tradingview-widget-container__widget {
-      width: 100%;
+    @media (min-width: 1024px) {
+      .stock-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+
+    .stock-item {
+      display: block;
+      min-width: 0;
+      background: #f9fafb;
+      border: 1px solid #f0f0f0;
+      border-radius: 12px;
+      padding: 14px;
+      color: inherit;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .stock-item:hover {
+      background: #eff6ff;
+      border-color: #bfdbfe;
+    }
+
+    .stock-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: #374151;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .stock-price {
+      margin-top: 6px;
+      font-size: 22px;
+      font-weight: 700;
+      color: #1f2937;
+      letter-spacing: -0.5px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .stock-chg {
+      margin-top: 2px;
+      font-size: 13px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .stock-chg.up   { color: #e53e3e; }   /* 상승: 빨강 */
+    .stock-chg.down { color: #2b6cb0; }   /* 하락: 파랑 */
+    .stock-chg.flat { color: #6b7280; }
+
+    .stock-time {
+      margin-top: 6px;
+      font-size: 11px;
+      color: #9ca3af;
     }
 
     /* Mobile */
@@ -150,6 +202,8 @@
       .weather-temperature {
         font-size: 29px;
       }
+
+      .stock-price { font-size: 19px; }
     }
   </style>
 </head>
@@ -752,60 +806,25 @@
         </div>
 
 
-        <!-- TradingView Ticker Tape -->
+        <!-- Stock Cards (JS가 채움) -->
 
-        <div class="tradingview-widget-container">
+        <div id="stockGrid" class="stock-grid"></div>
 
-          <div class="tradingview-widget-container__widget"></div>
+        <div class="flex justify-between items-center mt-4">
 
-          <div class="tradingview-widget-copyright text-xs text-gray-400 mt-2">
+          <span class="text-xs text-gray-400">
+            시세는 Yahoo Finance 기준이며 거래소별로 지연될 수 있습니다.
+          </span>
 
-            <a href="https://www.tradingview.com/markets/"
-               target="_blank"
-               rel="noopener noreferrer"
-               class="hover:underline">
-              Market data by TradingView
-            </a>
-
-          </div>
-
-          <script type="text/javascript"
-                  src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js"
-                  async>
-          {
-            "symbols": [
-              {
-                "proName": "KRX:005930",
-                "title": "Samsung Electronics"
-              },
-              {
-                "proName": "KRX:005380",
-                "title": "Hyundai Motor"
-              },
-              {
-                "proName": "KRX:KOSPI",
-                "title": "KOSPI"
-              },
-              {
-                "proName": "SP:SPX",
-                "title": "S&P 500"
-              }
-            ],
-            "colorTheme": "light",
-            "locale": "kr",
-            "largeChartUrl": "",
-            "isTransparent": true,
-            "showSymbolLogo": true,
-            "displayMode": "adaptive"
-          }
-          </script>
+          <span class="flex items-center gap-3">
+            <span id="stockUpdated" class="text-xs text-gray-400">업데이트 대기</span>
+            <button onclick="updateStocks()"
+                    class="text-xs text-blue-500 hover:underline">
+              새로고침
+            </button>
+          </span>
 
         </div>
-
-        <p class="text-xs text-gray-400 mt-3">
-          시세 및 등락률은 TradingView 제공 데이터를 사용합니다.
-          거래소별 데이터는 지연될 수 있습니다.
-        </p>
 
       </div>
 
@@ -838,7 +857,7 @@
 
             <div class="flex justify-between border-b border-gray-200 pb-1">
               <dt class="font-medium text-gray-600">Last Updated</dt>
-              <dd class="text-gray-500">2026. 11. 08</dd>
+              <dd class="text-gray-500">2026. 11. 09</dd>
             </div>
 
           </dl>
@@ -858,8 +877,8 @@
 
             <li>Today Weather Dashboard 추가</li>
             <li>Open-Meteo API 연동 및 자동 업데이트</li>
-            <li>TradingView 주식 시세 위젯 추가</li>
-            <li>삼성전자, 현대차, KOSPI, S&P 500 표시</li>
+            <li>Market Watch를 직접 시세 조회 방식으로 변경 (현재가·등락률 바로 표시)</li>
+            <li>삼성전자, 현대차, KOSPI, S&P 500 표시 (3분마다 자동 갱신)</li>
             <li>날짜 및 요일 자동 표시</li>
             <li>Quick Links와 Today 섹션 순서 및 그룹형 레이아웃 개선</li>
             <li>모바일 반응형 레이아웃 개선</li>
@@ -1189,6 +1208,128 @@
 
     setInterval(updateWeather, 30 * 60 * 1000);
 
+
+    /* ----------------------------------
+       C. Market Watch (직접 시세 조회)
+       종목을 추가하려면 stockList에 한 줄만 더하면 됩니다.
+       Yahoo 코드: 한국 종목은 6자리 + .KS (코스닥은 .KQ)
+    ---------------------------------- */
+
+    const stockList = [
+      { name: '삼성전자', symbol: '005930.KS', type: 'kr',  url: 'https://m.stock.naver.com/domestic/stock/005930' },
+      { name: '현대차',   symbol: '005380.KS', type: 'kr',  url: 'https://m.stock.naver.com/domestic/stock/005380' },
+      { name: 'KOSPI',    symbol: '^KS11',     type: 'idx', url: 'https://m.stock.naver.com/domestic/index/KOSPI' },
+      { name: 'S&P 500',  symbol: '^GSPC',     type: 'idx', url: 'https://www.tradingview.com/symbols/SPX/' }
+    ];
+
+    // 브라우저에서 직접 호출이 막히면 중계 주소로 순서대로 재시도
+    const PROXIES = [
+      u => u,
+      u => 'https://corsproxy.io/?' + encodeURIComponent(u),
+      u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u)
+    ];
+
+    // 카드 뼈대 그리기
+    document.getElementById('stockGrid').innerHTML = stockList.map((s, i) => `
+      <a class="stock-item" href="${s.url}" target="_blank" rel="noopener noreferrer">
+        <div class="stock-name">${s.name}</div>
+        <div id="stockPrice${i}" class="stock-price">--</div>
+        <div id="stockChg${i}" class="stock-chg flat">조회 중...</div>
+        <div id="stockTime${i}" class="stock-time">&nbsp;</div>
+      </a>
+    `).join('');
+
+    async function fetchQuote(s) {
+      const url = 'https://query1.finance.yahoo.com/v8/finance/chart/' +
+                  encodeURIComponent(s.symbol) + '?range=1d&interval=1d';
+
+      for (const makeUrl of PROXIES) {
+        try {
+          const ctrl = new AbortController();
+          const timer = setTimeout(() => ctrl.abort(), 8000);
+          const res = await fetch(makeUrl(url), { signal: ctrl.signal });
+          clearTimeout(timer);
+          if (!res.ok) continue;
+
+          const meta = (await res.json()).chart.result[0].meta;
+          const price = meta.regularMarketPrice;
+          const prev = meta.chartPreviousClose ?? meta.previousClose;
+          if (typeof price !== 'number') continue;
+
+          return { price: price, prev: prev, time: meta.regularMarketTime };
+        } catch (e) { /* 다음 방법으로 재시도 */ }
+      }
+      throw new Error('Quote failed: ' + s.symbol);
+    }
+
+    function fmtNum(v, type) {
+      return type === 'kr'
+        ? Math.round(v).toLocaleString('ko-KR')
+        : v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function showQuote(i, q, stale) {
+      const s = stockList[i];
+      const diff = (q.prev != null) ? q.price - q.prev : null;
+      const pct = (diff != null && q.prev) ? diff / q.prev * 100 : null;
+
+      const chg = document.getElementById('stockChg' + i);
+      document.getElementById('stockPrice' + i).textContent =
+        fmtNum(q.price, s.type) + (s.type === 'kr' ? '원' : '');
+
+      if (diff == null) {
+        chg.className = 'stock-chg flat';
+        chg.textContent = '-';
+      } else {
+        const dir = diff > 0 ? 'up' : diff < 0 ? 'down' : 'flat';
+        const arrow = diff > 0 ? '▲' : diff < 0 ? '▼' : '-';
+        chg.className = 'stock-chg ' + dir;
+        chg.textContent = arrow + ' ' + fmtNum(Math.abs(diff), s.type) +
+                          ' (' + (pct > 0 ? '+' : '') + pct.toFixed(2) + '%)';
+      }
+
+      const t = q.time
+        ? new Date(q.time * 1000).toLocaleString('ko-KR',
+            { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' 기준'
+        : '';
+      document.getElementById('stockTime' + i).textContent = (stale ? '이전 값 · ' : '') + t;
+    }
+
+    async function updateStocks() {
+      const label = document.getElementById('stockUpdated');
+      label.textContent = '업데이트 중...';
+
+      let cache = {};
+      try { cache = JSON.parse(localStorage.getItem('stockCache') || '{}'); } catch (e) {}
+
+      const results = await Promise.allSettled(stockList.map(fetchQuote));
+      let failed = 0;
+
+      results.forEach((r, i) => {
+        const sym = stockList[i].symbol;
+        if (r.status === 'fulfilled') {
+          cache[sym] = r.value;
+          showQuote(i, r.value, false);
+        } else {
+          failed++;
+          if (cache[sym]) {
+            showQuote(i, cache[sym], true);          // 실패 시 마지막 성공값 표시
+          } else {
+            document.getElementById('stockPrice' + i).textContent = '--';
+            document.getElementById('stockChg' + i).textContent = '조회 실패';
+          }
+        }
+      });
+
+      try { localStorage.setItem('stockCache', JSON.stringify(cache)); } catch (e) {}
+
+      label.textContent = failed
+        ? failed + '개 조회 실패'
+        : '업데이트: ' + new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    updateStocks();
+    setInterval(updateStocks, 3 * 60 * 1000);   // 3분마다 자동 갱신
 
   </script>
 
