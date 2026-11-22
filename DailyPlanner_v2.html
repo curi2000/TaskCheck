@@ -68,6 +68,15 @@ td.hourlabel:hover{background:#f7faff}
 .t input{margin-top:1px;flex-shrink:0}
 .t .tx{flex:1}
 .t .tm{font-size:10px;color:var(--done-txt);white-space:nowrap;text-decoration:none;font-family:monospace;margin-top:1px}
+/* 연장 칸 (PC) */
+.t.cont{background:#f4f8fd;border-left:3px dashed #9fb8d6;color:var(--muted);align-items:center}
+.t.cont.rep{background:#f3fbf6;border-left-color:#9bd0b2}
+.t.cont.done{background:#eaf5ee;color:var(--done-txt);text-decoration:none;opacity:.9}
+.t.cont.done .tx{text-decoration:line-through}
+.t .rg{font-size:10px;color:var(--muted);font-family:monospace;white-space:nowrap;margin-top:1px}
+.t .xb{display:flex;gap:2px;flex-shrink:0}
+.t .xb button{font-size:10px;line-height:1;padding:3px 5px;border-radius:4px;background:#fff;border:1px solid var(--border);color:var(--navy-md);font-weight:700}
+.t .xb button:hover{background:#e6f0fb}
 
 /* ───── 모바일 전용 요소 (PC에서는 숨김) ───── */
 .monly{display:none}
@@ -86,6 +95,7 @@ td.hourlabel:hover{background:#f7faff}
 .stepper button:active{background:#dbe5f1}
 .sv{flex:1;min-width:0;height:52px;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--border);
   border-radius:14px;font-size:18px;font-weight:700;color:var(--navy);font-variant-numeric:tabular-nums;white-space:nowrap}
+.sv small{font-size:12px;font-weight:600;color:var(--muted);margin-left:6px}
 .reprow{display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding:12px 14px;background:#f7faff;border-radius:12px}
 .reprow span{font-size:15px;font-weight:600;color:var(--text)}
 .switch{position:relative;width:52px;height:30px;flex-shrink:0}
@@ -157,6 +167,17 @@ td.hourlabel:hover{background:#f7faff}
   .card.done{background:var(--done-bg)}
   .card.done .tx{text-decoration:line-through;color:var(--done-txt);opacity:.75}
   .card.done .meta{color:var(--done-txt)}
+
+  /* 연장 칸 (모바일) */
+  .card.cont{background:#f4f8fd;box-shadow:none;border-left:5px dashed #9fb8d6;min-height:48px}
+  .card.cont.rep{background:#f3fbf6;border-left-color:#9bd0b2}
+  .card.cont.done{background:#eaf5ee}
+  .card.cont .ck{font-size:22px;color:#8aa4c4;font-weight:700}
+  .card.cont .tx{font-size:15px;color:var(--muted);font-weight:500}
+  .card.cont.done .tx{color:var(--done-txt)}
+  .xrow{display:flex;gap:8px;margin-top:6px}
+  .xrow button{height:32px;padding:0 12px;border-radius:10px;background:#edf2f7;color:var(--navy-md);font-size:13px;font-weight:700}
+  .xrow button:active{background:#dbe5f1;transform:scale(.95)}
 
   /* 플로팅 + 버튼 */
   .fab{position:fixed;right:18px;bottom:calc(20px + var(--safe-b));width:62px;height:62px;border-radius:50%;z-index:30;
@@ -235,11 +256,17 @@ td.hourlabel:hover{background:#f7faff}
       <div class="sv" id="mDateTxt"></div>
       <button type="button" onclick="stepDate(1)" aria-label="하루 후">›</button>
     </div>
-    <label class="lb">시간</label>
+    <label class="lb">시작 시간</label>
     <div class="stepper">
       <button type="button" onclick="stepHour(-1)" aria-label="이전 시간">‹</button>
       <div class="sv" id="mHourTxt"></div>
       <button type="button" onclick="stepHour(1)" aria-label="다음 시간">›</button>
+    </div>
+    <label class="lb">종료 시간 <span style="font-weight:400">(같은 업무가 이어지면 늘리세요)</span></label>
+    <div class="stepper">
+      <button type="button" onclick="stepEnd(-1)" aria-label="종료 시간 줄이기">‹</button>
+      <div class="sv" id="mEndTxt"></div>
+      <button type="button" onclick="stepEnd(1)" aria-label="종료 시간 늘리기">›</button>
     </div>
     <div class="reprow">
       <span>🔁 반복</span>
@@ -264,6 +291,9 @@ const addDays = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+n); retu
 const nowTime = () => { const n = new Date(); return pad(n.getHours())+':'+pad(n.getMinutes()); };
 const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const isMobile = () => window.matchMedia('(max-width:768px)').matches;
+
+// 일정의 종료 시각(해당 시각 정각에 끝남). endHour가 없는 기존 일정은 1시간짜리로 처리
+const endOf = t => Math.max(t.hour + 1, Math.min(H1 + 1, t.endHour || (t.hour + 1)));
 
 // ── 인증 ──
 async function doLogin(){
@@ -290,22 +320,56 @@ function shift(n){ setDate(addDays(base, n)); }
 dateIn.onchange = () => { if (dateIn.value) setDate(parse(dateIn.value)); };
 mDateIn.onchange = () => { if (mDateIn.value) setDate(parse(mDateIn.value)); };
 
-// ── 해당 날짜/시간의 할일 (일회성 + 반복 요일 자동 반영) ──
-function tasksFor(ds, hour){
+// ── 해당 날짜에 일정이 적용되는지 (일회성 + 반복 요일) ──
+function onDate(t, ds){
   const wd = parse(ds).getDay();
-  return tasks.filter(t => t.hour === hour && (
-    t.repeat && t.repeat.length ? (ds >= t.date && t.repeat.includes(wd)) : t.date === ds
-  ));
+  return t.repeat && t.repeat.length ? (ds >= t.date && t.repeat.includes(wd)) : t.date === ds;
+}
+// 시작 칸: 해당 시간에 시작하는 일정
+function tasksFor(ds, hour){
+  return tasks.filter(t => t.hour === hour && onDate(t, ds));
+}
+// 연장 칸: 앞 시간에서 시작해 이 시간까지 이어지는 일정
+function contFor(ds, hour){
+  return tasks.filter(t => t.hour < hour && hour < endOf(t) && onDate(t, ds));
 }
 
+// ── 연장 / 축소 (+1h / -1h 버튼) ──
+function extend(id, delta){
+  const t = tasks.find(x => x.id === id); if (!t) return;
+  const ne = Math.max(t.hour + 1, Math.min(H1 + 1, endOf(t) + delta));
+  if (ne === endOf(t)) return;
+  db.collection('users').doc(user.uid).collection('dailyTasks').doc(id)
+    .set({ endHour: ne }, { merge: true })
+    .catch(e => alert('저장 실패: ' + e.message));
+}
+// 블록의 마지막 칸에서만 연장/축소 버튼 표시
+function isLastSlot(t, hour){ return endOf(t) - 1 === hour; }
+function xbHtml(t, hour, mobile){
+  if (!isLastSlot(t, hour)) return '';
+  const canShrink = endOf(t) - t.hour > 1, canGrow = endOf(t) <= H1;
+  const btns = (canShrink ? `<button type="button" onclick="event.stopPropagation();extend('${t.id}',-1)" aria-label="1시간 줄이기">－1h</button>` : '')
+             + (canGrow ? `<button type="button" onclick="event.stopPropagation();extend('${t.id}',1)" aria-label="1시간 늘리기">＋1h</button>` : '');
+  if (!btns) return '';
+  return mobile ? `<div class="xrow">${btns}</div>` : `<span class="xb">${btns}</span>`;
+}
+const rangeTxt = t => endOf(t) - t.hour > 1 ? `${pad(t.hour)}:00~${pad(endOf(t))}:00` : '';
+
 // ── PC 렌더 (세로: 시간 / 가로: 오늘·다음날) ──
-function taskHtml(t, ds){
+function taskHtml(t, ds, hour){
   const done = t.done && t.done[ds];
   const tm = typeof done === 'string' ? done : '';
   const rep = t.repeat && t.repeat.length;
+  const rg = rangeTxt(t);
   return `<div class="t ${rep?'rep':''} ${done?'done':''}" onclick="event.stopPropagation();openModal('${ds}',${t.hour},'${t.id}')">
     <input type="checkbox" ${done?'checked':''} onclick="event.stopPropagation()" onchange="toggleDone('${t.id}','${ds}',this.checked)">
-    <span class="tx">${rep?'🔁 ':''}${esc(t.text)}</span>${tm?`<span class="tm">${tm}</span>`:''}</div>`;
+    <span class="tx">${rep?'🔁 ':''}${esc(t.text)}</span>${rg?`<span class="rg">${rg}</span>`:''}${tm?`<span class="tm">${tm}</span>`:''}${xbHtml(t, hour, false)}</div>`;
+}
+function contHtml(t, ds, hour){
+  const done = t.done && t.done[ds];
+  const rep = t.repeat && t.repeat.length;
+  return `<div class="t cont ${rep?'rep':''} ${done?'done':''}" onclick="event.stopPropagation();openModal('${ds}',${t.hour},'${t.id}')">
+    <span class="tx">↳ 계속 (${esc(t.text)})</span>${xbHtml(t, hour, false)}</div>`;
 }
 function renderDesktop(){
   const days = [base, addDays(base,1)].map(d => ({ d, ds: ymd(d) }));
@@ -319,7 +383,8 @@ function renderDesktop(){
   for (let h=H0; h<=H1; h++) {
     t += `<tr><td class="hourlabel ${h===nowH&&days.some(x=>x.ds===todayS)?'now':''}">${pad(h)}:00</td>`;
     days.forEach(({ds}) => {
-      t += `<td class="${ds===todayS&&h===nowH?'now':''}" onclick="openModal('${ds}',${h})">${tasksFor(ds,h).map(x=>taskHtml(x,ds)).join('')}</td>`;
+      const inner = contFor(ds,h).map(x=>contHtml(x,ds,h)).join('') + tasksFor(ds,h).map(x=>taskHtml(x,ds,h)).join('');
+      t += `<td class="${ds===todayS&&h===nowH?'now':''}" onclick="openModal('${ds}',${h})">${inner}</td>`;
     });
     t += '</tr>';
   }
@@ -327,15 +392,24 @@ function renderDesktop(){
 }
 
 // ── 모바일 렌더 (하루 1열 타임라인) ──
-function cardHtml(t, ds){
+function cardHtml(t, ds, hour){
   const d = t.done && t.done[ds];
   const tm = typeof d === 'string' ? d : '';
   const rep = t.repeat && t.repeat.length;
-  const meta = [rep ? '🔁 반복' : '', tm ? `✓ ${tm} 완료` : ''].filter(Boolean).join('  ·  ');
+  const meta = [rep ? '🔁 반복' : '', rangeTxt(t), tm ? `✓ ${tm} 완료` : ''].filter(Boolean).join('  ·  ');
   return `<div class="card ${rep?'rep':''} ${d?'done':''}" onclick="event.stopPropagation()">
     <button class="ck" aria-label="완료 체크" onclick="toggleDone('${t.id}','${ds}',${!d})"><span>${CHECK}</span></button>
     <div class="ct" onclick="openModal('${ds}',${t.hour},'${t.id}')">
-      <div class="tx">${esc(t.text)}</div>${meta?`<div class="meta">${meta}</div>`:''}
+      <div class="tx">${esc(t.text)}</div>${meta?`<div class="meta">${meta}</div>`:''}${xbHtml(t, hour, true)}
+    </div></div>`;
+}
+function contCardHtml(t, ds, hour){
+  const d = t.done && t.done[ds];
+  const rep = t.repeat && t.repeat.length;
+  return `<div class="card cont ${rep?'rep':''} ${d?'done':''}" onclick="event.stopPropagation()">
+    <div class="ck" aria-hidden="true">↳</div>
+    <div class="ct" onclick="openModal('${ds}',${t.hour},'${t.id}')">
+      <div class="tx">계속 (${esc(t.text)})</div>${xbHtml(t, hour, true)}
     </div></div>`;
 }
 function renderMobile(){
@@ -343,13 +417,13 @@ function renderMobile(){
   const isToday = ds === todayS;
   let total = 0, doneN = 0, html = '';
   for (let h=H0; h<=H1; h++) {
-    const list = tasksFor(ds, h);
-    total += list.length;
+    const list = tasksFor(ds, h), conts = contFor(ds, h);
+    total += list.length;                      // 진행률은 일정 1개당 1회만 계산 (연장 칸 제외)
     doneN += list.filter(t => t.done && t.done[ds]).length;
     const now = isToday && h === nowH;
-    html += `<section class="hr ${now?'now':''} ${list.length?'has':''}" id="hr${h}" onclick="openModal('${ds}',${h})">
+    html += `<section class="hr ${now?'now':''} ${(list.length||conts.length)?'has':''}" id="hr${h}" onclick="openModal('${ds}',${h})">
       <div class="hl">${pad(h)}:00${now?'<em>지금</em>':''}</div>
-      <div class="hc">${list.map(t => cardHtml(t, ds)).join('')}</div></section>`;
+      <div class="hc">${conts.map(t => contCardHtml(t, ds, h)).join('')}${list.map(t => cardHtml(t, ds, h)).join('')}</div></section>`;
   }
   mList.innerHTML = html;
 
@@ -375,7 +449,7 @@ function render(){
   }
 }
 
-// ── 완료 체크 ──
+// ── 완료 체크 (연장된 일정도 시작 칸에서 한 번만 체크) ──
 function toggleDone(id, ds, on){
   db.collection('users').doc(user.uid).collection('dailyTasks').doc(id)
     .set({ done: { [ds]: on ? nowTime() : firebase.firestore.FieldValue.delete() } }, { merge: true })
@@ -383,9 +457,24 @@ function toggleDone(id, ds, on){
 }
 
 // ── 입력 모달 / 하단 시트 ──
-let curHour = 9, curDate = '';
-function setHour(h){ curHour = Math.min(H1, Math.max(H0, h)); mHourTxt.textContent = `${pad(curHour)}:00 ~ ${pad(curHour+1)}:00`; }
+let curHour = 9, curEnd = 10, curDate = '';
+function paintTime(){
+  mHourTxt.textContent = `${pad(curHour)}:00`;
+  mEndTxt.innerHTML = `${pad(curEnd)}:00<small>(${curEnd - curHour}시간)</small>`;
+}
+// 시작 시간을 바꾸면 길이(시간 수)를 유지한 채 함께 이동
+function setHour(h){
+  const dur = Math.max(1, curEnd - curHour);
+  curHour = Math.min(H1, Math.max(H0, h));
+  curEnd = Math.min(H1 + 1, curHour + dur);
+  paintTime();
+}
 function stepHour(n){ setHour(curHour + n); }
+function setEnd(e){
+  curEnd = Math.min(H1 + 1, Math.max(curHour + 1, e));
+  paintTime();
+}
+function stepEnd(n){ setEnd(curEnd + n); }
 function setModalDate(ds){
   curDate = ds;
   const d = parse(ds);
@@ -414,7 +503,10 @@ function openModal(ds, hour, id){
   mTitle.textContent = t ? '할일 수정' : `${ds.slice(5).replace('-','/')} 할일 추가`;
   mText.value = t ? t.text : '';
   setModalDate(ctx.date);
-  setHour(hour);
+  // 시작/종료 시간 초기화 (새 일정은 1시간짜리)
+  curHour = Math.min(H1, Math.max(H0, t ? t.hour : hour));
+  curEnd = t ? endOf(t) : curHour + 1;
+  paintTime();
   mRep.checked = ctx.repDays.size > 0;
   updDateLb();
   dayPick.classList.toggle('on', mRep.checked);
@@ -439,7 +531,7 @@ bSave.onclick = async () => {
   const text = mText.value.trim();
   if (!text) { mText.focus(); return; }
   if (mRep.checked && !ctx.repDays.size) { alert('반복할 요일을 선택하세요.'); return; }
-  const data = { text, hour: curHour, date: curDate, repeat: mRep.checked ? [...ctx.repDays].sort() : [] };
+  const data = { text, hour: curHour, endHour: curEnd, date: curDate, repeat: mRep.checked ? [...ctx.repDays].sort() : [] };
   const col = db.collection('users').doc(user.uid).collection('dailyTasks');
   try {
     if (ctx.id) await col.doc(ctx.id).set(data, { merge: true });
